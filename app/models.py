@@ -1,0 +1,133 @@
+import uuid
+from datetime import datetime, time
+from sqlalchemy import (
+    Column, String, Text, Boolean, Integer, Float, DateTime, Time, 
+    ForeignKey, Enum as SQLEnum, JSON
+)
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+import enum
+
+from app.database import Base
+
+
+class EntityType(str, enum.Enum):
+    TASK = "task"
+    USER = "user"
+
+
+class AttributeType(str, enum.Enum):
+    STRING = "string"
+    ENUM = "enum"
+    INT = "int"
+    FLOAT = "float"
+    BOOL = "bool"
+    DATE = "date"
+
+
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False)
+    email = Column(String, nullable=True)
+    timezone = Column(String, default="UTC")
+    notification_time = Column(Time, default=time(10, 0))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    tasks_owned = relationship("Task", back_populates="owner", foreign_keys="Task.owner_user_id")
+    alignments_source = relationship("AlignmentEdge", foreign_keys="AlignmentEdge.source_user_id", back_populates="source_user")
+    alignments_target = relationship("AlignmentEdge", foreign_keys="AlignmentEdge.target_user_id", back_populates="target_user")
+    answers_given = relationship("AttributeAnswer", foreign_keys="AttributeAnswer.answered_by_user_id", back_populates="answered_by_user")
+    answers_about = relationship("AttributeAnswer", foreign_keys="AttributeAnswer.target_user_id", back_populates="target_user")
+    questions_answered = relationship("QuestionLog", foreign_keys="QuestionLog.answered_by_user_id", back_populates="answered_by_user")
+    questions_about = relationship("QuestionLog", foreign_keys="QuestionLog.target_user_id", back_populates="target_user")
+
+
+class AlignmentEdge(Base):
+    __tablename__ = "alignment_edges"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    target_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    source_user = relationship("User", foreign_keys=[source_user_id], back_populates="alignments_source")
+    target_user = relationship("User", foreign_keys=[target_user_id], back_populates="alignments_target")
+
+
+class Task(Base):
+    __tablename__ = "tasks"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    owner_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
+    
+    # Relationships
+    owner = relationship("User", back_populates="tasks_owned", foreign_keys=[owner_user_id])
+    answers = relationship("AttributeAnswer", back_populates="task")
+    questions = relationship("QuestionLog", back_populates="task")
+
+
+class AttributeDefinition(Base):
+    __tablename__ = "attribute_definitions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entity_type = Column(SQLEnum(EntityType), nullable=False)
+    name = Column(String, nullable=False)
+    label = Column(String, nullable=False)
+    type = Column(SQLEnum(AttributeType), nullable=False)
+    description = Column(Text, nullable=True)
+    allowed_values = Column(JSON, nullable=True)
+    is_required = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    answers = relationship("AttributeAnswer", back_populates="attribute")
+    questions = relationship("QuestionLog", back_populates="attribute")
+
+
+class AttributeAnswer(Base):
+    __tablename__ = "attribute_answers"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    answered_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    target_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=True)
+    attribute_id = Column(UUID(as_uuid=True), ForeignKey("attribute_definitions.id"), nullable=False)
+    value = Column(String, nullable=True)
+    refused = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    answered_by_user = relationship("User", foreign_keys=[answered_by_user_id], back_populates="answers_given")
+    target_user = relationship("User", foreign_keys=[target_user_id], back_populates="answers_about")
+    task = relationship("Task", back_populates="answers")
+    attribute = relationship("AttributeDefinition", back_populates="answers")
+
+
+class QuestionLog(Base):
+    __tablename__ = "question_logs"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    answered_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    target_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=True)
+    attribute_id = Column(UUID(as_uuid=True), ForeignKey("attribute_definitions.id"), nullable=False)
+    question_text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    answered_by_user = relationship("User", foreign_keys=[answered_by_user_id], back_populates="questions_answered")
+    target_user = relationship("User", foreign_keys=[target_user_id], back_populates="questions_about")
+    task = relationship("Task", back_populates="questions")
+    attribute = relationship("AttributeDefinition", back_populates="questions")
+
