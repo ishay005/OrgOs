@@ -156,7 +156,31 @@
                     <h3>⚠️ Perception Gaps</h3>
                     <p class="subtitle">Areas where your views differ from your teammates</p>
                 </div>
-                <div id="misalignments-list"></div>
+                
+                <!-- Statistics Dashboard -->
+                <div id="misalignment-stats" class="stats-dashboard">
+                    <!-- Will be populated dynamically -->
+                </div>
+                
+                <!-- View Toggle -->
+                <div class="view-toggle">
+                    <button id="stats-view-btn" class="toggle-btn active" onclick="showMisalignmentView('stats')">
+                        📊 Statistics
+                    </button>
+                    <button id="list-view-btn" class="toggle-btn" onclick="showMisalignmentView('list')">
+                        📋 Detailed List
+                    </button>
+                </div>
+                
+                <!-- Charts Section -->
+                <div id="misalignment-charts" class="charts-section">
+                    <!-- Will be populated dynamically -->
+                </div>
+                
+                <!-- Detailed List -->
+                <div id="misalignments-list" style="display: none;">
+                    <!-- Will be populated dynamically -->
+                </div>
             </div>
             
             <div class="dashboard-footer">

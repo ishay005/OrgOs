@@ -548,84 +548,245 @@ async function toggleAlignment(userId, align) {
 // Dashboard - Misalignments
 // ============================================================================
 
+let currentMisalignmentView = 'stats';
+
+function showMisalignmentView(view) {
+    currentMisalignmentView = view;
+    
+    // Update button states
+    document.getElementById('stats-view-btn').classList.toggle('active', view === 'stats');
+    document.getElementById('list-view-btn').classList.toggle('active', view === 'list');
+    
+    // Show/hide sections
+    document.getElementById('misalignment-charts').style.display = view === 'stats' ? 'grid' : 'none';
+    document.getElementById('misalignments-list').style.display = view === 'list' ? 'block' : 'none';
+}
+
 async function loadMisalignments() {
+    const statsDiv = document.getElementById('misalignment-stats');
+    const chartsDiv = document.getElementById('misalignment-charts');
     const listDiv = document.getElementById('misalignments-list');
-    listDiv.innerHTML = '<div class="loading">Analyzing perception gaps</div>';
+    
+    statsDiv.innerHTML = '<div class="loading">Loading statistics...</div>';
+    chartsDiv.innerHTML = '';
+    listDiv.innerHTML = '';
     
     try {
-        const misalignments = await apiCall('/misalignments');
+        // Load both statistics and detailed misalignments
+        const [stats, misalignments] = await Promise.all([
+            apiCall('/misalignments/statistics'),
+            apiCall('/misalignments')
+        ]);
+        
+        // Display statistics overview
+        displayStatistics(stats);
+        
+        // Display charts
+        displayCharts(stats);
+        
+        // Display detailed list
+        displayMisalignmentsList(misalignments);
         
         // Update badge
         document.getElementById('misalignment-badge').textContent = misalignments.length;
         
-        if (misalignments.length === 0) {
-            listDiv.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">✨</div>
-                    <h3>Perfect Alignment!</h3>
-                    <p>No perception gaps detected with your teammates.</p>
-                    <p class="small">This means your views are aligned! 🎉</p>
+    } catch (error) {
+        statsDiv.innerHTML = `<div class="message error">Failed to load misalignments: ${error.message}</div>`;
+    }
+}
+
+function displayStatistics(stats) {
+    const statsDiv = document.getElementById('misalignment-stats');
+    
+    statsDiv.innerHTML = `
+        <div class="stat-card">
+            <div class="stat-label">Total Misalignments</div>
+            <div class="stat-value">${stats.total_count}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Avg Similarity</div>
+            <div class="stat-value">${(stats.average_similarity * 100).toFixed(0)}%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">High Severity</div>
+            <div class="stat-value" style="color: var(--danger)">${stats.by_severity.high}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Attributes Affected</div>
+            <div class="stat-value">${Object.keys(stats.by_attribute).length}</div>
+        </div>
+    `;
+}
+
+function displayCharts(stats) {
+    const chartsDiv = document.getElementById('misalignment-charts');
+    
+    if (stats.total_count === 0) {
+        chartsDiv.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">✨</div>
+                <h3>Perfect Alignment!</h3>
+                <p>No perception gaps detected.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Chart 1: Severity Distribution
+    const severityHTML = `
+        <div class="chart-card">
+            <div class="chart-title">📊 Misalignment Severity</div>
+            <div class="severity-chart">
+                <div class="severity-item high">
+                    <div class="severity-label">High</div>
+                    <div class="severity-count">${stats.by_severity.high}</div>
+                    <div class="severity-label">< 30% similar</div>
                 </div>
-            `;
-            return;
-        }
-        
-        // Group by user
-        const grouped = {};
-        misalignments.forEach(m => {
-            if (!grouped[m.other_user_name]) {
-                grouped[m.other_user_name] = [];
-            }
-            grouped[m.other_user_name].push(m);
-        });
-        
-        listDiv.innerHTML = Object.entries(grouped).map(([userName, items]) => {
-            const itemsHTML = items.map(m => {
-                const severity = m.similarity_score < 0.3 ? 'high' : 
-                                m.similarity_score < 0.5 ? 'medium' : 'low';
-                
-                return `
-                    <div class="misalignment-item ${severity}">
-                        <div class="misalignment-detail">
-                            <strong>📝 ${m.task_title || 'General'}</strong>
-                        </div>
-                        <div class="misalignment-detail">
-                            <strong>${m.attribute_label}</strong>
-                        </div>
-                        <div class="value-comparison">
-                            <div class="value-box yours">
-                                <div class="value-label">Your View</div>
-                                <div class="value-text">${m.your_value}</div>
+                <div class="severity-item medium">
+                    <div class="severity-label">Medium</div>
+                    <div class="severity-count">${stats.by_severity.medium}</div>
+                    <div class="severity-label">30-60% similar</div>
+                </div>
+                <div class="severity-item low">
+                    <div class="severity-label">Low</div>
+                    <div class="severity-count">${stats.by_severity.low}</div>
+                    <div class="severity-label">> 60% similar</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Chart 2: By Attribute
+    const attrEntries = Object.entries(stats.by_attribute)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 5);
+    
+    const maxCount = Math.max(...attrEntries.map(([_, data]) => data.count));
+    
+    const attributeHTML = `
+        <div class="chart-card">
+            <div class="chart-title">📈 Misalignments by Attribute</div>
+            <div class="bar-chart">
+                ${attrEntries.map(([attr, data]) => `
+                    <div class="bar-item">
+                        <div class="bar-label">${attr}</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${(data.count / maxCount * 100)}%">
+                                <span class="bar-value">${data.count}</span>
                             </div>
-                            <div class="value-box theirs">
-                                <div class="value-label">Their View</div>
-                                <div class="value-text">${m.their_value}</div>
-                            </div>
-                        </div>
-                        <div class="similarity-score ${severity}">
-                            ${severity === 'high' ? '🚨 Very Different' : 
-                              severity === 'medium' ? '⚠️ Somewhat Different' : 
-                              '✓ Slightly Different'} 
-                            (${(m.similarity_score * 100).toFixed(0)}% similar)
                         </div>
                     </div>
-                `;
-            }).join('');
+                `).join('')}
+            </div>
+        </div>
+    `;
+    
+    // Chart 3: By User
+    const userHTML = `
+        <div class="chart-card">
+            <div class="chart-title">👥 Misalignments by Teammate</div>
+            <div class="user-comparison">
+                ${Object.entries(stats.by_user).map(([user, data]) => `
+                    <div class="user-item">
+                        <div class="user-name">${user}</div>
+                        <div class="user-stats">
+                            <div><span class="user-stat-value">${data.count}</span> gaps</div>
+                            <div><span class="user-stat-value">${(data.avg_similarity * 100).toFixed(0)}%</span> avg</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    
+    // Chart 4: Most Misaligned Tasks
+    const tasksHTML = stats.most_misaligned_tasks && stats.most_misaligned_tasks.length > 0 ? `
+        <div class="chart-card">
+            <div class="chart-title">🎯 Most Misaligned Tasks</div>
+            <div class="user-comparison">
+                ${stats.most_misaligned_tasks.map(task => `
+                    <div class="user-item">
+                        <div class="user-name">${task.task}</div>
+                        <div class="user-stats">
+                            <div><span class="user-stat-value">${task.count}</span> gaps</div>
+                            <div><span class="user-stat-value">${(task.avg_similarity * 100).toFixed(0)}%</span> similar</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';
+    
+    chartsDiv.innerHTML = severityHTML + attributeHTML + userHTML + tasksHTML;
+}
+
+function displayMisalignmentsList(misalignments) {
+    const listDiv = document.getElementById('misalignments-list');
+    
+    if (misalignments.length === 0) {
+        listDiv.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">✨</div>
+                <h3>Perfect Alignment!</h3>
+                <p>No perception gaps detected with your teammates.</p>
+                <p class="small">This means your views are aligned! 🎉</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Group by user
+    const grouped = {};
+    misalignments.forEach(m => {
+        if (!grouped[m.other_user_name]) {
+            grouped[m.other_user_name] = [];
+        }
+        grouped[m.other_user_name].push(m);
+    });
+    
+    listDiv.innerHTML = Object.entries(grouped).map(([userName, items]) => {
+        const itemsHTML = items.map(m => {
+            const severity = m.similarity_score < 0.3 ? 'high' : 
+                            m.similarity_score < 0.5 ? 'medium' : 'low';
             
             return `
-                <div class="misalignment-group">
-                    <div class="misalignment-group-header">
-                        <h4>👤 ${userName}</h4>
-                        <span class="badge">${items.length}</span>
+                <div class="misalignment-item ${severity}">
+                    <div class="misalignment-detail">
+                        <strong>📝 ${m.task_title || 'General'}</strong>
                     </div>
-                    ${itemsHTML}
+                    <div class="misalignment-detail">
+                        <strong>${m.attribute_label}</strong>
+                    </div>
+                    <div class="value-comparison">
+                        <div class="value-box yours">
+                            <div class="value-label">Your View</div>
+                            <div class="value-text">${m.your_value}</div>
+                        </div>
+                        <div class="value-box theirs">
+                            <div class="value-label">Their View</div>
+                            <div class="value-text">${m.their_value}</div>
+                        </div>
+                    </div>
+                    <div class="similarity-score ${severity}">
+                        ${severity === 'high' ? '🚨 Very Different' : 
+                          severity === 'medium' ? '⚠️ Somewhat Different' : 
+                          '✓ Slightly Different'} 
+                        (${(m.similarity_score * 100).toFixed(0)}% similar)
+                    </div>
                 </div>
             `;
         }).join('');
         
-    } catch (error) {
-        listDiv.innerHTML = `<div class="message error">Failed to load misalignments: ${error.message}</div>`;
-    }
+        return `
+            <div class="misalignment-group">
+                <div class="misalignment-group-header">
+                    <h4>👤 ${userName}</h4>
+                    <span class="badge">${items.length}</span>
+                </div>
+                ${itemsHTML}
+            </div>
+        `;
+    }).join('');
 }
 
 // ============================================================================
