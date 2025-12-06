@@ -59,6 +59,16 @@ class AlignmentEdge(Base):
     target_user = relationship("User", foreign_keys=[target_user_id], back_populates="alignments_target")
 
 
+class TaskDependency(Base):
+    """Junction table for task dependencies (many-to-many)"""
+    __tablename__ = "task_dependencies"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
+    depends_on_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class Task(Base):
     __tablename__ = "tasks"
     
@@ -66,6 +76,7 @@ class Task(Base):
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     owner_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = Column(Boolean, default=True)
@@ -74,6 +85,18 @@ class Task(Base):
     owner = relationship("User", back_populates="tasks_owned", foreign_keys=[owner_user_id])
     answers = relationship("AttributeAnswer", back_populates="task")
     questions = relationship("QuestionLog", back_populates="task")
+    
+    # Parent-child relationships
+    parent = relationship("Task", remote_side=[id], foreign_keys=[parent_id], backref="children")
+    
+    # Dependencies (many-to-many)
+    dependencies = relationship(
+        "Task",
+        secondary="task_dependencies",
+        primaryjoin="Task.id==TaskDependency.task_id",
+        secondaryjoin="Task.id==TaskDependency.depends_on_task_id",
+        backref="dependent_tasks"
+    )
 
 
 class AttributeDefinition(Base):

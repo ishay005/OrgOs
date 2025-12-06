@@ -49,6 +49,9 @@ class AlignmentResponse(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
+    parent_id: Optional[UUID] = None
+    children: Optional[List[str]] = None  # List of task titles (create if don't exist)
+    dependencies: Optional[List[UUID]] = None  # List of task IDs
 
 
 class TaskResponse(BaseModel):
@@ -57,11 +60,23 @@ class TaskResponse(BaseModel):
     description: Optional[str]
     owner_user_id: UUID
     owner_name: str
+    parent_id: Optional[UUID]
     is_active: bool
     created_at: datetime
     
     class Config:
         from_attributes = True
+
+
+class TaskGraphNode(BaseModel):
+    """Task node for graph visualization"""
+    id: UUID
+    title: str
+    description: Optional[str]
+    owner_name: str
+    parent_id: Optional[UUID]
+    children_ids: List[UUID]
+    dependency_ids: List[UUID]
 
 
 # Attribute schemas

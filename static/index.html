@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrgOs - Perception Alignment</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Registration/Login Page -->
+    <div id="auth-page" class="page active">
+        <div class="auth-container">
+            <div class="logo">
+                <h1>🎯 OrgOs</h1>
+                <p>Perception Alignment System</p>
+            </div>
+            
+            <div class="auth-form">
+                <h2>Welcome!</h2>
+                <p class="subtitle">Enter your name to get started</p>
+                
+                <input type="text" id="user-name" placeholder="Your Name" autocomplete="name">
+                <input type="email" id="user-email" placeholder="Email (optional)" autocomplete="email">
+                
+                <button onclick="register()" class="primary-btn">Get Started</button>
+                
+                <div class="divider">or</div>
+                
+                <p class="small">Already have an account?</p>
+                <button onclick="showUserList()" class="secondary-btn">Sign In</button>
+            </div>
+            
+            <!-- User Selection Modal -->
+            <div id="user-list-modal" class="modal hidden">
+                <div class="modal-content">
+                    <h3>Select Your Account</h3>
+                    <div id="user-list"></div>
+                    <button onclick="hideUserList()" class="secondary-btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat/Questions Page -->
+    <div id="chat-page" class="page">
+        <div class="header">
+            <h2>💬 Daily Questions</h2>
+            <div class="user-info">
+                <span id="current-user-name"></span>
+                <button onclick="logout()" class="icon-btn">🚪</button>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div id="chat-messages"></div>
+            
+            <div id="question-input" class="hidden">
+                <!-- Dynamic question input will be inserted here -->
+            </div>
+            
+            <div class="chat-actions">
+                <button onclick="loadQuestions()" class="primary-btn">Get New Questions</button>
+                <button onclick="showDashboard()" class="secondary-btn">View Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="page">
+        <div class="header">
+            <h2>📊 Dashboard</h2>
+            <div class="user-info">
+                <span id="dashboard-user-name"></span>
+                <button onclick="logout()" class="icon-btn">🚪</button>
+            </div>
+        </div>
+        
+        <div class="dashboard-container">
+            <div class="dashboard-nav">
+                <button onclick="showSection('tasks')" class="nav-btn active" id="tasks-nav">My Tasks</button>
+                <button onclick="showSection('graph')" class="nav-btn" id="graph-nav">🔗 Task Graph</button>
+                <button onclick="showSection('alignments')" class="nav-btn" id="alignments-nav">Team</button>
+                <button onclick="showSection('misalignments')" class="nav-btn" id="misalignments-nav">
+                    Misalignments <span id="misalignment-badge" class="badge">0</span>
+                </button>
+            </div>
+            
+            <!-- Tasks Section -->
+            <div id="tasks-section" class="section active">
+                <div class="section-header">
+                    <h3>📝 My Tasks</h3>
+                    <button onclick="showCreateTask()" class="primary-btn">+ New Task</button>
+                </div>
+                <div id="tasks-list"></div>
+            </div>
+            
+            <!-- Alignments Section -->
+            <div id="alignments-section" class="section">
+                <div class="section-header">
+                    <h3>👥 Team Alignments</h3>
+                    <p class="subtitle">Select people to compare perceptions with</p>
+                </div>
+                <div id="alignments-list"></div>
+            </div>
+            
+            <!-- Task Graph Section -->
+            <div id="graph-section" class="section">
+                <div class="section-header">
+                    <h3>🔗 Task Relationship Graph</h3>
+                    <p class="subtitle">Visual representation of task dependencies and hierarchies</p>
+                </div>
+                
+                <div class="graph-controls">
+                    <div class="filter-group">
+                        <label>Owner:</label>
+                        <div class="filter-dropdown" id="filter-dropdown-owner">
+                            <button class="filter-button" id="filter-btn-owner" onclick="toggleFilterDropdown('owner'); event.stopPropagation();">
+                                <span>All</span><span>▼</span>
+                            </button>
+                            <div class="filter-dropdown-content" id="filter-content-owner">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="attribute-filters" class="attribute-filters">
+                        <!-- Dynamic attribute filters will be added here -->
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Show:</label>
+                        <label><input type="checkbox" id="show-parents" checked onchange="applyFilters()"> Parents</label>
+                        <label><input type="checkbox" id="show-children" checked onchange="applyFilters()"> Children</label>
+                        <label><input type="checkbox" id="show-dependencies" checked onchange="applyFilters()"> Dependencies</label>
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button onclick="clearFilters()" class="secondary-btn">Clear Filters</button>
+                        <button onclick="resetGraphView()" class="secondary-btn">🔍 Reset View</button>
+                        <button onclick="loadTaskGraph()" class="primary-btn">🔄 Refresh</button>
+                    </div>
+                </div>
+                
+                <div class="graph-controls-hint">
+                    💡 <strong>Controls:</strong> Scroll to zoom • Click and drag to pan
+                </div>
+                
+                <div id="graph-container" class="graph-view">
+                    <div id="graph-canvas"></div>
+                </div>
+            </div>
+            
+            <!-- Misalignments Section -->
+            <div id="misalignments-section" class="section">
+                <div class="section-header">
+                    <h3>⚠️ Perception Gaps</h3>
+                    <p class="subtitle">Areas where your views differ from your teammates</p>
+                </div>
+                <div id="misalignments-list"></div>
+            </div>
+            
+            <div class="dashboard-footer">
+                <button onclick="showChat()" class="primary-btn">Answer Questions</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Task Modal -->
+    <div id="create-task-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Create New Task</h3>
+            <input type="text" id="task-title" placeholder="Task Title">
+            <textarea id="task-description" placeholder="Description (optional)" rows="3"></textarea>
+            
+            <div class="form-group">
+                <label>Parent Task (optional):</label>
+                <select id="task-parent">
+                    <option value="">None</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Child Tasks (comma-separated, optional):</label>
+                <input type="text" id="task-children" placeholder="e.g., Subtask 1, Subtask 2">
+                <small>Enter task titles. New tasks will be created if they don't exist.</small>
+            </div>
+            
+            <div class="form-group">
+                <label>Dependencies (optional):</label>
+                <select id="task-dependencies" multiple size="4">
+                    <!-- Will be populated with available tasks -->
+                </select>
+                <small>Hold Ctrl/Cmd to select multiple tasks</small>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="createTask()" class="primary-btn">Create</button>
+                <button onclick="hideCreateTask()" class="secondary-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Details Modal -->
+    <div id="task-details-modal" class="modal hidden">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3 id="task-details-title"></h3>
+                <button onclick="closeTaskDetails()" class="close-btn">✕</button>
+            </div>
+            <div id="task-details-content" class="task-details-content">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
+

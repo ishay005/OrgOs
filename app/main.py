@@ -2,8 +2,11 @@
 Main FastAPI application for OrgOs - Perception Alignment System
 """
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 import logging
+import os
 
 from app.database import init_db, SessionLocal
 from app.seed import seed_database
@@ -59,16 +62,27 @@ app.include_router(misalignments.router)
 app.include_router(debug.router)
 
 
+# Mount static files
+static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+
 @app.get("/")
 async def root():
     """
-    Root endpoint - API health check
+    Serve the web UI or API info
     """
+    static_index = os.path.join(static_dir, "index.html")
+    if os.path.exists(static_index):
+        return FileResponse(static_index)
+    
     return {
         "status": "ok",
         "service": "OrgOs - Perception Alignment System",
         "version": "1.0.0",
-        "documentation": "/docs"
+        "documentation": "/docs",
+        "web_ui": "/"
     }
 
 

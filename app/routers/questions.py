@@ -86,7 +86,8 @@ async def get_pending_questions(
                     task_title=task.title,
                     task_description=task.description,
                     previous_value=previous_value,
-                    is_followup=is_stale
+                    is_followup=is_stale,
+                    answering_user_name=user.name
                 )
                 
                 # Create question log entry

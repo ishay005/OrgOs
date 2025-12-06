@@ -25,6 +25,7 @@ class QuestionContext(BaseModel):
     task_title: Optional[str] = None
     task_description: Optional[str] = None
     target_user_name: str
+    answering_user_name: Optional[str] = None  # Who is answering (for clarity)
     previous_value: Optional[str] = None
 
 
@@ -125,27 +126,36 @@ async def generate_question(ctx: QuestionContext) -> str:
     client = get_openai_client()
     
     # Build system prompt
+    is_asking_about_other = ctx.answering_user_name and ctx.answering_user_name != ctx.target_user_name
+    
     system_prompt = """You are helping collect perceptions about work tasks in a team.
 Generate a single, friendly question asking for someone's perception of an attribute.
 
 Requirements:
 - Keep it short (1-2 sentences max)
 - Be polite and conversational
+- Address the person answering directly (use "you")
 - Ask directly, no meta-explanations
 - NO emojis
-- If options are provided, mention them naturally"""
+- If options are provided, mention them naturally
+- Make it clear whether they're answering about their own work or someone else's"""
     
     # Build user prompt with context
     user_parts = []
     
     # Context about what we're asking
     if ctx.task_title:
-        user_parts.append(f"Ask about the task: '{ctx.task_title}'")
+        if is_asking_about_other:
+            user_parts.append(f"Ask {ctx.answering_user_name} for THEIR perception of {ctx.target_user_name}'s task: '{ctx.task_title}'")
+        else:
+            user_parts.append(f"Ask {ctx.target_user_name} about their own task: '{ctx.task_title}'")
         if ctx.task_description:
             user_parts.append(f"Task description: {ctx.task_description}")
-        user_parts.append(f"Task owner: {ctx.target_user_name}")
     else:
-        user_parts.append(f"Ask about the person: {ctx.target_user_name}")
+        if is_asking_about_other:
+            user_parts.append(f"Ask {ctx.answering_user_name} for THEIR perception of the person: {ctx.target_user_name}")
+        else:
+            user_parts.append(f"Ask {ctx.target_user_name} about themselves")
     
     # Attribute information
     user_parts.append(f"Attribute: {ctx.attribute_label}")
@@ -201,6 +211,8 @@ async def generate_followup_question(ctx: QuestionContext) -> str:
     client = get_openai_client()
     
     # Build system prompt
+    is_asking_about_other = ctx.answering_user_name and ctx.answering_user_name != ctx.target_user_name
+    
     system_prompt = """You are helping track changes in perceptions about work tasks.
 Generate a follow-up question that asks if a previous answer still holds.
 
@@ -209,16 +221,22 @@ Requirements:
 - Ask if it's still correct or what changed
 - Keep it short (1-2 sentences max)
 - Be polite and conversational
+- Address the person answering directly (use "you")
 - NO emojis"""
     
     # Build user prompt
     user_parts = []
     
     if ctx.task_title:
-        user_parts.append(f"Task: '{ctx.task_title}'")
-        user_parts.append(f"Task owner: {ctx.target_user_name}")
+        if is_asking_about_other:
+            user_parts.append(f"Asking {ctx.answering_user_name} about {ctx.target_user_name}'s task: '{ctx.task_title}'")
+        else:
+            user_parts.append(f"Asking {ctx.target_user_name} about their own task: '{ctx.task_title}'")
     else:
-        user_parts.append(f"Person: {ctx.target_user_name}")
+        if is_asking_about_other:
+            user_parts.append(f"Asking {ctx.answering_user_name} about the person: {ctx.target_user_name}")
+        else:
+            user_parts.append(f"Asking {ctx.target_user_name} about themselves")
     
     user_parts.append(f"Attribute: {ctx.attribute_label}")
     user_parts.append(f"Previous answer: {ctx.previous_value}")
@@ -285,13 +303,17 @@ async def generate_question_from_context(
     task_title: Optional[str] = None,
     task_description: Optional[str] = None,
     previous_value: Optional[str] = None,
-    is_followup: bool = False
+    is_followup: bool = False,
+    answering_user_name: Optional[str] = None
 ) -> str:
     """
     Helper function to generate a question from individual parameters.
     
     This is a convenience wrapper that backends can use directly without
     constructing a QuestionContext object.
+    
+    Args:
+        answering_user_name: Name of the person who will answer (for clarity)
     
     Returns:
         Generated question text
@@ -305,6 +327,7 @@ async def generate_question_from_context(
         task_title=task_title,
         task_description=task_description,
         target_user_name=target_user_name,
+        answering_user_name=answering_user_name,
         previous_value=previous_value
     )
     
