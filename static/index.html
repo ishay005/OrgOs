@@ -83,6 +83,7 @@
                 <button onclick="showSection('misalignments')" class="nav-btn" id="misalignments-nav">
                     Misalignments <span id="misalignment-badge" class="badge">0</span>
                 </button>
+                <button onclick="showSection('ontology')" class="nav-btn" id="ontology-nav">📚 Schema</button>
             </div>
             
             <!-- Tasks Section -->
@@ -179,6 +180,17 @@
                 
                 <!-- Detailed List -->
                 <div id="misalignments-list" style="display: none;">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+            
+            <!-- Ontology/Schema Section -->
+            <div id="ontology-section" class="section">
+                <div class="section-header">
+                    <h3>📚 System Schema</h3>
+                    <p class="subtitle">Data model and structure of the OrgOs system</p>
+                </div>
+                <div id="ontology-content" class="ontology-content">
                     <!-- Will be populated dynamically -->
                 </div>
             </div>

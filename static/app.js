@@ -164,8 +164,180 @@ function showSection(sectionName) {
         loadMisalignments();
     } else if (sectionName === 'graph') {
         loadTaskGraph();
+    } else if (sectionName === 'ontology') {
+        displayOntology();
     }
 }
+
+function displayOntology() {
+    loadOntology();
+}
+
+// ============================================================================
+// Ontology/Schema Display
+// ============================================================================
+
+async function loadOntology() {
+    const content = document.getElementById('ontology-content');
+    content.innerHTML = '<div class="loading">Loading attributes...</div>';
+    
+    try {
+        // Fetch task and user attributes from the API
+        // These endpoints don't require authentication as they're just schema info
+        const [taskAttrsRes, userAttrsRes] = await Promise.all([
+            fetch('/task-attributes'),
+            fetch('/user-attributes')
+        ]);
+        
+        if (!taskAttrsRes.ok || !userAttrsRes.ok) {
+            const error = taskAttrsRes.ok ? await userAttrsRes.text() : await taskAttrsRes.text();
+            throw new Error('Failed to fetch attributes: ' + error);
+        }
+        
+        const taskAttributes = await taskAttrsRes.json();
+        const userAttributes = await userAttrsRes.json();
+        
+        // Also add structural fields
+        const taskStructuralFields = [
+            {
+                name: "parent",
+                label: "Parent Task",
+                type: "reference",
+                description: "Parent task in hierarchy (optional)",
+                entity_type: "task"
+            },
+            {
+                name: "children",
+                label: "Child Tasks",
+                type: "reference_list",
+                description: "List of child tasks (auto-created if needed)",
+                entity_type: "task"
+            },
+            {
+                name: "dependencies",
+                label: "Dependencies",
+                type: "reference_list",
+                description: "Tasks that this task depends on",
+                entity_type: "task"
+            }
+        ];
+        
+        displayAttributesPage(taskAttributes, userAttributes, taskStructuralFields);
+        
+    } catch (error) {
+        console.error('Error loading attributes:', error);
+        content.innerHTML = '<div class="error">Failed to load attributes. Please try again.</div>';
+    }
+}
+
+function displayAttributesPage(taskAttributes, userAttributes, taskStructuralFields) {
+    const content = document.getElementById('ontology-content');
+    
+    const allTaskFields = [...taskAttributes, ...taskStructuralFields];
+    
+    content.innerHTML = `
+        <div class="attributes-section">
+            <div class="entity-card">
+                <div class="entity-header">
+                    <div>
+                        <div class="entity-name">📝 Task Attributes</div>
+                        <div class="entity-description">All attributes that can be tracked for tasks</div>
+                    </div>
+                    <span class="entity-badge">${allTaskFields.length} attributes</span>
+                </div>
+                <div class="entity-body">
+                    <table class="field-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Options</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allTaskFields.map(attr => `
+                                <tr>
+                                    <td>
+                                        <span class="field-name">${attr.name}</span>
+                                        ${attr.is_required ? ' <span style="color: var(--danger)">*</span>' : ''}
+                                    </td>
+                                    <td>
+                                        <span class="field-type">${formatAttributeType(attr.type)}</span>
+                                    </td>
+                                    <td>${attr.description || attr.label || ''}</td>
+                                    <td>
+                                        ${attr.allowed_values && attr.allowed_values.length > 0 
+                                            ? `<span class="allowed-values">${attr.allowed_values.join(', ')}</span>`
+                                            : '<span style="color: var(--text-light); font-size: 0.85rem;">—</span>'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            ${userAttributes.length > 0 ? `
+                <div class="entity-card">
+                    <div class="entity-header">
+                        <div>
+                            <div class="entity-name">👤 User Attributes</div>
+                            <div class="entity-description">All attributes that can be tracked for users</div>
+                        </div>
+                        <span class="entity-badge">${userAttributes.length} attributes</span>
+                    </div>
+                    <div class="entity-body">
+                        <table class="field-table">
+                            <thead>
+                                <tr>
+                                    <th>Attribute</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Options</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${userAttributes.map(attr => `
+                                    <tr>
+                                        <td>
+                                            <span class="field-name">${attr.name}</span>
+                                            ${attr.is_required ? ' <span style="color: var(--danger)">*</span>' : ''}
+                                        </td>
+                                        <td>
+                                            <span class="field-type">${formatAttributeType(attr.type)}</span>
+                                        </td>
+                                        <td>${attr.description || attr.label || ''}</td>
+                                        <td>
+                                            ${attr.allowed_values && attr.allowed_values.length > 0 
+                                                ? `<span class="allowed-values">${attr.allowed_values.join(', ')}</span>`
+                                                : '<span style="color: var(--text-light); font-size: 0.85rem;">—</span>'}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function formatAttributeType(type) {
+    const typeMap = {
+        'string': 'Text',
+        'enum': 'Choice',
+        'int': 'Number',
+        'float': 'Decimal',
+        'bool': 'Yes/No',
+        'date': 'Date',
+        'reference': 'Task Reference',
+        'reference_list': 'Task List'
+    };
+    return typeMap[type] || type;
+}
+
 
 // ============================================================================
 // Questions & Chat Interface
@@ -744,46 +916,46 @@ function displayMisalignmentsList(misalignments) {
         grouped[m.other_user_name].push(m);
     });
     
+    // Create compact table view
     listDiv.innerHTML = Object.entries(grouped).map(([userName, items]) => {
-        const itemsHTML = items.map(m => {
+        const tableRows = items.map(m => {
             const severity = m.similarity_score < 0.3 ? 'high' : 
                             m.similarity_score < 0.5 ? 'medium' : 'low';
+            const severityIcon = severity === 'high' ? '🔴' : severity === 'medium' ? '🟡' : '🟢';
             
             return `
-                <div class="misalignment-item ${severity}">
-                    <div class="misalignment-detail">
-                        <strong>📝 ${m.task_title || 'General'}</strong>
-                    </div>
-                    <div class="misalignment-detail">
-                        <strong>${m.attribute_label}</strong>
-                    </div>
-                    <div class="value-comparison">
-                        <div class="value-box yours">
-                            <div class="value-label">Your View</div>
-                            <div class="value-text">${m.your_value}</div>
-                        </div>
-                        <div class="value-box theirs">
-                            <div class="value-label">Their View</div>
-                            <div class="value-text">${m.their_value}</div>
-                        </div>
-                    </div>
-                    <div class="similarity-score ${severity}">
-                        ${severity === 'high' ? '🚨 Very Different' : 
-                          severity === 'medium' ? '⚠️ Somewhat Different' : 
-                          '✓ Slightly Different'} 
-                        (${(m.similarity_score * 100).toFixed(0)}% similar)
-                    </div>
-                </div>
+                <tr class="misalignment-row ${severity}">
+                    <td class="severity-col">${severityIcon}</td>
+                    <td class="task-col">${m.task_title || 'General'}</td>
+                    <td class="attr-col">${m.attribute_label}</td>
+                    <td class="value-col your-value">${m.your_value}</td>
+                    <td class="value-col their-value">${m.their_value}</td>
+                    <td class="similarity-col">${(m.similarity_score * 100).toFixed(0)}%</td>
+                </tr>
             `;
         }).join('');
         
         return `
-            <div class="misalignment-group">
+            <div class="misalignment-group-compact">
                 <div class="misalignment-group-header">
                     <h4>👤 ${userName}</h4>
-                    <span class="badge">${items.length}</span>
+                    <span class="badge">${items.length} gaps</span>
                 </div>
-                ${itemsHTML}
+                <table class="misalignment-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Task</th>
+                            <th>Attribute</th>
+                            <th>Your View</th>
+                            <th>Their View</th>
+                            <th>Match</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
             </div>
         `;
     }).join('');

@@ -146,9 +146,12 @@ async def create_task(
 
 
 @attributes_router.get("/task-attributes", response_model=List[AttributeDefinitionResponse])
-async def get_task_attributes(db: Session = Depends(get_db)):
+async def get_task_attributes(
+    db: Session = Depends(get_db)
+):
     """
     Get all task attribute definitions.
+    No authentication required - this is schema information.
     """
     attributes = db.query(AttributeDefinition).filter(
         AttributeDefinition.entity_type == EntityType.TASK
@@ -157,9 +160,12 @@ async def get_task_attributes(db: Session = Depends(get_db)):
 
 
 @attributes_router.get("/user-attributes", response_model=List[AttributeDefinitionResponse])
-async def get_user_attributes(db: Session = Depends(get_db)):
+async def get_user_attributes(
+    db: Session = Depends(get_db)
+):
     """
     Get all user attribute definitions.
+    No authentication required - this is schema information.
     """
     attributes = db.query(AttributeDefinition).filter(
         AttributeDefinition.entity_type == EntityType.USER
