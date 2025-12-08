@@ -148,7 +148,8 @@ async def compute_misalignments_for_user(
                         value_a=my_answer.value,
                         value_b=their_answer.value,
                         attribute_type=attr_type,
-                        allowed_values=attribute.allowed_values
+                        allowed_values=attribute.allowed_values,
+                        attribute_name=attribute.name
                     )
                     
                     # Include if below threshold (or if include_all is True)
@@ -270,7 +271,8 @@ async def compute_user_misalignments(
                     value_a=my_answer.value,
                     value_b=their_answer.value,
                     attribute_type=attr_type,
-                    allowed_values=attribute.allowed_values
+                    allowed_values=attribute.allowed_values,
+                    attribute_name=attribute.name
                 )
                 
                 if similarity_score < threshold:

@@ -98,7 +98,8 @@ async def compute_similarity(
     value_a: str,
     value_b: str,
     attribute_type: AttributeType,
-    allowed_values: Optional[list[str]] = None
+    allowed_values: Optional[list[str]] = None,
+    attribute_name: Optional[str] = None
 ) -> float:
     """
     Compute similarity between two attribute values.
@@ -165,6 +166,30 @@ async def compute_similarity(
             return 0.0
     
     elif attribute_type == AttributeType.string:
+        # Special handling for attributes that should use EXACT matching
+        # (not semantic similarity)
+        exact_match_attributes = [
+            'perceived_dependencies',  # Task names should match exactly
+            'dependency',
+            'dependencies',
+            'perceived_owner',  # Person names should match exactly
+            'owner',
+        ]
+        
+        if attribute_name and attribute_name.lower() in exact_match_attributes:
+            # For these attributes, use EXACT task/person name matching
+            # Normalize: lowercase, strip whitespace
+            normalized_a = value_a.strip().lower()
+            normalized_b = value_b.strip().lower()
+            
+            # Check if one contains the other (handles "Task A, Task B" lists)
+            if normalized_a in normalized_b or normalized_b in normalized_a:
+                return 1.0
+            elif normalized_a == normalized_b:
+                return 1.0
+            else:
+                return 0.0
+        
         # String: semantic similarity using OpenAI embeddings
         # This is the key feature for comparing free-text like "main_goal"
         try:

@@ -1360,11 +1360,14 @@ async function loadMisalignments(userId = null, userName = null) {
             sectionHeader.textContent = '⚠️ Perception Gaps';
         }
         
-        // Load both statistics and detailed misalignments for target user
+        // Load both statistics and ALL comparisons (0-100% alignment) for target user
         const [stats, misalignments] = await Promise.all([
             apiCall('/misalignments/statistics', { headers: { 'X-User-Id': targetUserId } }),
-            apiCall('/misalignments', { headers: { 'X-User-Id': targetUserId } })
+            apiCall('/misalignments?include_all=true', { headers: { 'X-User-Id': targetUserId } })
         ]);
+        
+        // Sort by similarity score (ascending: worst misalignments first)
+        misalignments.sort((a, b) => a.similarity_score - b.similarity_score);
         
         // Display statistics overview
         displayStatistics(stats);
@@ -1516,10 +1519,10 @@ function displayMisalignmentsList(misalignments) {
     if (misalignments.length === 0) {
         listDiv.innerHTML = `
             <div class="empty-state">
-                <div class="empty-state-icon">✨</div>
-                <h3>Perfect Alignment!</h3>
-                <p>No perception gaps detected with your teammates.</p>
-                <p class="small">This means your views are aligned! 🎉</p>
+                <div class="empty-state-icon">💼</div>
+                <h3>No Data Yet</h3>
+                <p>No comparisons available with your teammates.</p>
+                <p class="small">Answer questions to see alignment data.</p>
             </div>
         `;
         return;
@@ -1534,30 +1537,52 @@ function displayMisalignmentsList(misalignments) {
         grouped[m.other_user_name].push(m);
     });
     
-    // Create compact table view
+    // Create compact table view with full alignment spectrum (0-100%)
     listDiv.innerHTML = Object.entries(grouped).map(([userName, items]) => {
         const tableRows = items.map(m => {
-            const severity = m.similarity_score < 0.3 ? 'high' : 
-                            m.similarity_score < 0.5 ? 'medium' : 'low';
-            const severityIcon = severity === 'high' ? '🔴' : severity === 'medium' ? '🟡' : '🟢';
+            const alignmentPct = m.similarity_score * 100;
+            
+            // Determine alignment level and color
+            let alignmentClass, alignmentIcon;
+            if (alignmentPct >= 80) {
+                alignmentClass = 'high';
+                alignmentIcon = '🟢';
+            } else if (alignmentPct >= 60) {
+                alignmentClass = 'medium';
+                alignmentIcon = '🟡';
+            } else if (alignmentPct >= 40) {
+                alignmentClass = 'low';
+                alignmentIcon = '🟠';
+            } else {
+                alignmentClass = 'very-low';
+                alignmentIcon = '🔴';
+            }
             
             return `
-                <tr class="misalignment-row ${severity}">
-                    <td class="severity-col">${severityIcon}</td>
+                <tr class="misalignment-row ${alignmentClass}">
+                    <td class="severity-col">${alignmentIcon}</td>
                     <td class="task-col">${m.task_title || 'General'}</td>
                     <td class="attr-col">${m.attribute_label}</td>
                     <td class="value-col your-value">${m.your_value}</td>
                     <td class="value-col their-value">${m.their_value}</td>
-                    <td class="similarity-col">${(m.similarity_score * 100).toFixed(0)}%</td>
+                    <td class="similarity-col alignment-${alignmentClass}">${alignmentPct.toFixed(0)}%</td>
                 </tr>
             `;
         }).join('');
+        
+        // Count alignment levels
+        const perfect = items.filter(i => i.similarity_score >= 0.9).length;
+        const good = items.filter(i => i.similarity_score >= 0.6 && i.similarity_score < 0.9).length;
+        const gaps = items.filter(i => i.similarity_score < 0.6).length;
         
         return `
             <div class="misalignment-group-compact">
                 <div class="misalignment-group-header">
                     <h4>👤 ${userName}</h4>
-                    <span class="badge">${items.length} gaps</span>
+                    <span class="badge">${items.length} comparisons</span>
+                    <span class="badge-mini" style="background: var(--success);">${perfect} perfect</span>
+                    <span class="badge-mini" style="background: var(--warning);">${good} good</span>
+                    <span class="badge-mini" style="background: var(--danger);">${gaps} gaps</span>
                 </div>
                 <table class="misalignment-table">
                     <thead>
@@ -1567,7 +1592,7 @@ function displayMisalignmentsList(misalignments) {
                             <th>Attribute</th>
                             <th>Your View</th>
                             <th>Their View</th>
-                            <th>Match</th>
+                            <th>Alignment</th>
                         </tr>
                     </thead>
                     <tbody>

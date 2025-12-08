@@ -18,14 +18,18 @@ router = APIRouter(prefix="/misalignments", tags=["misalignments"])
 @router.get("", response_model=List[MisalignmentResponse])
 async def get_misalignments(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    include_all: bool = False
 ):
     """
     Compute misalignments between current user's perceptions and
     aligned users' self-perceptions.
     
-    Returns only misalignments where similarity score is below the threshold
-    (default 0.6), indicating a significant perception gap.
+    By default, returns only misalignments where similarity score is below 
+    the threshold (default 0.6), indicating a significant perception gap.
+    
+    If include_all=true, returns ALL comparisons regardless of threshold,
+    useful for detailed views showing full alignment spectrum (0-100%).
     
     Compares:
     - Current user's answers about aligned users & their tasks
@@ -35,11 +39,11 @@ async def get_misalignments(
     - OpenAI embeddings for semantic similarity on text attributes (main_goal)
     - Type-specific similarity for enum, bool, int, float, date
     """
-    # Use the cached misalignment service with thresholding
+    # Use the cached misalignment service
     misalignments = await compute_misalignments_for_user_cached(
         user_id=current_user.id,
         db=db,
-        include_all=False  # Only return misalignments below threshold
+        include_all=include_all
     )
     
     return misalignments

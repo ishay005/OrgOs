@@ -168,8 +168,99 @@ async def compute_misalignments_for_user_cached(
                         f"This should have been calculated when the answer was saved!"
                     )
     
+    # REVERSE DIRECTION: Check how OTHERS perceive MY tasks
+    # This shows if my manager or teammates understand my work
+    logger.info(f"Checking reverse comparisons (others' views of {user.name}'s tasks)")
+    
+    # Get all tasks owned by current user
+    my_tasks = db.query(Task).filter(
+        Task.owner_user_id == user_id,
+        Task.is_active == True
+    ).all()
+    
+    for task in my_tasks:
+        # Get all task attributes
+        task_attributes = db.query(AttributeDefinition).filter(
+            AttributeDefinition.entity_type == EntityType.TASK
+        ).all()
+        
+        for attribute in task_attributes:
+            # Get my self-answer about my own task
+            my_self_answer = db.query(AttributeAnswer).filter(
+                AttributeAnswer.answered_by_user_id == user_id,
+                AttributeAnswer.target_user_id == user_id,
+                AttributeAnswer.task_id == task.id,
+                AttributeAnswer.attribute_id == attribute.id,
+                AttributeAnswer.refused == False
+            ).first()
+            
+            if not my_self_answer or not my_self_answer.value:
+                continue
+            
+            # Find ALL other users who answered about MY task
+            others_answers = db.query(AttributeAnswer).filter(
+                AttributeAnswer.answered_by_user_id != user_id,  # Not me
+                AttributeAnswer.target_user_id == user_id,  # About me
+                AttributeAnswer.task_id == task.id,
+                AttributeAnswer.attribute_id == attribute.id,
+                AttributeAnswer.refused == False
+            ).all()
+            
+            for other_answer in others_answers:
+                if not other_answer.value:
+                    continue
+                
+                # Get the other user
+                other_user = db.query(User).filter(
+                    User.id == other_answer.answered_by_user_id
+                ).first()
+                
+                if not other_user:
+                    continue
+                
+                # Look up PRE-CALCULATED similarity score
+                similarity_score_record = db.query(SimilarityScore).filter(
+                    or_(
+                        and_(
+                            SimilarityScore.answer_a_id == my_self_answer.id,
+                            SimilarityScore.answer_b_id == other_answer.id
+                        ),
+                        and_(
+                            SimilarityScore.answer_a_id == other_answer.id,
+                            SimilarityScore.answer_b_id == my_self_answer.id
+                        )
+                    )
+                ).first()
+                
+                if similarity_score_record:
+                    similarity_score = similarity_score_record.similarity_score
+                    
+                    # Include if below threshold (or if include_all is True)
+                    if include_all or similarity_score < threshold:
+                        misalignment = MisalignmentDTO(
+                            other_user_id=other_user.id,
+                            other_user_name=other_user.name,
+                            task_id=task.id,
+                            task_title=task.title,
+                            attribute_id=attribute.id,
+                            attribute_name=attribute.name,
+                            attribute_label=attribute.label,
+                            your_value=my_self_answer.value,
+                            their_value=other_answer.value,
+                            similarity_score=similarity_score
+                        )
+                        
+                        misalignments.append(misalignment)
+                        
+                        if similarity_score < threshold:
+                            logger.debug(
+                                f"Reverse misalignment found: {other_user.name} vs {user.name} "
+                                f"on {task.title}/{attribute.label}: "
+                                f"score={similarity_score:.3f}"
+                            )
+    
     logger.info(
-        f"Found {len(misalignments)} misalignment(s) (cached) for {user.name} "
+        f"Found {len(misalignments)} total comparison(s) (cached) for {user.name} "
         f"(threshold={threshold})"
     )
     

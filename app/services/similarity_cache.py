@@ -81,7 +81,8 @@ async def calculate_and_store_scores_for_answer(
                 value_a=answer.value,
                 value_b=other_answer.value,
                 attribute_type=attr_type,
-                allowed_values=attribute.allowed_values
+                allowed_values=attribute.allowed_values,
+                attribute_name=attribute.name
             )
             
             # Store or update the score
