@@ -66,8 +66,14 @@ app.include_router(alignment_stats.router)
 
 # Mount static files
 static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+logger.info(f"Static directory path: {static_dir}")
+logger.info(f"Static directory exists: {os.path.exists(static_dir)}")
+
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    logger.info("✅ Static files mounted")
+else:
+    logger.warning("⚠️  Static directory not found")
 
 
 @app.get("/")
@@ -77,14 +83,17 @@ async def root():
     """
     static_index = os.path.join(static_dir, "index.html")
     if os.path.exists(static_index):
+        logger.info("Serving index.html")
         return FileResponse(static_index)
     
+    logger.info("Serving API info (static files not found)")
     return {
         "status": "ok",
         "service": "OrgOs - Perception Alignment System",
         "version": "1.0.0",
         "documentation": "/docs",
-        "web_ui": "/"
+        "web_ui": "/",
+        "health": "/health"
     }
 
 
