@@ -1,9 +1,13 @@
 from pydantic_settings import BaseSettings
+from pydantic import Field
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql://postgres:postgres@localhost:5432/orgos"
-    openai_api_key: str = ""
+    database_url: str = Field(
+        default="postgresql://postgres:postgres@localhost:5432/orgos",
+        validation_alias="DATABASE_URL"  # Explicitly read DATABASE_URL from env
+    )
+    openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
     openai_model: str = "gpt-4"
     openai_max_retries: int = 3
     
@@ -12,6 +16,7 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+        case_sensitive = False  # Allow case-insensitive env var names
 
 
 settings = Settings()
