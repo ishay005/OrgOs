@@ -444,20 +444,34 @@ def create_attribute_answers_direct(users: Dict[str, dict], tasks: Dict[str, dic
                 db_manager = db.query(User).filter(User.id == manager_id).first()
                 
                 if db_manager:
-                    # Decide if this should be aligned (70%) or misaligned (30%)
-                    # Increased misalignment rate for better visibility
-                    is_aligned = random.random() < 0.7
+                    # Determine misalignment level for this task
+                    # 30% fully aligned, 50% partially misaligned, 20% fully misaligned
+                    rand = random.random()
                     
-                    if is_aligned:
-                        # Team lead has same perception as owner
-                        manager_status = status
-                        manager_goal = goal
+                    if rand < 0.30:
+                        # Fully aligned (30%)
+                        misalign_status = False
+                        misalign_goal = False
+                        misalign_dependency = False
                         aligned_count += 1
-                    else:
-                        # Team lead has different perception (misalignment)
-                        manager_status = status_alternatives.get(status, status)
-                        manager_goal = goal_variations.get(goal, goal)
+                    elif rand < 0.80:
+                        # Partially misaligned (50%) - randomly misalign 1-2 attributes
+                        num_to_misalign = random.randint(1, 2)
+                        attrs_to_misalign = random.sample(['status', 'goal', 'dependency'], num_to_misalign)
+                        misalign_status = 'status' in attrs_to_misalign
+                        misalign_goal = 'goal' in attrs_to_misalign
+                        misalign_dependency = 'dependency' in attrs_to_misalign
                         misaligned_count += 1
+                    else:
+                        # Fully misaligned (20%) - all attributes different
+                        misalign_status = True
+                        misalign_goal = True
+                        misalign_dependency = True
+                        misaligned_count += 1
+                    
+                    # Apply misalignments
+                    manager_status = status_alternatives.get(status, status) if misalign_status else status
+                    manager_goal = goal_variations.get(goal, goal) if misalign_goal else goal
                     
                     # Manager's answers about this task
                     manager_status_answer = AttributeAnswer(
@@ -496,10 +510,7 @@ def create_attribute_answers_direct(users: Dict[str, dict], tasks: Dict[str, dic
                         dep_titles = [t.title for t in db_task.dependencies]
                         
                         # Manager might have different perception (misalignment)
-                        if is_aligned or not dep_titles:
-                            # Aligned: same dependency perception
-                            manager_dep_value = ", ".join(dep_titles)
-                        else:
+                        if misalign_dependency and dep_titles:
                             # Misaligned: wrong dependency perception
                             # Get a random other task as misperceived dependency
                             all_tasks = db.query(Task).filter(Task.id != db_task.id).limit(3).all()
@@ -508,6 +519,9 @@ def create_attribute_answers_direct(users: Dict[str, dict], tasks: Dict[str, dic
                                 manager_dep_value = wrong_dep.title
                             else:
                                 manager_dep_value = ", ".join(dep_titles)
+                        else:
+                            # Aligned: same dependency perception
+                            manager_dep_value = ", ".join(dep_titles)
                         
                         manager_dep_answer = AttributeAnswer(
                             answered_by_user_id=db_manager.id,
@@ -524,7 +538,9 @@ def create_attribute_answers_direct(users: Dict[str, dict], tasks: Dict[str, dic
         
         db.commit()
         print(f"✅ Created {answer_count} attribute answers")
-        print(f"   📊 Alignment: {aligned_count} aligned ({aligned_count/(aligned_count+misaligned_count)*100:.0f}%), {misaligned_count} misaligned ({misaligned_count/(aligned_count+misaligned_count)*100:.0f}%)")
+        if aligned_count + misaligned_count > 0:
+            print(f"   📊 Alignment: {aligned_count} fully aligned ({aligned_count/(aligned_count+misaligned_count)*100:.0f}%), {misaligned_count} with misalignments ({misaligned_count/(aligned_count+misaligned_count)*100:.0f}%)")
+            print(f"   🎯 Target: 50% fully aligned, 40% partially misaligned, 10% fully misaligned")
         
     finally:
         db.close()

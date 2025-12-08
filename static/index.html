@@ -177,6 +177,14 @@
                     <p class="subtitle">Areas where your views differ from your teammates</p>
                 </div>
                 
+                <!-- Team Navigation (for managers only) -->
+                <div id="team-navigation" style="display: none;" class="team-navigation">
+                    <h4>👥 View Team Member's Misalignments:</h4>
+                    <div id="team-member-buttons" class="team-member-buttons">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+                
                 <!-- Statistics Dashboard -->
                 <div id="misalignment-stats" class="stats-dashboard">
                     <!-- Will be populated dynamically -->
@@ -295,6 +303,19 @@
                 <button onclick="closeTaskDetails()" class="close-btn">✕</button>
             </div>
             <div id="task-details-content" class="task-details-content">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- User Misalignment Modal -->
+    <div id="user-misalignment-modal" class="modal hidden">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3 id="user-misalignment-title"></h3>
+                <button onclick="closeUserMisalignmentModal()" class="close-btn">✕</button>
+            </div>
+            <div id="user-misalignment-content" class="modal-body">
                 <!-- Will be populated dynamically -->
             </div>
         </div>

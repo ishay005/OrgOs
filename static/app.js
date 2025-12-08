@@ -436,13 +436,6 @@ function calculateDependencyAlignment(sourceTask, targetTaskId) {
         }
         
         // Get target task to match its title in dependency answers
-        if (!allGraphTasks || allGraphTasks.length === 0) {
-            return 100; // No tasks loaded yet
-        }
-        
-        const targetTask = allGraphTasks.find(t => t.id === targetTaskId);
-        if (!targetTask) return 100;
-        
         let total = 0;
         let aligned = 0;
         
@@ -456,16 +449,23 @@ function calculateDependencyAlignment(sourceTask, targetTaskId) {
                 
                 total++;
                 
-                // Check if both mention the target task
-                const ans1Lower = answer1.toLowerCase();
-                const ans2Lower = answer2.toLowerCase();
-                const targetLower = targetTask.title.toLowerCase();
+                // Simple comparison: do the answers match?
+                const ans1Lower = answer1.toLowerCase().trim();
+                const ans2Lower = answer2.toLowerCase().trim();
                 
-                const both_mention = ans1Lower.includes(targetLower) && ans2Lower.includes(targetLower);
-                const neither_mention = !ans1Lower.includes(targetLower) && !ans2Lower.includes(targetLower);
-                
-                if (both_mention || neither_mention) {
+                // Consider aligned if answers are similar (exact match or high overlap)
+                if (ans1Lower === ans2Lower) {
                     aligned++;
+                } else {
+                    // Check for partial match (at least 50% of words match)
+                    const words1 = ans1Lower.split(/[,\s]+/).filter(w => w.length > 3);
+                    const words2 = ans2Lower.split(/[,\s]+/).filter(w => w.length > 3);
+                    const commonWords = words1.filter(w => words2.some(w2 => w2.includes(w) || w.includes(w2)));
+                    const similarity = commonWords.length / Math.max(words1.length, words2.length, 1);
+                    
+                    if (similarity >= 0.5) {
+                        aligned++;
+                    }
                 }
             }
         }
@@ -488,7 +488,12 @@ const orgChartView = {
     translateY: 0,
     isDragging: false,
     startX: 0,
-    startY: 0
+    startY: 0,
+    dragStartX: 0,
+    dragStartY: 0,
+    clickedNodeId: null,
+    clickedNodeName: null,
+    listenersAdded: false
 };
 
 async function loadOrgChart() {
@@ -533,41 +538,66 @@ function initOrgChartControls() {
     const container = document.getElementById('org-chart-container');
     const svg = document.getElementById('org-chart-svg');
     
-    // Mouse wheel zoom
-    container.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        orgChartView.scale *= delta;
-        orgChartView.scale = Math.max(0.1, Math.min(5, orgChartView.scale));
-        updateOrgChartTransform();
-    });
-    
-    // Mouse drag to pan
-    svg.addEventListener('mousedown', (e) => {
-        orgChartView.isDragging = true;
-        orgChartView.startX = e.clientX - orgChartView.translateX;
-        orgChartView.startY = e.clientY - orgChartView.translateY;
-        svg.style.cursor = 'grabbing';
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-        if (!orgChartView.isDragging) return;
-        orgChartView.translateX = e.clientX - orgChartView.startX;
-        orgChartView.translateY = e.clientY - orgChartView.startY;
-        updateOrgChartTransform();
-    });
-    
-    document.addEventListener('mouseup', () => {
-        if (orgChartView.isDragging) {
-            orgChartView.isDragging = false;
-            svg.style.cursor = 'grab';
-        }
-    });
-    
-    // Double-click to reset
-    svg.addEventListener('dblclick', () => {
-        resetOrgChartView();
-    });
+    // Add event listeners only once (not every render)
+    if (!orgChartView.listenersAdded) {
+        orgChartView.listenersAdded = true;
+        
+        // Mouse wheel zoom
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            // Slower zoom: 5% per scroll (was 10%)
+            const delta = e.deltaY > 0 ? 0.95 : 1.05;
+            orgChartView.scale *= delta;
+            orgChartView.scale = Math.max(0.1, Math.min(5, orgChartView.scale));
+            updateOrgChartTransform();
+        });
+        
+        // Mouse drag to pan
+        svg.addEventListener('mousedown', (e) => {
+            orgChartView.isDragging = true;
+            orgChartView.startX = e.clientX - orgChartView.translateX;
+            orgChartView.startY = e.clientY - orgChartView.translateY;
+            orgChartView.dragStartX = e.clientX;
+            orgChartView.dragStartY = e.clientY;
+            svg.style.cursor = 'grabbing';
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!orgChartView.isDragging) return;
+            orgChartView.translateX = e.clientX - orgChartView.startX;
+            orgChartView.translateY = e.clientY - orgChartView.startY;
+            updateOrgChartTransform();
+        });
+        
+        document.addEventListener('mouseup', (e) => {
+            if (orgChartView.isDragging) {
+                orgChartView.isDragging = false;
+                svg.style.cursor = 'grab';
+                
+                // Check if this was a click (minimal movement) vs a drag
+                const deltaX = Math.abs(e.clientX - orgChartView.dragStartX);
+                const deltaY = Math.abs(e.clientY - orgChartView.dragStartY);
+                const isClick = deltaX < 5 && deltaY < 5;
+                
+                console.log('Org chart mouseup:', { deltaX, deltaY, isClick, clickedNodeId: orgChartView.clickedNodeId });
+                
+                // If it was a click and we have a clicked node, show popup
+                if (isClick && orgChartView.clickedNodeId) {
+                    console.log('Showing popup for user:', orgChartView.clickedNodeName);
+                    showUserMisalignments(orgChartView.clickedNodeId, orgChartView.clickedNodeName);
+                }
+                
+                // Reset clicked node
+                orgChartView.clickedNodeId = null;
+                orgChartView.clickedNodeName = null;
+            }
+        });
+        
+        // Double-click to reset
+        svg.addEventListener('dblclick', () => {
+            resetOrgChartView();
+        });
+    }
     
     svg.style.cursor = 'grab';
 }
@@ -694,8 +724,9 @@ function renderOrgChart(users) {
         if (showAlignment && userAlignmentStats[node.id] !== undefined) {
             const alignmentPct = userAlignmentStats[node.id];
             const color = getAlignmentColor(alignmentPct);
-            rect.setAttribute('fill', color);
-            rect.setAttribute('fill-opacity', '0.3');
+            // Use inline style with !important to override CSS
+            // Higher opacity for better visibility
+            rect.setAttribute('style', `fill: ${color} !important; fill-opacity: 0.85 !important;`);
         }
         
         // Highlight current user with thick border
@@ -743,6 +774,15 @@ function renderOrgChart(users) {
             : 'Individual Contributor';
         group.appendChild(info2);
         
+        // Add click handler to show user misalignments
+        group.style.cursor = 'pointer';
+        group.addEventListener('mousedown', () => {
+            // Store which node was clicked - don't stopPropagation so drag still works
+            console.log('Node clicked:', node.name, node.id);
+            orgChartView.clickedNodeId = node.id;
+            orgChartView.clickedNodeName = node.name;
+        });
+        
         mainGroup.appendChild(group);
     });
     
@@ -750,6 +790,126 @@ function renderOrgChart(users) {
     svg.appendChild(mainGroup);
 }
 
+
+/**
+ * Show misalignments for a specific user in a popup
+ */
+async function showUserMisalignments(userId, userName) {
+    console.log('showUserMisalignments called for:', userName, userId);
+    
+    try {
+        const modal = document.getElementById('user-misalignment-modal');
+        const modalTitle = document.getElementById('user-misalignment-title');
+        const modalContent = document.getElementById('user-misalignment-content');
+        
+        console.log('Modal elements:', { modal, modalTitle, modalContent });
+        
+        if (!modal || !modalTitle || !modalContent) {
+            console.error('Modal elements not found!');
+            return;
+        }
+        
+        modalTitle.textContent = `Misalignments for ${userName}`;
+        modalContent.innerHTML = '<div class="loading">Loading misalignments...</div>';
+        
+        console.log('Removing hidden class...');
+        // Remove hidden class instead of setting display (hidden has !important)
+        modal.classList.remove('hidden');
+        console.log('Modal classes after remove:', modal.classList.toString());
+        console.log('Modal display style:', window.getComputedStyle(modal).display);
+        
+        // Fetch misalignments for this user
+        const misalignments = await apiCall('/misalignments', { 
+            headers: { 'X-User-Id': userId } 
+        });
+        
+        if (!misalignments || misalignments.length === 0) {
+            modalContent.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">✅</div>
+                    <p>No misalignments found for ${userName}</p>
+                    <p>All perceptions are aligned!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Group misalignments by task
+        const byTask = {};
+        misalignments.forEach(m => {
+            const taskKey = m.task_id || 'general';
+            if (!byTask[taskKey]) {
+                byTask[taskKey] = {
+                    task_id: m.task_id,
+                    task_title: m.task_title || 'General',
+                    other_user_name: m.other_user_name,
+                    misalignments: []
+                };
+            }
+            byTask[taskKey].misalignments.push(m);
+        });
+        
+        // Create table for each task
+        let html = `
+            <div class="misalignment-summary">
+                <strong>Total Misalignments:</strong> ${misalignments.length}
+            </div>
+        `;
+        
+        Object.values(byTask).forEach(taskGroup => {
+            html += `
+                <div class="task-misalignment-group">
+                    <h4>📋 ${taskGroup.task_title}</h4>
+                    <p class="misalignment-with">With: ${taskGroup.other_user_name}</p>
+                    <table class="misalignment-table">
+                        <thead>
+                            <tr>
+                                <th>Attribute</th>
+                                <th>Your View</th>
+                                <th>Their View</th>
+                                <th>Alignment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            taskGroup.misalignments.forEach(m => {
+                const alignmentPct = (m.similarity_score * 100).toFixed(0);
+                const colorClass = alignmentPct > 70 ? 'high' : alignmentPct > 40 ? 'medium' : 'low';
+                
+                html += `
+                    <tr>
+                        <td><strong>${m.attribute_label}</strong></td>
+                        <td class="your-value">${m.your_value || 'N/A'}</td>
+                        <td class="their-value">${m.their_value || 'N/A'}</td>
+                        <td class="alignment-${colorClass}">${alignmentPct}%</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        });
+        
+        modalContent.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading user misalignments:', error);
+        modalContent.innerHTML = `
+            <div class="error">
+                <p>Failed to load misalignments</p>
+                <p>${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function closeUserMisalignmentModal() {
+    document.getElementById('user-misalignment-modal').classList.add('hidden');
+}
 
 // ============================================================================
 // Questions & Chat Interface
@@ -1146,20 +1306,64 @@ function showMisalignmentView(view) {
     document.getElementById('misalignments-list').style.display = view === 'list' ? 'block' : 'none';
 }
 
-async function loadMisalignments() {
+async function loadMisalignments(userId = null, userName = null) {
     const statsDiv = document.getElementById('misalignment-stats');
     const chartsDiv = document.getElementById('misalignment-charts');
     const listDiv = document.getElementById('misalignments-list');
+    const teamNav = document.getElementById('team-navigation');
+    
+    // Use provided userId or current user
+    const targetUserId = userId || currentUser.id;
+    const targetUserName = userName || currentUser.name;
     
     statsDiv.innerHTML = '<div class="loading">Loading statistics...</div>';
     chartsDiv.innerHTML = '';
     listDiv.innerHTML = '';
     
     try {
-        // Load both statistics and detailed misalignments
+        // Check if current user is a manager and show team navigation
+        if (!userId) {  // Only show when viewing own misalignments
+            const orgChart = await apiCall('/users/org-chart', { skipAuth: true });
+            const currentUserData = orgChart.users.find(u => u.id === currentUser.id);
+            
+            if (currentUserData && currentUserData.employee_count > 0) {
+                // Current user is a manager - show team navigation
+                const employees = orgChart.users.filter(u => u.manager_id === currentUser.id);
+                
+                let buttonsHtml = '<p class="team-nav-hint">Click to view team member\'s misalignments:</p><div class="button-group">';
+                employees.forEach(emp => {
+                    buttonsHtml += `
+                        <button onclick="loadMisalignments('${emp.id}', '${emp.name}')" class="team-member-btn">
+                            👤 ${emp.name}
+                        </button>
+                    `;
+                });
+                buttonsHtml += '</div>';
+                
+                document.getElementById('team-member-buttons').innerHTML = buttonsHtml;
+                teamNav.style.display = 'block';
+            } else {
+                teamNav.style.display = 'none';
+            }
+        }
+        
+        // Update section header if viewing another user's misalignments
+        const sectionHeader = document.querySelector('#misalignments-section .section-header h3');
+        if (userId && userId !== currentUser.id) {
+            sectionHeader.innerHTML = `
+                ⚠️ Perception Gaps - ${targetUserName}
+                <button onclick="loadMisalignments()" class="secondary-btn" style="margin-left: 15px; font-size: 0.9rem;">
+                    ← Back to My Misalignments
+                </button>
+            `;
+        } else {
+            sectionHeader.textContent = '⚠️ Perception Gaps';
+        }
+        
+        // Load both statistics and detailed misalignments for target user
         const [stats, misalignments] = await Promise.all([
-            apiCall('/misalignments/statistics'),
-            apiCall('/misalignments')
+            apiCall('/misalignments/statistics', { headers: { 'X-User-Id': targetUserId } }),
+            apiCall('/misalignments', { headers: { 'X-User-Id': targetUserId } })
         ]);
         
         // Display statistics overview
@@ -1171,8 +1375,10 @@ async function loadMisalignments() {
         // Display detailed list
         displayMisalignmentsList(misalignments);
         
-        // Update badge
-        document.getElementById('misalignment-badge').textContent = misalignments.length;
+        // Update badge (only for current user)
+        if (!userId || userId === currentUser.id) {
+            document.getElementById('misalignment-badge').textContent = misalignments.length;
+        }
         
     } catch (error) {
         statsDiv.innerHTML = `<div class="message error">Failed to load misalignments: ${error.message}</div>`;
@@ -1455,7 +1661,8 @@ function setupGraphInteractions() {
     graphContainer.addEventListener('wheel', (e) => {
         e.preventDefault();
         
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        // Slower zoom: 5% per scroll (was 10%)
+        const delta = e.deltaY > 0 ? 0.95 : 1.05;
         const newZoom = Math.min(Math.max(0.2, graphView.zoom * delta), 3);
         
         // Zoom towards mouse position
@@ -2013,8 +2220,13 @@ function renderGraph() {
                 }
                 
                 const color = getAlignmentColor(alignmentPct);
-                // Make lines thicker and more visible when colored
-                lineStyle = `stroke="${color}" stroke-width="4" opacity="0.9"`;
+                // Make lines MUCH thicker and more visible when colored
+                // Dependency lines extra thick and dashed for clarity
+                if (conn.type === 'dependency') {
+                    lineStyle = `stroke="${color}" stroke-width="6" opacity="1.0" stroke-dasharray="10,5"`;
+                } else {
+                    lineStyle = `stroke="${color}" stroke-width="4" opacity="1.0"`;
+                }
             }
             
             html += `

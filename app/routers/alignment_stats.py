@@ -16,11 +16,13 @@ router = APIRouter(prefix="/alignment-stats", tags=["alignment-stats"])
 async def get_user_alignment_stats(db: Session = Depends(get_db)) -> Dict[str, float]:
     """
     Get alignment percentage for each user based on ALL tasks connected to them.
+    For managers/team leads: includes alignment with their employees on employees' tasks.
     Returns: { "user_id": alignment_percentage (0-100) }
     
     For each user, calculate:
     - Find all tasks they've answered about (any task where they provided answers)
     - For each of their answers, compare with other users' answers about the same task/attribute
+    - If user is a manager: ALSO compare their answers about employees' tasks with employees' self-answers
     - Calculate percentage of aligned vs total comparisons
     """
     users = db.query(User).all()
@@ -56,6 +58,42 @@ async def get_user_alignment_stats(db: Session = Depends(get_db)) -> Dict[str, f
                 # Check if answers match
                 if user_answer.value.strip().lower() == other_answer.value.strip().lower():
                     aligned_comparisons += 1
+        
+        # If user is a manager/team lead, ALSO include alignment with employees on THEIR tasks
+        if hasattr(user, 'employees') and user.employees:
+            for employee in user.employees:
+                # Get all tasks owned by this employee
+                employee_tasks = db.query(Task).filter(Task.owner_user_id == employee.id).all()
+                
+                for task in employee_tasks:
+                    # Get all attributes
+                    attributes = db.query(AttributeDefinition).filter(
+                        AttributeDefinition.entity_type == "task"
+                    ).all()
+                    
+                    for attr in attributes:
+                        # Employee's self-answer
+                        employee_answer = db.query(AttributeAnswer).filter(
+                            AttributeAnswer.answered_by_user_id == employee.id,
+                            AttributeAnswer.target_user_id == employee.id,
+                            AttributeAnswer.task_id == task.id,
+                            AttributeAnswer.attribute_id == attr.id,
+                            AttributeAnswer.refused == False
+                        ).first()
+                        
+                        # Manager's answer about this employee's task
+                        manager_answer = db.query(AttributeAnswer).filter(
+                            AttributeAnswer.answered_by_user_id == user.id,
+                            AttributeAnswer.target_user_id == employee.id,
+                            AttributeAnswer.task_id == task.id,
+                            AttributeAnswer.attribute_id == attr.id,
+                            AttributeAnswer.refused == False
+                        ).first()
+                        
+                        if employee_answer and manager_answer:
+                            total_comparisons += 1
+                            if employee_answer.value.strip().lower() == manager_answer.value.strip().lower():
+                                aligned_comparisons += 1
         
         if total_comparisons > 0:
             alignment_pct = (aligned_comparisons / total_comparisons) * 100

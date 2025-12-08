@@ -1014,7 +1014,9 @@ input:checked + .slider:before {
 
 .graph-line.dependency-line {
     stroke: #F44336;
-    stroke-dasharray: 5,5;
+    stroke-dasharray: 8,4;
+    stroke-width: 3;
+    opacity: 0.9;
 }
 
 .graph-arrow {
@@ -1516,6 +1518,108 @@ input:checked + .slider:before {
     font-weight: 600;
     color: var(--text-light);
     font-size: 0.85rem;
+}
+
+/* User Misalignment Modal */
+.misalignment-summary {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.task-misalignment-group {
+    margin-bottom: 25px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--surface);
+}
+
+.task-misalignment-group h4 {
+    background: var(--bg);
+    margin: 0;
+    padding: 12px 15px;
+    color: var(--text);
+    font-size: 1rem;
+    border-bottom: 2px solid var(--border);
+}
+
+.misalignment-with {
+    padding: 8px 15px;
+    margin: 0;
+    background: rgba(99, 102, 241, 0.05);
+    color: var(--text-light);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.alignment-high {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.alignment-medium {
+    color: var(--warning);
+    font-weight: 600;
+}
+
+.alignment-low {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+/* Team Navigation for Managers */
+.team-navigation {
+    background: var(--surface);
+    border: 2px solid var(--primary);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: var(--shadow);
+}
+
+.team-navigation h4 {
+    margin: 0 0 15px 0;
+    color: var(--text);
+    font-size: 1.1rem;
+}
+
+.team-nav-hint {
+    color: var(--text-light);
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+.team-member-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.team-member-btn {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.team-member-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.team-member-btn:active {
+    transform: translateY(0);
 }
 
 /* Org Chart */
