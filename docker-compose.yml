@@ -1,23 +1,50 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: orgos-postgres
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: orgos-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: orgos
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme123}
       POSTGRES_DB: orgos
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U orgos"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+  # FastAPI Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orgos-app
+    environment:
+      DATABASE_URL: postgresql+psycopg://orgos:${DB_PASSWORD:-changeme123}@db:5432/orgos
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        sleep 5 &&
+        ./start.sh
+      "
 
 volumes:
   postgres_data:
-
+    driver: local

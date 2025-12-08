@@ -1685,18 +1685,18 @@ input:checked + .slider:before {
 }
 
 .org-node-manager text {
-    fill: white !important;
+    fill: #000000 !important; /* Black text for readability */
 }
 
 .org-node-name {
     font-weight: 600;
     font-size: 14px;
-    fill: var(--text);
+    fill: #000000 !important; /* Black text for readability on colored backgrounds */
 }
 
 .org-node-info {
     font-size: 11px;
-    fill: var(--text-light);
+    fill: #000000 !important; /* Black text for readability on colored backgrounds */
 }
 
 .org-connection {

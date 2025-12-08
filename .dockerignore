@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.cursor/
+
+# Git
+.git/
+.gitignore
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local
+*.log
+*.sqlite
+.env.local
+*.db
+
+# Mac
+.DS_Store
+
+# Scripts
+populate_*.py
+clear_all_data.py
+delete_attributes.py
+test_*.py
+
+# Documentation
+README.md
+*.md
+

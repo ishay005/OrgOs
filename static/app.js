@@ -377,19 +377,29 @@ function getAlignmentColor(alignmentPct) {
     // Clamp to 0-100
     alignmentPct = Math.max(0, Math.min(100, alignmentPct));
     
-    // Red (0%) -> Yellow (50%) -> Green (100%)
+    // More gradual scale: Red (0%) → Orange (40%) → Yellow (60%) → Light Green (80%) → Green (100%)
     let r, g, b;
     
-    if (alignmentPct < 50) {
-        // Red to Yellow
+    if (alignmentPct < 40) {
+        // Red to Orange (0-40%)
         r = 255;
-        g = Math.round((alignmentPct / 50) * 255);
+        g = Math.round((alignmentPct / 40) * 165); // Orange is rgb(255, 165, 0)
         b = 0;
-    } else {
-        // Yellow to Green
-        r = Math.round(255 - ((alignmentPct - 50) / 50) * 255);
+    } else if (alignmentPct < 60) {
+        // Orange to Yellow (40-60%)
+        r = 255;
+        g = Math.round(165 + ((alignmentPct - 40) / 20) * 90); // 165 to 255
+        b = 0;
+    } else if (alignmentPct < 80) {
+        // Yellow to Light Green (60-80%)
+        r = Math.round(255 - ((alignmentPct - 60) / 20) * 165); // 255 to 90
         g = 255;
-        b = 0;
+        b = Math.round(((alignmentPct - 60) / 20) * 50); // 0 to 50
+    } else {
+        // Light Green to Green (80-100%)
+        r = Math.round(90 - ((alignmentPct - 80) / 20) * 90); // 90 to 0
+        g = 255;
+        b = Math.round(50 + ((alignmentPct - 80) / 20) * 50); // 50 to 100
     }
     
     return `rgb(${r}, ${g}, ${b})`;
@@ -743,6 +753,7 @@ function renderOrgChart(users) {
         name.setAttribute('x', NODE_WIDTH / 2);
         name.setAttribute('y', 25);
         name.setAttribute('text-anchor', 'middle');
+        name.setAttribute('fill', '#000000'); // Always black for readability
         name.textContent = node.name;
         if (isCurrentUser) {
             name.textContent += ' (You)';
@@ -756,6 +767,7 @@ function renderOrgChart(users) {
         info1.setAttribute('x', NODE_WIDTH / 2);
         info1.setAttribute('y', 45);
         info1.setAttribute('text-anchor', 'middle');
+        info1.setAttribute('fill', '#000000'); // Always black for readability
         if (showAlignment && userAlignmentStats[node.id] !== undefined) {
             info1.textContent = `Alignment: ${Math.round(userAlignmentStats[node.id])}%`;
         } else {
@@ -769,6 +781,7 @@ function renderOrgChart(users) {
         info2.setAttribute('x', NODE_WIDTH / 2);
         info2.setAttribute('y', 62);
         info2.setAttribute('text-anchor', 'middle');
+        info2.setAttribute('fill', '#000000'); // Always black for readability
         info2.textContent = node.employee_count > 0 
             ? `${node.employee_count} report${node.employee_count !== 1 ? 's' : ''}`
             : 'Individual Contributor';
@@ -2286,10 +2299,10 @@ function renderGraph() {
                  style="left: ${node.x}px; top: ${node.y}px; ${bgStyle}"
                  title="${task.description || ''}"
                  onclick="showTaskDetails('${task.id}')">
-                <div class="task-node-title">${task.title}</div>
-                <div class="task-node-owner">${task.owner_name}</div>
+                <div class="task-node-title" style="color: #000000;">${task.title}</div>
+                <div class="task-node-owner" style="color: #000000;">${task.owner_name}</div>
                 ${showTaskAlignment && taskAlignmentStats[task.id] !== undefined 
-                    ? `<div style="font-size: 10px; opacity: 0.8;">Alignment: ${Math.round(taskAlignmentStats[task.id])}%</div>` 
+                    ? `<div style="font-size: 10px; opacity: 0.8; color: #000000;">Alignment: ${Math.round(taskAlignmentStats[task.id])}%</div>` 
                     : ''}
             </div>
         `;
