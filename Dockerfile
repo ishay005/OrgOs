@@ -21,8 +21,8 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p /app/logs
 
-# Expose port
-EXPOSE 8000
+# Expose port (Railway will override with $PORT, typically 8080)
+EXPOSE 8080
 
 # Start server (migrations run in start script)
 CMD ["./start.sh"]
