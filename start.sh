@@ -22,5 +22,18 @@ fi
 
 # Start the application
 echo "✅ Starting FastAPI server..."
-exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+
+# Railway-optimized uvicorn settings:
+# - workers=1: Single worker (Railway free tier has limited CPU/memory)
+# - timeout-keep-alive=75: Keep connections alive longer (reduces overhead)
+# - limit-concurrency=50: Limit concurrent requests to prevent overload
+# - backlog=100: Queue up to 100 connections during spikes
+exec uvicorn app.main:app \
+    --host 0.0.0.0 \
+    --port ${PORT:-8080} \
+    --workers 1 \
+    --timeout-keep-alive 75 \
+    --limit-concurrency 50 \
+    --backlog 100 \
+    --log-level info
 
