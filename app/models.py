@@ -156,3 +156,27 @@ class QuestionLog(Base):
     task = relationship("Task", back_populates="questions")
     attribute = relationship("AttributeDefinition", back_populates="questions")
 
+
+class SimilarityScore(Base):
+    """
+    Pre-calculated similarity scores between attribute answer pairs.
+    Updated whenever answers change to avoid recalculating on every request.
+    """
+    __tablename__ = "similarity_scores"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    # The two answers being compared
+    answer_a_id = Column(UUID(as_uuid=True), ForeignKey("attribute_answers.id"), nullable=False)
+    answer_b_id = Column(UUID(as_uuid=True), ForeignKey("attribute_answers.id"), nullable=False)
+    
+    # Pre-calculated similarity score (0.0 to 1.0)
+    similarity_score = Column(Float, nullable=False)
+    
+    # Metadata
+    calculated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    answer_a = relationship("AttributeAnswer", foreign_keys=[answer_a_id])
+    answer_b = relationship("AttributeAnswer", foreign_keys=[answer_b_id])
+

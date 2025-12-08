@@ -10,7 +10,7 @@ from app.database import get_db
 from app.auth import get_current_user
 from app.models import User
 from app.schemas import MisalignmentResponse
-from app.services.misalignment import compute_misalignments_for_user
+from app.services.misalignment_cached import compute_misalignments_for_user_cached
 
 router = APIRouter(prefix="/misalignments", tags=["misalignments"])
 
@@ -35,8 +35,8 @@ async def get_misalignments(
     - OpenAI embeddings for semantic similarity on text attributes (main_goal)
     - Type-specific similarity for enum, bool, int, float, date
     """
-    # Use the misalignment service with thresholding
-    misalignments = await compute_misalignments_for_user(
+    # Use the cached misalignment service with thresholding
+    misalignments = await compute_misalignments_for_user_cached(
         user_id=current_user.id,
         db=db,
         include_all=False  # Only return misalignments below threshold
@@ -62,7 +62,7 @@ async def get_misalignment_statistics(
     - Average similarity scores
     """
     # Get all misalignments (including those above threshold for stats)
-    all_misalignments = await compute_misalignments_for_user(
+    all_misalignments = await compute_misalignments_for_user_cached(
         user_id=current_user.id,
         db=db,
         include_all=True  # Get all for statistics

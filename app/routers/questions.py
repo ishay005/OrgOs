@@ -15,6 +15,7 @@ from app.models import (
 )
 from app.schemas import QuestionResponse, AnswerCreate, AnswerResponse
 from app.services.llm_questions import generate_question_from_context
+from app.services.similarity_cache import calculate_and_store_scores_for_answer
 
 router = APIRouter(prefix="/questions", tags=["questions"])
 answers_router = APIRouter(prefix="/answers", tags=["answers"])
@@ -180,6 +181,10 @@ async def submit_answer(
         existing_answer.updated_at = datetime.utcnow()
         db.commit()
         db.refresh(existing_answer)
+        
+        # Trigger similarity score calculation in background
+        await calculate_and_store_scores_for_answer(existing_answer.id, db)
+        
         return existing_answer
     else:
         # Create new answer
@@ -194,5 +199,9 @@ async def submit_answer(
         db.add(new_answer)
         db.commit()
         db.refresh(new_answer)
+        
+        # Trigger similarity score calculation in background
+        await calculate_and_store_scores_for_answer(new_answer.id, db)
+        
         return new_answer
 
