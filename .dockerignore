@@ -34,9 +34,9 @@ htmlcov/
 # Mac
 .DS_Store
 
-# Scripts
-populate_*.py
-clear_all_data.py
+# Scripts (keep populate and clear scripts for deployment)
+# populate_*.py  <- Removed: We need these in production
+# clear_all_data.py  <- Removed: We need this too
 delete_attributes.py
 test_*.py
 
