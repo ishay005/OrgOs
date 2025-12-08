@@ -13,6 +13,7 @@ class UserCreate(BaseModel):
     email: Optional[str] = None
     timezone: Optional[str] = "UTC"
     notification_time: Optional[str] = "10:00"
+    manager_id: Optional[UUID] = None
 
 
 class UserResponse(BaseModel):
@@ -21,6 +22,9 @@ class UserResponse(BaseModel):
     email: Optional[str] = None
     timezone: str
     notification_time: time
+    manager_id: Optional[UUID] = None
+    manager_name: Optional[str] = None
+    employee_count: int = 0
     
     class Config:
         from_attributes = True
@@ -156,4 +160,21 @@ class SimilarityDebugRequest(BaseModel):
 
 class SimilarityDebugResponse(BaseModel):
     similarity_score: float
+
+
+# Org Chart schemas
+class OrgChartNode(BaseModel):
+    id: UUID
+    name: str
+    email: Optional[str] = None
+    manager_id: Optional[UUID] = None
+    employee_count: int
+    task_count: int
+    
+    class Config:
+        from_attributes = True
+
+
+class OrgChartResponse(BaseModel):
+    users: List[OrgChartNode]
 

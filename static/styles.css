@@ -993,6 +993,13 @@ input:checked + .slider:before {
 .graph-line {
     stroke-width: 2;
     fill: none;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+}
+
+.graph-line:hover {
+    stroke-width: 3;
+    opacity: 1;
 }
 
 .graph-line.parent-line {
@@ -1509,6 +1516,69 @@ input:checked + .slider:before {
     font-weight: 600;
     color: var(--text-light);
     font-size: 0.85rem;
+}
+
+/* Org Chart */
+.org-chart-container {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    position: relative;
+    cursor: grab;
+    user-select: none;
+}
+
+.org-chart-container:active {
+    cursor: grabbing;
+}
+
+#org-chart-svg {
+    min-height: 600px;
+    display: block;
+}
+
+.org-node {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.org-node:hover .org-node-rect {
+    filter: brightness(1.1);
+    stroke-width: 3;
+}
+
+.org-node-rect {
+    fill: var(--surface);
+    stroke: var(--primary);
+    stroke-width: 2;
+    rx: 8;
+}
+
+.org-node-manager .org-node-rect {
+    fill: var(--primary);
+}
+
+.org-node-manager text {
+    fill: white !important;
+}
+
+.org-node-name {
+    font-weight: 600;
+    font-size: 14px;
+    fill: var(--text);
+}
+
+.org-node-info {
+    font-size: 11px;
+    fill: var(--text-light);
+}
+
+.org-connection {
+    stroke: var(--border);
+    stroke-width: 2;
+    fill: none;
 }
 
 /* Ontology/Schema View */

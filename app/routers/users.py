@@ -11,7 +11,8 @@ from app.auth import get_current_user
 from app.models import User, AlignmentEdge
 from app.schemas import (
     UserCreate, UserResponse, UserListResponse,
-    AlignmentCreate, AlignmentResponse
+    AlignmentCreate, AlignmentResponse,
+    OrgChartNode, OrgChartResponse
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -33,17 +34,36 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid notification_time format. Use HH:MM")
     
+    # Validate manager_id if provided
+    if user_data.manager_id:
+        manager = db.query(User).filter(User.id == user_data.manager_id).first()
+        if not manager:
+            raise HTTPException(status_code=404, detail="Manager user not found")
+    
     user = User(
         name=user_data.name,
         email=user_data.email,
         timezone=user_data.timezone or "UTC",
-        notification_time=notification_time
+        notification_time=notification_time,
+        manager_id=user_data.manager_id
     )
     db.add(user)
     db.commit()
     db.refresh(user)
     
-    return user
+    # Enrich response with manager info
+    response_data = UserResponse(
+        id=user.id,
+        name=user.name,
+        email=user.email,
+        timezone=user.timezone,
+        notification_time=user.notification_time,
+        manager_id=user.manager_id,
+        manager_name=manager.name if user.manager_id and manager else None,
+        employee_count=0
+    )
+    
+    return response_data
 
 
 @router.get("", response_model=List[UserListResponse])

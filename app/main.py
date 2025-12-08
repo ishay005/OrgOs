@@ -11,7 +11,7 @@ import os
 from app.database import init_db, SessionLocal
 from app.seed import seed_database
 from app.routers import (
-    users, tasks, questions, misalignments, debug
+    users, tasks, questions, misalignments, debug, users_orgchart, alignment_stats
 )
 
 # Configure logging
@@ -54,12 +54,14 @@ app = FastAPI(
 # Include routers
 app.include_router(users.router)
 app.include_router(users.alignment_router)
+app.include_router(users_orgchart.router)
 app.include_router(tasks.router)
 app.include_router(tasks.attributes_router)
 app.include_router(questions.router)
 app.include_router(questions.answers_router)
 app.include_router(misalignments.router)
 app.include_router(debug.router)
+app.include_router(alignment_stats.router)
 
 
 # Mount static files

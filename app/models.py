@@ -33,10 +33,12 @@ class User(Base):
     email = Column(String, nullable=True)
     timezone = Column(String, default="UTC")
     notification_time = Column(Time, default=time(10, 0))
+    manager_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)  # Team hierarchy
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
+    manager = relationship("User", remote_side=[id], foreign_keys=[manager_id], backref="employees")
     tasks_owned = relationship("Task", back_populates="owner", foreign_keys="Task.owner_user_id")
     alignments_source = relationship("AlignmentEdge", foreign_keys="AlignmentEdge.source_user_id", back_populates="source_user")
     alignments_target = relationship("AlignmentEdge", foreign_keys="AlignmentEdge.target_user_id", back_populates="target_user")

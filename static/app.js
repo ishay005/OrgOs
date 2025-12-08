@@ -166,6 +166,8 @@ function showSection(sectionName) {
         loadTaskGraph();
     } else if (sectionName === 'ontology') {
         displayOntology();
+    } else if (sectionName === 'orgchart') {
+        loadOrgChart();
     }
 }
 
@@ -222,7 +224,24 @@ async function loadOntology() {
             }
         ];
         
-        displayAttributesPage(taskAttributes, userAttributes, taskStructuralFields);
+        const userStructuralFields = [
+            {
+                name: "manager",
+                label: "Manager / Team Lead",
+                type: "user_reference",
+                description: "Direct manager (for team hierarchy)",
+                entity_type: "user"
+            },
+            {
+                name: "employees",
+                label: "Direct Reports",
+                type: "user_reference_list",
+                description: "List of employees reporting to this user",
+                entity_type: "user"
+            }
+        ];
+        
+        displayAttributesPage(taskAttributes, userAttributes, taskStructuralFields, userStructuralFields);
         
     } catch (error) {
         console.error('Error loading attributes:', error);
@@ -230,10 +249,11 @@ async function loadOntology() {
     }
 }
 
-function displayAttributesPage(taskAttributes, userAttributes, taskStructuralFields) {
+function displayAttributesPage(taskAttributes, userAttributes, taskStructuralFields, userStructuralFields) {
     const content = document.getElementById('ontology-content');
     
     const allTaskFields = [...taskAttributes, ...taskStructuralFields];
+    const allUserFields = [...userAttributes, ...userStructuralFields];
     
     content.innerHTML = `
         <div class="attributes-section">
@@ -278,14 +298,14 @@ function displayAttributesPage(taskAttributes, userAttributes, taskStructuralFie
                 </div>
             </div>
             
-            ${userAttributes.length > 0 ? `
+            ${allUserFields.length > 0 ? `
                 <div class="entity-card">
                     <div class="entity-header">
                         <div>
                             <div class="entity-name">👤 User Attributes</div>
                             <div class="entity-description">All attributes that can be tracked for users</div>
                         </div>
-                        <span class="entity-badge">${userAttributes.length} attributes</span>
+                        <span class="entity-badge">${allUserFields.length} attributes</span>
                     </div>
                     <div class="entity-body">
                         <table class="field-table">
@@ -295,10 +315,10 @@ function displayAttributesPage(taskAttributes, userAttributes, taskStructuralFie
                                     <th>Type</th>
                                     <th>Description</th>
                                     <th>Options</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${userAttributes.map(attr => `
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allUserFields.map(attr => `
                                     <tr>
                                         <td>
                                             <span class="field-name">${attr.name}</span>
@@ -333,9 +353,401 @@ function formatAttributeType(type) {
         'bool': 'Yes/No',
         'date': 'Date',
         'reference': 'Task Reference',
-        'reference_list': 'Task List'
+        'reference_list': 'Task List',
+        'user_reference': 'User Reference',
+        'user_reference_list': 'User List'
     };
     return typeMap[type] || type;
+}
+
+// ============================================================================
+// Org Chart Visualization
+// ============================================================================
+
+// ============================================================================
+// Alignment Color Helpers
+// ============================================================================
+
+/**
+ * Convert alignment percentage (0-100) to a color (red to green)
+ * @param {number} alignmentPct - Alignment percentage (0-100)
+ * @returns {string} - RGB color string
+ */
+function getAlignmentColor(alignmentPct) {
+    // Clamp to 0-100
+    alignmentPct = Math.max(0, Math.min(100, alignmentPct));
+    
+    // Red (0%) -> Yellow (50%) -> Green (100%)
+    let r, g, b;
+    
+    if (alignmentPct < 50) {
+        // Red to Yellow
+        r = 255;
+        g = Math.round((alignmentPct / 50) * 255);
+        b = 0;
+    } else {
+        // Yellow to Green
+        r = Math.round(255 - ((alignmentPct - 50) / 50) * 255);
+        g = 255;
+        b = 0;
+    }
+    
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
+// Global alignment stats
+let userAlignmentStats = {};
+let taskAlignmentStats = {};
+
+/**
+ * Fetch alignment statistics from backend
+ */
+async function fetchAlignmentStats() {
+    try {
+        const [userStats, taskStats] = await Promise.all([
+            apiCall('/alignment-stats/users', { skipAuth: true }),
+            apiCall('/alignment-stats/tasks', { skipAuth: true })
+        ]);
+        
+        userAlignmentStats = userStats;
+        taskAlignmentStats = taskStats;
+        
+        console.log('Alignment stats loaded:', { userStats, taskStats });
+    } catch (error) {
+        console.error('Failed to fetch alignment stats:', error);
+    }
+}
+
+/**
+ * Calculate alignment for a specific dependency connection
+ * Compares different users' perceptions of what a task depends on
+ */
+function calculateDependencyAlignment(sourceTask, targetTaskId) {
+    try {
+        if (!sourceTask || !sourceTask.answers || !sourceTask.answers.perceived_dependencies) {
+            return 100; // No data, default to aligned
+        }
+        
+        const dependencyAnswers = sourceTask.answers.perceived_dependencies;
+        const users = Object.keys(dependencyAnswers);
+        
+        if (users.length < 2) {
+            return 100; // Need at least 2 users to compare
+        }
+        
+        // Get target task to match its title in dependency answers
+        if (!allGraphTasks || allGraphTasks.length === 0) {
+            return 100; // No tasks loaded yet
+        }
+        
+        const targetTask = allGraphTasks.find(t => t.id === targetTaskId);
+        if (!targetTask) return 100;
+        
+        let total = 0;
+        let aligned = 0;
+        
+        // Compare each pair of users
+        for (let i = 0; i < users.length; i++) {
+            for (let j = i + 1; j < users.length; j++) {
+                const answer1 = dependencyAnswers[users[i]]?.value;
+                const answer2 = dependencyAnswers[users[j]]?.value;
+                
+                if (!answer1 || !answer2) continue;
+                
+                total++;
+                
+                // Check if both mention the target task
+                const ans1Lower = answer1.toLowerCase();
+                const ans2Lower = answer2.toLowerCase();
+                const targetLower = targetTask.title.toLowerCase();
+                
+                const both_mention = ans1Lower.includes(targetLower) && ans2Lower.includes(targetLower);
+                const neither_mention = !ans1Lower.includes(targetLower) && !ans2Lower.includes(targetLower);
+                
+                if (both_mention || neither_mention) {
+                    aligned++;
+                }
+            }
+        }
+        
+        return total > 0 ? (aligned / total) * 100 : 100;
+    } catch (error) {
+        console.error('Error calculating dependency alignment:', error);
+        return 100; // Default to aligned on error
+    }
+}
+
+// ============================================================================
+// Org Chart
+// ============================================================================
+
+// Org chart view state
+const orgChartView = {
+    scale: 1,
+    translateX: 0,
+    translateY: 0,
+    isDragging: false,
+    startX: 0,
+    startY: 0
+};
+
+async function loadOrgChart() {
+    const svg = document.getElementById('org-chart-svg');
+    svg.innerHTML = '<text x="50" y="50" fill="var(--text-light)">Loading org chart...</text>';
+    
+    try {
+        // Fetch org chart data
+        const response = await fetch('/users/org-chart');
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to load org chart: ${response.status} - ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Org chart data loaded:', data);
+        
+        if (!data.users || data.users.length === 0) {
+            svg.innerHTML = `
+                <text x="50" y="50" fill="var(--text-light)">No users found</text>
+                <text x="50" y="80" fill="var(--text-light)" font-size="14">Create users to see org chart</text>
+            `;
+            return;
+        }
+        
+        // Always fetch alignment stats when loading org chart
+        // (needed for when user checks the checkbox later)
+        await fetchAlignmentStats();
+        
+        renderOrgChart(data.users);
+        initOrgChartControls();
+    } catch (error) {
+        console.error('Error loading org chart:', error);
+        svg.innerHTML = `
+            <text x="50" y="50" fill="var(--danger)">Failed to load org chart</text>
+            <text x="50" y="80" fill="var(--text-light)" font-size="14">${error.message}</text>
+        `;
+    }
+}
+
+function initOrgChartControls() {
+    const container = document.getElementById('org-chart-container');
+    const svg = document.getElementById('org-chart-svg');
+    
+    // Mouse wheel zoom
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        orgChartView.scale *= delta;
+        orgChartView.scale = Math.max(0.1, Math.min(5, orgChartView.scale));
+        updateOrgChartTransform();
+    });
+    
+    // Mouse drag to pan
+    svg.addEventListener('mousedown', (e) => {
+        orgChartView.isDragging = true;
+        orgChartView.startX = e.clientX - orgChartView.translateX;
+        orgChartView.startY = e.clientY - orgChartView.translateY;
+        svg.style.cursor = 'grabbing';
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!orgChartView.isDragging) return;
+        orgChartView.translateX = e.clientX - orgChartView.startX;
+        orgChartView.translateY = e.clientY - orgChartView.startY;
+        updateOrgChartTransform();
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (orgChartView.isDragging) {
+            orgChartView.isDragging = false;
+            svg.style.cursor = 'grab';
+        }
+    });
+    
+    // Double-click to reset
+    svg.addEventListener('dblclick', () => {
+        resetOrgChartView();
+    });
+    
+    svg.style.cursor = 'grab';
+}
+
+function updateOrgChartTransform() {
+    const svg = document.getElementById('org-chart-svg');
+    const g = svg.querySelector('g');
+    if (g) {
+        g.setAttribute('transform', 
+            `translate(${orgChartView.translateX}, ${orgChartView.translateY}) scale(${orgChartView.scale})`);
+    }
+}
+
+function resetOrgChartView() {
+    orgChartView.scale = 1;
+    orgChartView.translateX = 0;
+    orgChartView.translateY = 0;
+    updateOrgChartTransform();
+}
+
+function zoomOrgChart(factor) {
+    orgChartView.scale *= factor;
+    orgChartView.scale = Math.max(0.1, Math.min(5, orgChartView.scale));
+    updateOrgChartTransform();
+}
+
+function renderOrgChart(users) {
+    const svg = document.getElementById('org-chart-svg');
+    svg.innerHTML = ''; // Clear existing content
+    
+    // Build hierarchy tree
+    const userMap = new Map(users.map(u => [u.id, {...u, children: []}]));
+    const roots = [];
+    
+    users.forEach(user => {
+        const userNode = userMap.get(user.id);
+        if (user.manager_id && userMap.has(user.manager_id)) {
+            userMap.get(user.manager_id).children.push(userNode);
+        } else {
+            roots.push(userNode);
+        }
+    });
+    
+    // Layout parameters
+    const NODE_WIDTH = 180;
+    const NODE_HEIGHT = 80;
+    const HORIZONTAL_GAP = 50;
+    const VERTICAL_GAP = 100;
+    
+    // Calculate positions
+    function calculateLayout(node, level, xOffset) {
+        node.level = level;
+        node.y = level * (NODE_HEIGHT + VERTICAL_GAP) + 50;
+        
+        if (node.children.length === 0) {
+            node.x = xOffset;
+            return xOffset + NODE_WIDTH + HORIZONTAL_GAP;
+        }
+        
+        let childX = xOffset;
+        node.children.forEach(child => {
+            childX = calculateLayout(child, level + 1, childX);
+        });
+        
+        // Center parent above children
+        const firstChild = node.children[0];
+        const lastChild = node.children[node.children.length - 1];
+        node.x = (firstChild.x + lastChild.x) / 2;
+        
+        return childX;
+    }
+    
+    let currentX = 50;
+    roots.forEach(root => {
+        currentX = calculateLayout(root, 0, currentX);
+        currentX += HORIZONTAL_GAP * 2; // Extra space between root trees
+    });
+    
+    // Set SVG viewBox
+    const allNodes = Array.from(userMap.values());
+    const maxX = Math.max(...allNodes.map(n => n.x || 0)) + NODE_WIDTH + 100;
+    const maxY = Math.max(...allNodes.map(n => n.y || 0)) + NODE_HEIGHT + 100;
+    svg.setAttribute('viewBox', `0 0 ${maxX} ${maxY}`);
+    svg.setAttribute('width', maxX);
+    svg.setAttribute('height', maxY);
+    
+    // Create main group for all elements (for zoom/pan)
+    const mainGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    mainGroup.setAttribute('id', 'org-chart-main-group');
+    
+    // Draw connections first (so they're behind nodes)
+    allNodes.forEach(node => {
+        if (node.manager_id && userMap.has(node.manager_id)) {
+            const parent = userMap.get(node.manager_id);
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const d = `M ${parent.x + NODE_WIDTH/2} ${parent.y + NODE_HEIGHT} 
+                       L ${parent.x + NODE_WIDTH/2} ${parent.y + NODE_HEIGHT + VERTICAL_GAP/2}
+                       L ${node.x + NODE_WIDTH/2} ${parent.y + NODE_HEIGHT + VERTICAL_GAP/2}
+                       L ${node.x + NODE_WIDTH/2} ${node.y}`;
+            path.setAttribute('d', d);
+            path.setAttribute('class', 'org-connection');
+            mainGroup.appendChild(path);
+        }
+    });
+    
+    // Check if alignment coloring is enabled
+    const showAlignment = document.getElementById('show-user-alignment')?.checked;
+    const currentUserId = localStorage.getItem('userId');
+    
+    // Draw nodes
+    allNodes.forEach(node => {
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        const isCurrentUser = node.id === currentUserId;
+        group.setAttribute('class', `org-node ${node.employee_count > 0 ? 'org-node-manager' : ''} ${isCurrentUser ? 'current-user' : ''}`);
+        group.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+        
+        // Node rectangle
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('class', 'org-node-rect');
+        rect.setAttribute('width', NODE_WIDTH);
+        rect.setAttribute('height', NODE_HEIGHT);
+        
+        // Apply alignment color if enabled
+        if (showAlignment && userAlignmentStats[node.id] !== undefined) {
+            const alignmentPct = userAlignmentStats[node.id];
+            const color = getAlignmentColor(alignmentPct);
+            rect.setAttribute('fill', color);
+            rect.setAttribute('fill-opacity', '0.3');
+        }
+        
+        // Highlight current user with thick border
+        if (isCurrentUser) {
+            rect.setAttribute('stroke', '#4CAF50');
+            rect.setAttribute('stroke-width', '4');
+        }
+        
+        group.appendChild(rect);
+        
+        // Name
+        const name = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        name.setAttribute('class', 'org-node-name');
+        name.setAttribute('x', NODE_WIDTH / 2);
+        name.setAttribute('y', 25);
+        name.setAttribute('text-anchor', 'middle');
+        name.textContent = node.name;
+        if (isCurrentUser) {
+            name.textContent += ' (You)';
+            name.setAttribute('font-weight', 'bold');
+        }
+        group.appendChild(name);
+        
+        // Info line 1 - show alignment % if enabled
+        const info1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        info1.setAttribute('class', 'org-node-info');
+        info1.setAttribute('x', NODE_WIDTH / 2);
+        info1.setAttribute('y', 45);
+        info1.setAttribute('text-anchor', 'middle');
+        if (showAlignment && userAlignmentStats[node.id] !== undefined) {
+            info1.textContent = `Alignment: ${Math.round(userAlignmentStats[node.id])}%`;
+        } else {
+            info1.textContent = `${node.task_count} task${node.task_count !== 1 ? 's' : ''}`;
+        }
+        group.appendChild(info1);
+        
+        // Info line 2
+        const info2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        info2.setAttribute('class', 'org-node-info');
+        info2.setAttribute('x', NODE_WIDTH / 2);
+        info2.setAttribute('y', 62);
+        info2.setAttribute('text-anchor', 'middle');
+        info2.textContent = node.employee_count > 0 
+            ? `${node.employee_count} report${node.employee_count !== 1 ? 's' : ''}`
+            : 'Individual Contributor';
+        group.appendChild(info2);
+        
+        mainGroup.appendChild(group);
+    });
+    
+    // Add main group to SVG
+    svg.appendChild(mainGroup);
 }
 
 
@@ -1001,6 +1413,10 @@ async function loadTaskGraph() {
         allGraphTasks = tasks;
         taskAttributes = attributes;
         
+        // Always fetch alignment stats when loading graph
+        // (needed for when user checks the checkbox later)
+        await fetchAlignmentStats();
+        
         // Populate owner filter (multi-select)
         const ownerFilterContent = document.getElementById('filter-content-owner');
         const owners = [...new Set(tasks.map(t => t.owner_name))];
@@ -1351,13 +1767,84 @@ function updateOwnerFilter() {
     applyFilters();
 }
 
-function applyFilters() {
+async function applyFilters() {
     // Owner filter (multi-select)
     const ownerCheckboxes = document.querySelectorAll('input[data-attr-name="owner"]:checked');
     if (ownerCheckboxes.length > 0) {
         graphFilters.owner = Array.from(ownerCheckboxes).map(cb => cb.value);
     } else {
         graphFilters.owner = null;
+    }
+    
+    // Team filter
+    const teamFilter = document.getElementById('filter-team');
+    const selectedTeam = teamFilter ? teamFilter.value : '';
+    
+    if (selectedTeam) {
+        try {
+            const response = await fetch('/users/org-chart');
+            if (response.ok) {
+                const data = await response.json();
+                let teamLeadName = '';
+                
+                if (selectedTeam === 'platform') {
+                    teamLeadName = 'Dana Cohen';
+                } else if (selectedTeam === 'product') {
+                    teamLeadName = 'Amir Levi';
+                }
+                
+                // Find team lead
+                const teamLead = data.users.find(u => u.name === teamLeadName);
+                
+                if (teamLead) {
+                    // Get team members (employees of this lead + the lead)
+                    const teamMemberNames = data.users
+                        .filter(u => u.manager_id === teamLead.id || u.id === teamLead.id)
+                        .map(u => u.name);
+                    
+                    console.log(`${selectedTeam} team members:`, teamMemberNames);
+                    graphFilters.owner = teamMemberNames;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading team filter:', error);
+        }
+    }
+    
+    // My Team filter (overrides team filter if both are checked)
+    const myTeamChecked = document.getElementById('filter-my-team') ? document.getElementById('filter-my-team').checked : false;
+    if (myTeamChecked && userId) {
+        // Fetch org chart to get team members
+        try {
+            const response = await fetch('/users/org-chart');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Org chart data for team filter:', data);
+                console.log('Current user ID:', userId);
+                
+                // Find current user's employees
+                const teamMemberIds = data.users
+                    .filter(u => u.manager_id === userId)
+                    .map(u => u.id);
+                    
+                // Add current user
+                teamMemberIds.push(userId);
+                
+                console.log('Team member IDs:', teamMemberIds);
+                
+                // Also get the names for these IDs
+                const teamMemberNames = data.users
+                    .filter(u => teamMemberIds.includes(u.id))
+                    .map(u => u.name);
+                    
+                console.log('Team member names:', teamMemberNames);
+                
+                // Set filter to use names (since that's what the task graph uses)
+                graphFilters.owner = teamMemberNames;
+            }
+        } catch (error) {
+            console.error('Error loading team members:', error);
+        }
     }
     
     graphFilters.showParents = document.getElementById('show-parents').checked;
@@ -1397,7 +1884,13 @@ function clearFilters() {
         }
     });
     
-    // Reset checkboxes
+    // Reset checkboxes and selects
+    if (document.getElementById('filter-my-team')) {
+        document.getElementById('filter-my-team').checked = false;
+    }
+    if (document.getElementById('filter-team')) {
+        document.getElementById('filter-team').value = '';
+    }
     document.getElementById('show-parents').checked = true;
     document.getElementById('show-children').checked = true;
     document.getElementById('show-dependencies').checked = true;
@@ -1413,7 +1906,17 @@ function renderGraph() {
     
     // Filter by owner (multi-select support)
     if (graphFilters.owner && graphFilters.owner.length > 0) {
-        filteredTasks = filteredTasks.filter(t => graphFilters.owner.includes(t.owner_name));
+        // Check if filtering by IDs or names
+        const firstFilter = graphFilters.owner[0];
+        const isFilteringByIds = typeof firstFilter === 'string' && firstFilter.includes('-');
+        
+        filteredTasks = filteredTasks.filter(t => {
+            if (isFilteringByIds) {
+                return graphFilters.owner.includes(t.owner_id);
+            } else {
+                return graphFilters.owner.includes(t.owner_name);
+            }
+        });
     }
     
     // Filter by attributes (multi-select support)
@@ -1448,18 +1951,77 @@ function renderGraph() {
     const layout = createGraphLayout(filteredTasks);
     
     // Render nodes and connections
-    let html = '<svg width="100%" height="' + (layout.height + 100) + '" style="position: absolute; top: 0; left: 0; z-index: 1;">';
+    // Create SVG with large viewBox to prevent clipping when zooming out
+    const svgWidth = Math.max(layout.width + 200, 2000);
+    const svgHeight = Math.max(layout.height + 200, 1000);
+    let html = `<svg width="100%" height="100%" viewBox="0 0 ${svgWidth} ${svgHeight}" preserveAspectRatio="xMidYMid meet" style="position: absolute; top: 0; left: 0; z-index: 1; min-height: ${svgHeight}px; overflow: visible;">`;
     
-    // Draw connections first (behind nodes)
+    // Check if alignment coloring is enabled for tasks
+    const showTaskAlignment = document.getElementById('show-task-alignment')?.checked;
+    
+    // Draw connections first (behind nodes) with curved paths
     layout.connections.forEach(conn => {
         if ((conn.type === 'parent' && graphFilters.showParents) ||
             (conn.type === 'child' && graphFilters.showChildren) ||
             (conn.type === 'dependency' && graphFilters.showDependencies)) {
             
             const lineClass = conn.type + '-line';
+            
+            // Calculate control points for curved line
+            const dx = conn.x2 - conn.x1;
+            const dy = conn.y2 - conn.y1;
+            
+            // Use bezier curve for smoother appearance
+            const midX = conn.x1 + dx / 2;
+            const midY = conn.y1 + dy / 2;
+            
+            // Adjust control points based on connection type
+            let cp1x, cp1y, cp2x, cp2y;
+            if (conn.type === 'parent' || conn.type === 'child') {
+                // Vertical connections - curve horizontally
+                cp1x = conn.x1;
+                cp1y = midY;
+                cp2x = conn.x2;
+                cp2y = midY;
+            } else {
+                // Dependency - curve smoothly
+                cp1x = midX;
+                cp1y = conn.y1;
+                cp2x = midX;
+                cp2y = conn.y2;
+            }
+            
+            const pathD = `M ${conn.x1} ${conn.y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${conn.x2} ${conn.y2}`;
+            
+            // Apply alignment color to lines if enabled
+            let lineStyle = '';
+            if (showTaskAlignment) {
+                let alignmentPct = 100;
+                
+                if (conn.type === 'dependency') {
+                    // For dependency lines, use dependency ATTRIBUTE alignment
+                    // This compares what different users think the task depends on
+                    const sourceTask = filteredTasks.find(t => t.id === conn.from);
+                    if (sourceTask) {
+                        alignmentPct = calculateDependencyAlignment(sourceTask, conn.to);
+                    }
+                } else {
+                    // For parent/child lines, use task alignment
+                    const sourceAlignment = taskAlignmentStats[conn.from] || 100;
+                    const targetAlignment = taskAlignmentStats[conn.to] || 100;
+                    alignmentPct = (sourceAlignment + targetAlignment) / 2;
+                }
+                
+                const color = getAlignmentColor(alignmentPct);
+                // Make lines thicker and more visible when colored
+                lineStyle = `stroke="${color}" stroke-width="4" opacity="0.9"`;
+            }
+            
             html += `
-                <line x1="${conn.x1}" y1="${conn.y1}" x2="${conn.x2}" y2="${conn.y2}" 
-                      class="graph-line ${lineClass}" />
+                <path d="${pathD}" 
+                      class="graph-line ${lineClass}" 
+                      fill="none" 
+                      ${lineStyle} />
             `;
         }
     });
@@ -1474,13 +2036,24 @@ function renderGraph() {
         if (task.children_ids.length > 0) classes.push('has-children');
         if (task.dependency_ids.length > 0) classes.push('has-dependencies');
         
+        // Get alignment color if enabled
+        let bgStyle = '';
+        if (showTaskAlignment && taskAlignmentStats[task.id] !== undefined) {
+            const alignmentPct = taskAlignmentStats[task.id];
+            const color = getAlignmentColor(alignmentPct);
+            bgStyle = `background: linear-gradient(135deg, ${color} 0%, ${color} 100%); opacity: 0.9;`;
+        }
+        
         html += `
             <div class="task-node ${classes.join(' ')}" 
-                 style="left: ${node.x}px; top: ${node.y}px;"
+                 style="left: ${node.x}px; top: ${node.y}px; ${bgStyle}"
                  title="${task.description || ''}"
                  onclick="showTaskDetails('${task.id}')">
                 <div class="task-node-title">${task.title}</div>
                 <div class="task-node-owner">${task.owner_name}</div>
+                ${showTaskAlignment && taskAlignmentStats[task.id] !== undefined 
+                    ? `<div style="font-size: 10px; opacity: 0.8;">Alignment: ${Math.round(taskAlignmentStats[task.id])}%</div>` 
+                    : ''}
             </div>
         `;
     });

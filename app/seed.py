@@ -83,6 +83,14 @@ def seed_task_attributes(db: Session):
             "description": "In your own words, what is the main goal of this task? (free-text field; when comparing answers, use semantic similarity)",
             "is_required": False,
         },
+        {
+            "entity_type": EntityType.TASK,
+            "name": "perceived_dependencies",
+            "label": "Dependencies",
+            "type": AttributeType.STRING,
+            "description": "What other tasks does this depend on? (Your perception of dependencies)",
+            "is_required": False,
+        },
     ]
     
     for attr_data in task_attributes:
