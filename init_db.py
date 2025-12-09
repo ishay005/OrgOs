@@ -57,6 +57,22 @@ def main():
                 db.commit()
             logger.info("✅ Performance indexes migration complete")
             
+            # Migration 3: Chat tables (idempotent)
+            logger.info("📝 Ensuring chat tables are in place...")
+            with open('/app/migrations/add_chat_tables.sql', 'r') as f:
+                sql = f.read()
+                for statement in sql.split(';'):
+                    statement = statement.strip()
+                    if statement and not statement.startswith('--'):
+                        try:
+                            db.execute(text(statement))
+                        except Exception as e:
+                            # Tables might already exist, that's OK
+                            if 'already exists' not in str(e):
+                                logger.warning(f"Chat table creation warning: {e}")
+                db.commit()
+            logger.info("✅ Chat tables migration complete")
+            
         finally:
             db.close()
         

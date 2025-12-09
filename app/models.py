@@ -25,6 +25,12 @@ class AttributeType(str, enum.Enum):
     DATE = "date"
 
 
+class MessageSender(str, enum.Enum):
+    USER = "user"
+    ROBIN = "robin"
+    SYSTEM = "system"
+
+
 class User(Base):
     __tablename__ = "users"
     
@@ -179,4 +185,38 @@ class SimilarityScore(Base):
     # Relationships
     answer_a = relationship("AttributeAnswer", foreign_keys=[answer_a_id])
     answer_b = relationship("AttributeAnswer", foreign_keys=[answer_b_id])
+
+
+class ChatThread(Base):
+    """
+    Chat conversation thread between a user and Robin assistant.
+    Each user has exactly one thread for their ongoing conversation with Robin.
+    """
+    __tablename__ = "chat_threads"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, unique=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", backref="chat_thread")
+    messages = relationship("ChatMessage", back_populates="thread", cascade="all, delete-orphan")
+
+
+class ChatMessage(Base):
+    """
+    Individual message in a chat thread.
+    Can be from user, Robin assistant, or system.
+    """
+    __tablename__ = "chat_messages"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    thread_id = Column(UUID(as_uuid=True), ForeignKey("chat_threads.id"), nullable=False)
+    sender = Column(String, nullable=False)  # Changed from SQLEnum to String
+    text = Column(Text, nullable=False)
+    msg_metadata = Column("metadata", JSON, nullable=True)  # For structured info like questions, updates
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    thread = relationship("ChatThread", back_populates="messages")
 

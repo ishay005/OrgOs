@@ -8,7 +8,7 @@ class Settings(BaseSettings):
         validation_alias="DATABASE_URL"  # Explicitly read DATABASE_URL from env
     )
     openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
-    openai_model: str = "gpt-4"
+    openai_model: str = "gpt-5-mini"  # Latest 2025 model with 400K context window!
     openai_max_retries: int = 3
     
     # Misalignment detection settings

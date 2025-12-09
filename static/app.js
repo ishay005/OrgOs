@@ -142,7 +142,10 @@ function showDashboard() {
     document.getElementById('dashboard-user-name').textContent = currentUser.name;
     showPage('dashboard-page');
     
-    // Load dashboard data
+    // Load default section (Robin chat)
+    showSection('robin');
+    
+    // Load other dashboard data in background
     loadTasks();
     loadAlignments();
     loadMisalignments();
@@ -156,7 +159,9 @@ function showSection(sectionName) {
     document.getElementById(`${sectionName}-nav`).classList.add('active');
     
     // Load data for specific sections
-    if (sectionName === 'tasks') {
+    if (sectionName === 'robin') {
+        loadRobinChat();
+    } else if (sectionName === 'tasks') {
         loadTasks();
     } else if (sectionName === 'alignments') {
         loadAlignments();
@@ -2449,6 +2454,293 @@ function createGraphLayout(tasks) {
         connections,
         height: maxY + NODE_HEIGHT + 150
     };
+}
+
+// ============================================================================
+// Robin Chat Functions
+// ============================================================================
+
+let robinChatHistory = [];
+let isRobinTyping = false;
+
+async function loadRobinChat() {
+    try {
+        const response = await fetch('/chat/history?limit=50', {
+            headers: {
+                'X-User-Id': currentUser.id
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load chat history');
+        
+        const messages = await response.json();
+        robinChatHistory = messages;
+        
+        // Clear and re-render messages
+        const container = document.getElementById('robin-messages');
+        container.innerHTML = '';
+        
+        // Add welcome message if no history
+        if (messages.length === 0) {
+            addWelcomeMessage(container);
+        } else {
+            // Render all messages
+            messages.forEach(msg => {
+                appendMessageToUI(msg);
+            });
+        }
+        
+        // Scroll to bottom
+        scrollToBottom();
+        
+    } catch (error) {
+        console.error('Error loading Robin chat:', error);
+        console.error('Failed to load chat history');
+    }
+}
+
+function addWelcomeMessage(container) {
+    const welcomeMsg = document.createElement('div');
+    welcomeMsg.className = 'chat-message system';
+    welcomeMsg.innerHTML = `
+        <div class="message-content">
+            <p>Hi! I'm Robin, your AI assistant. I'm here to help you stay aligned with your team.</p>
+            <p>I can:</p>
+            <ul>
+                <li>Give you status updates on your tasks</li>
+                <li>Help you fill in task information</li>
+                <li>Identify misalignments with your team</li>
+            </ul>
+            <p>Try asking me for a <strong>morning brief</strong> or tell me about your tasks!</p>
+        </div>
+    `;
+    container.appendChild(welcomeMsg);
+}
+
+function appendMessageToUI(message) {
+    const container = document.getElementById('robin-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${message.sender}`;
+    
+    const avatar = message.sender === 'user' ? '👤' : 
+                   message.sender === 'robin' ? '🤖' : 'ℹ️';
+    
+    let metadataHTML = '';
+    if (message.metadata && message.metadata.updates_applied) {
+        metadataHTML = `<div class="message-metadata">✓ Applied ${message.metadata.updates_applied} update(s)</div>`;
+    }
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">${avatar}</div>
+        <div>
+            <div class="message-content">
+                <p>${escapeHtml(message.text).replace(/\n/g, '<br>')}</p>
+            </div>
+            ${metadataHTML}
+            <div class="message-timestamp">${formatTimestamp(message.created_at)}</div>
+        </div>
+    `;
+    
+    container.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function showTypingIndicator() {
+    if (isRobinTyping) return;
+    isRobinTyping = true;
+    
+    const container = document.getElementById('robin-messages');
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'chat-message robin';
+    typingDiv.id = 'typing-indicator';
+    typingDiv.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div>
+            <div class="message-content typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+    `;
+    container.appendChild(typingDiv);
+    scrollToBottom();
+}
+
+function hideTypingIndicator() {
+    isRobinTyping = false;
+    const indicator = document.getElementById('typing-indicator');
+    if (indicator) {
+        indicator.remove();
+    }
+}
+
+async function sendMessageToRobin() {
+    console.log('🤖 sendMessageToRobin called');
+    
+    const input = document.getElementById('robin-input');
+    const sendBtn = document.getElementById('robin-send-btn');
+    const text = input.value.trim();
+    
+    console.log('Input text:', text);
+    console.log('Current user:', currentUser);
+    
+    if (!text) {
+        console.log('No text, returning');
+        return;
+    }
+    
+    if (!currentUser || !currentUser.id) {
+        console.error('No current user!');
+        alert('Please sign in first');
+        return;
+    }
+    
+    // Clear input immediately
+    input.value = '';
+    
+    // Disable send button
+    sendBtn.disabled = true;
+    sendBtn.classList.add('loading');
+    
+    try {
+        console.log('Sending message to Robin...');
+        
+        // Show user message immediately (optimistic UI)
+        const userMessage = {
+            sender: 'user',
+            text: text,
+            created_at: new Date().toISOString()
+        };
+        appendMessageToUI(userMessage);
+        
+        // Show typing indicator
+        showTypingIndicator();
+        
+        // Send to backend
+        const response = await fetch('/chat/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': currentUser.id
+            },
+            body: JSON.stringify({ text })
+        });
+        
+        console.log('Response status:', response.status);
+        hideTypingIndicator();
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            throw new Error(`Failed to send message: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        // Remove the optimistic user message and add all messages from response
+        const container = document.getElementById('robin-messages');
+        const lastMessage = container.lastElementChild;
+        if (lastMessage && lastMessage.classList.contains('user')) {
+            lastMessage.remove();
+        }
+        
+        // Add all messages from response
+        data.messages.forEach(msg => {
+            appendMessageToUI(msg);
+            
+            // Capture debug prompt from Robin's message metadata
+            if (msg.sender === 'robin' && msg.metadata && msg.metadata.debug_prompt) {
+                lastRobinPrompt = msg.metadata.debug_prompt;
+                console.log('🐛 Debug prompt captured for last message');
+            }
+        });
+        
+        // Reload dashboard data if updates were applied
+        const hasUpdates = data.messages.some(m => m.metadata && m.metadata.updates_applied);
+        if (hasUpdates) {
+            setTimeout(() => {
+                loadTasks();
+                loadMisalignments();
+            }, 500);
+        }
+        
+    } catch (error) {
+        console.error('Error sending message:', error);
+        hideTypingIndicator();
+        
+        // Show error message from Robin
+        appendMessageToUI({
+            sender: 'robin',
+            text: 'Sorry, I encountered an error. Please try again. Check the browser console for details.',
+            created_at: new Date().toISOString()
+        });
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.classList.remove('loading');
+        input.focus();
+    }
+}
+
+async function triggerMorningBrief() {
+    const input = document.getElementById('robin-input');
+    input.value = 'morning_brief';
+    await sendMessageToRobin();
+}
+
+function scrollToBottom() {
+    const container = document.getElementById('robin-messages');
+    setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+    }, 100);
+}
+
+function formatTimestamp(isoString) {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================================================
+// Debug Functions
+// ============================================================================
+
+let lastRobinPrompt = null;
+
+function showLastPrompt() {
+    if (!lastRobinPrompt) {
+        alert('No prompt available yet. Send a message to Robin first!');
+        return;
+    }
+    
+    const modal = document.getElementById('debug-prompt-modal');
+    const content = document.getElementById('debug-prompt-content');
+    
+    // Format the prompt nicely
+    const formatted = JSON.stringify(lastRobinPrompt, null, 2);
+    content.textContent = formatted;
+    
+    modal.classList.remove('hidden');
+}
+
+function closeDebugPrompt() {
+    document.getElementById('debug-prompt-modal').classList.add('hidden');
 }
 
 // ============================================================================
