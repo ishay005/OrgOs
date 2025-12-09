@@ -14,10 +14,11 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("/clear-all-data")
+@router.api_route("/clear-all-data", methods=["GET", "POST"])
 async def clear_all_data(db: Session = Depends(get_db)):
     """
     ⚠️ WARNING: Deletes ALL user data (preserves schema and attribute definitions)
+    Works with both GET (browser) and POST (API)
     """
     try:
         logger.info("🗑️  Clearing all user data from database...")
