@@ -282,7 +282,8 @@ Rules:
 - Empty updates [] if just answering/asking
 - Use TASK NAMES and USER NAMES from context (not UUIDs!)
 - task_id: exact task name from TASKS section
-- target_user_id: TASK OWNER name (who the question is about), from TASKS section "owner" field"""
+- target_user_id: TASK OWNER name (who the question is about), from TASKS section "owner" field
+- To CREATE A NEW TASK: use attribute_name="create_task", task_id=null, value=task_title"""
         else:
             return """Mode: Answer user question, no pending follow-up.
 
@@ -293,16 +294,32 @@ Rules:
 - Do not ask the user any follow-up questions.
 - If you don't know something, say so briefly.
 - When user provides task information (status, priority, etc.), create an update in the updates array.
+- When user wants to CREATE A NEW TASK, use attribute_name="create_task" and value=task_title.
 
 Output format - you MUST respond with valid JSON:
 {
   "display_messages": ["answer"],
   "updates": [
     {
-      "task_id": "task-uuid-from-context",
-      "target_user_id": "user-uuid-from-context", 
-      "attribute_name": "status",
-      "value": "Done"
+      "task_id": null,
+      "target_user_id": "current-user-name",
+      "attribute_name": "create_task",
+      "value": "Task Title Here"
+    }
+  ]
+}
+
+TASK CREATION EXAMPLE:
+User: "add a task to develop the OrgOs app"
+You respond:
+{
+  "display_messages": ["Task 'develop the OrgOs app' added."],
+  "updates": [
+    {
+      "task_id": null,
+      "target_user_id": "USER_NAME_FROM_CONTEXT",
+      "attribute_name": "create_task",
+      "value": "develop the OrgOs app"
     }
   ]
 }

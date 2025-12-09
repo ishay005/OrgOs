@@ -73,9 +73,42 @@ def _apply_structured_update(
     """
     Apply a structured update to the database.
     
+    Supports:
+    - Creating new tasks (attribute_name="create_task", value=task_title)
+    - Updating attributes on existing tasks
+    
     Returns True if successful, False otherwise.
     """
     try:
+        # Special case: Task creation
+        if update.attribute_name == "create_task":
+            task_title = update.value
+            task_description = None
+            
+            # Check if task already exists with this title for this user
+            existing_task = db.query(Task).filter(
+                Task.title == task_title,
+                Task.owner_user_id == current_user_id,
+                Task.is_active == True
+            ).first()
+            
+            if existing_task:
+                logger.info(f"Task already exists: {task_title}")
+                return True  # Not an error, task exists
+            
+            # Create new task
+            new_task = Task(
+                title=task_title,
+                description=task_description,
+                owner_user_id=current_user_id,
+                is_active=True
+            )
+            db.add(new_task)
+            db.commit()
+            logger.info(f"Created new task: {task_title} for user {current_user_id}")
+            return True
+        
+        # Normal attribute update flow
         # Find the attribute definition
         attr_def = db.query(AttributeDefinition).filter(
             AttributeDefinition.name == update.attribute_name
