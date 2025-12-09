@@ -11,6 +11,12 @@ python3 init_db.py
 echo "🌱 Seeding attribute definitions..."
 python3 app/seed.py
 
+# Clear all data (optional - for resetting production)
+if [ "$RUN_CLEAR_DATA" = "true" ]; then
+    echo "🗑️  Clearing all user data..."
+    python3 clear_all_data.py --confirm || echo "⚠️  Data clear failed"
+fi
+
 # Populate sample data (optional - only for demo)
 if [ "$POPULATE_SAMPLE_DATA" = "true" ]; then
     echo "📝 Populating sample data..."
