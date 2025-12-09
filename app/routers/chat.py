@@ -154,10 +154,13 @@ async def get_chat_history(
     # Ensure thread exists
     thread = _ensure_thread_exists(db, current_user.id)
     
-    # Get messages
+    # Get messages - get the LATEST N messages, then reverse to chronological order
     messages = db.query(ChatMessage).filter(
         ChatMessage.thread_id == thread.id
-    ).order_by(ChatMessage.created_at.asc()).limit(limit).all()
+    ).order_by(ChatMessage.created_at.desc()).limit(limit).all()
+    
+    # Reverse to get chronological order (oldest to newest)
+    messages = list(reversed(messages))
     
     return [
         ChatMessageResponse(
