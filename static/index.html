@@ -41,30 +41,6 @@
         </div>
     </div>
 
-    <!-- Chat/Questions Page -->
-    <div id="chat-page" class="page">
-        <div class="header">
-            <h2>💬 Daily Questions</h2>
-            <div class="user-info">
-                <span id="current-user-name"></span>
-                <button onclick="logout()" class="icon-btn">🚪</button>
-            </div>
-        </div>
-        
-        <div class="chat-container">
-            <div id="chat-messages"></div>
-            
-            <div id="question-input" class="hidden">
-                <!-- Dynamic question input will be inserted here -->
-            </div>
-            
-            <div class="chat-actions">
-                <button onclick="loadQuestions()" class="primary-btn">Get New Questions</button>
-                <button onclick="showDashboard()" class="secondary-btn">View Dashboard</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Dashboard Page -->
     <div id="dashboard-page" class="page">
         <div class="header">
@@ -79,7 +55,6 @@
             <div class="dashboard-nav">
                 <button onclick="showSection('robin')" class="nav-btn active" id="robin-nav">🤖 Chat with Robin</button>
                 <button onclick="showSection('pending')" class="nav-btn" id="pending-nav">📋 Pending Questions</button>
-                <button onclick="showSection('tasks')" class="nav-btn" id="tasks-nav">My Tasks</button>
                 <button onclick="showSection('graph')" class="nav-btn" id="graph-nav">🔗 Task Graph</button>
                 <button onclick="showSection('orgchart')" class="nav-btn" id="orgchart-nav">👥 Org Chart</button>
                 <button onclick="showSection('alignments')" class="nav-btn" id="alignments-nav">Team</button>
@@ -138,15 +113,6 @@
                 <div id="pending-questions-container">
                     <p style="text-align: center; color: #666; padding: 40px;">Loading pending questions...</p>
                 </div>
-            </div>
-            
-            <!-- Tasks Section -->
-            <div id="tasks-section" class="section">
-                <div class="section-header">
-                    <h3>📝 My Tasks</h3>
-                    <button onclick="showCreateTask()" class="primary-btn">+ New Task</button>
-                </div>
-                <div id="tasks-list"></div>
             </div>
             
             <!-- Alignments Section -->
@@ -305,45 +271,6 @@
                 <div id="ontology-content" class="ontology-content">
                     <!-- Will be populated dynamically -->
                 </div>
-            </div>
-            
-            <div class="dashboard-footer">
-                <button onclick="showChat()" class="primary-btn">Answer Questions</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Create Task Modal -->
-    <div id="create-task-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>Create New Task</h3>
-            <input type="text" id="task-title" placeholder="Task Title">
-            <textarea id="task-description" placeholder="Description (optional)" rows="3"></textarea>
-            
-            <div class="form-group">
-                <label>Parent Task (optional):</label>
-                <select id="task-parent">
-                    <option value="">None</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>Child Tasks (comma-separated, optional):</label>
-                <input type="text" id="task-children" placeholder="e.g., Subtask 1, Subtask 2">
-                <small>Enter task titles. New tasks will be created if they don't exist.</small>
-            </div>
-            
-            <div class="form-group">
-                <label>Dependencies (optional):</label>
-                <select id="task-dependencies" multiple size="4">
-                    <!-- Will be populated with available tasks -->
-                </select>
-                <small>Hold Ctrl/Cmd to select multiple tasks</small>
-            </div>
-            
-            <div class="modal-actions">
-                <button onclick="createTask()" class="primary-btn">Create</button>
-                <button onclick="hideCreateTask()" class="secondary-btn">Cancel</button>
             </div>
         </div>
     </div>

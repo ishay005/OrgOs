@@ -2,8 +2,6 @@
 
 const API_BASE = window.location.origin;
 let currentUser = null;
-let currentQuestions = [];
-let currentQuestionIndex = 0;
 
 // ============================================================================
 // Storage & Auth
@@ -78,7 +76,7 @@ async function register() {
         });
         
         saveUser(user);
-        showChat();
+        showDashboard();
     } catch (error) {
         alert('Registration failed: ' + error.message);
     }
@@ -108,7 +106,7 @@ function hideUserList() {
 function loginAsUser(id, name) {
     saveUser({ id, name });
     hideUserList();
-    showChat();
+    showDashboard();
 }
 
 // ============================================================================
@@ -118,19 +116,6 @@ function loginAsUser(id, name) {
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
-}
-
-function showChat() {
-    if (!currentUser) {
-        showPage('auth-page');
-        return;
-    }
-    
-    document.getElementById('current-user-name').textContent = currentUser.name;
-    showPage('chat-page');
-    
-    // Auto-load questions
-    loadQuestions();
 }
 
 function showDashboard() {
@@ -146,7 +131,6 @@ function showDashboard() {
     showSection('robin');
     
     // Load other dashboard data in background
-    loadTasks();
     loadAlignments();
     loadMisalignments();
 }
@@ -163,8 +147,6 @@ function showSection(sectionName) {
         loadRobinChat();
     } else if (sectionName === 'pending') {
         loadPendingQuestions();
-    } else if (sectionName === 'tasks') {
-        loadTasks();
     } else if (sectionName === 'alignments') {
         loadAlignments();
     } else if (sectionName === 'misalignments') {
@@ -931,324 +913,9 @@ function closeUserMisalignmentModal() {
     document.getElementById('user-misalignment-modal').classList.add('hidden');
 }
 
-// ============================================================================
-// Questions & Chat Interface
-// ============================================================================
-
-async function loadQuestions() {
-    const chatDiv = document.getElementById('chat-messages');
-    chatDiv.innerHTML = '<div class="loading">Loading questions</div>';
-    
-    try {
-        currentQuestions = await apiCall('/questions/next?max_questions=10');
-        
-        if (currentQuestions.length === 0) {
-            chatDiv.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">✅</div>
-                    <h3>All caught up!</h3>
-                    <p>No questions available right now.</p>
-                    <p>Check back later or ask teammates to create tasks.</p>
-                </div>
-            `;
-            return;
-        }
-        
-        currentQuestionIndex = 0;
-        displayCurrentQuestion();
-    } catch (error) {
-        chatDiv.innerHTML = `<div class="message error">Failed to load questions: ${error.message}</div>`;
-    }
-}
-
-function displayCurrentQuestion() {
-    const question = currentQuestions[currentQuestionIndex];
-    const chatDiv = document.getElementById('chat-messages');
-    const inputDiv = document.getElementById('question-input');
-    
-    // Determine if this is about own task or someone else's
-    const isOwnTask = question.target_user_id === currentUser.id;
-    const contextLabel = isOwnTask 
-        ? `📝 Your task: ${question.task_title || 'Your profile'}`
-        : `👤 ${question.target_user_name}'s task: ${question.task_title || 'Their profile'}`;
-    
-    // Display question message
-    const questionHTML = `
-        <div class="chat-message system">
-            <div class="question-header">
-                <span class="question-meta">
-                    ${contextLabel}
-                </span>
-                <span class="question-meta">
-                    ${currentQuestionIndex + 1}/${currentQuestions.length}
-                </span>
-            </div>
-            <div class="question-context">
-                ${isOwnTask 
-                    ? `<strong>About your ${question.task_title ? 'task' : 'profile'}</strong>` 
-                    : `<strong>What do YOU think about ${question.target_user_name}'s ${question.task_title ? 'task' : 'profile'}?</strong>`
-                }
-            </div>
-            <div class="question-text">${question.question_text}</div>
-            ${question.is_followup ? '<div class="question-meta">⏱ Follow-up question</div>' : ''}
-            ${!isOwnTask ? '<div class="question-hint">💡 We\'re asking for YOUR perception of their work</div>' : ''}
-        </div>
-    `;
-    
-    chatDiv.innerHTML = questionHTML;
-    
-    // Create appropriate input
-    let inputHTML = '';
-    
-    if (question.attribute_type === 'enum') {
-        const options = question.allowed_values.map(v => 
-            `<option value="${v}">${v}</option>`
-        ).join('');
-        inputHTML = `
-            <select id="answer-value" class="answer-input">
-                <option value="">Select...</option>
-                ${options}
-            </select>
-        `;
-    } else if (question.attribute_type === 'bool') {
-        inputHTML = `
-            <div class="answer-input">
-                <label class="toggle-container" style="margin: 0;">
-                    <span>Yes / No</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="answer-value">
-                        <span class="slider"></span>
-                    </label>
-                </label>
-            </div>
-        `;
-    } else if (question.attribute_type === 'int' || question.attribute_type === 'float') {
-        inputHTML = `
-            <input type="number" id="answer-value" class="answer-input" 
-                   placeholder="Enter a number" min="1" max="5" step="${question.attribute_type === 'float' ? '0.1' : '1'}">
-        `;
-    } else {
-        // String or other
-        const isLongText = question.attribute_name === 'main_goal' || 
-                          question.attribute_name === 'blocking_reason';
-        
-        inputHTML = isLongText ? `
-            <textarea id="answer-value" class="answer-input" rows="4" 
-                      placeholder="Type your answer..."></textarea>
-        ` : `
-            <input type="text" id="answer-value" class="answer-input" 
-                   placeholder="Type your answer...">
-        `;
-    }
-    
-    inputDiv.innerHTML = `
-        <div class="card">
-            ${inputHTML}
-            <div class="checkbox-container">
-                <input type="checkbox" id="answer-refused">
-                <label for="answer-refused">I don't want to answer this</label>
-            </div>
-            <div class="button-group">
-                <button onclick="submitAnswer()" class="primary-btn">Submit Answer</button>
-                ${currentQuestionIndex < currentQuestions.length - 1 ? 
-                    '<button onclick="skipToNext()" class="secondary-btn">Skip</button>' : ''}
-            </div>
-        </div>
-    `;
-    
-    inputDiv.classList.remove('hidden');
-}
-
-async function submitAnswer() {
-    const question = currentQuestions[currentQuestionIndex];
-    const refused = document.getElementById('answer-refused').checked;
-    
-    let value = null;
-    if (!refused) {
-        const valueInput = document.getElementById('answer-value');
-        
-        if (question.attribute_type === 'bool') {
-            value = valueInput.checked ? 'true' : 'false';
-        } else {
-            value = valueInput.value.trim();
-        }
-        
-        if (!value && !refused) {
-            alert('Please provide an answer or check "I don\'t want to answer"');
-            return;
-        }
-    }
-    
-    try {
-        await apiCall('/answers', {
-            method: 'POST',
-            body: JSON.stringify({
-                question_id: question.question_id,
-                value: value,
-                refused: refused
-            })
-        });
-        
-        // Show success and move to next
-        showAnswerSuccess();
-        
-        setTimeout(() => {
-            if (currentQuestionIndex < currentQuestions.length - 1) {
-                currentQuestionIndex++;
-                displayCurrentQuestion();
-            } else {
-                // All done!
-                showAllDone();
-            }
-        }, 1000);
-        
-    } catch (error) {
-        alert('Failed to submit answer: ' + error.message);
-    }
-}
-
-function skipToNext() {
-    if (currentQuestionIndex < currentQuestions.length - 1) {
-        currentQuestionIndex++;
-        displayCurrentQuestion();
-    }
-}
-
-function showAnswerSuccess() {
-    const inputDiv = document.getElementById('question-input');
-    inputDiv.innerHTML = '<div class="message success">✅ Answer saved!</div>';
-}
-
-function showAllDone() {
-    const chatDiv = document.getElementById('chat-messages');
-    const inputDiv = document.getElementById('question-input');
-    
-    chatDiv.innerHTML = `
-        <div class="empty-state">
-            <div class="empty-state-icon">🎉</div>
-            <h3>All questions answered!</h3>
-            <p>Great job! You've completed all available questions.</p>
-        </div>
-    `;
-    
-    inputDiv.innerHTML = `
-        <div class="button-group">
-            <button onclick="loadQuestions()" class="primary-btn">Check for More</button>
-            <button onclick="showDashboard()" class="secondary-btn">View Dashboard</button>
-        </div>
-    `;
-}
-
-// ============================================================================
 // Dashboard - Tasks
 // ============================================================================
 
-async function loadTasks() {
-    const listDiv = document.getElementById('tasks-list');
-    listDiv.innerHTML = '<div class="loading">Loading tasks</div>';
-    
-    try {
-        const tasks = await apiCall('/tasks');
-        
-        if (tasks.length === 0) {
-            listDiv.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">📋</div>
-                    <p>No tasks yet. Create your first task!</p>
-                </div>
-            `;
-            return;
-        }
-        
-        listDiv.innerHTML = tasks.map(task => `
-            <div class="task-item">
-                <div class="task-item-header">
-                    <span class="task-title">${task.title}</span>
-                    <span class="task-owner">${task.owner_name}</span>
-                </div>
-                ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
-            </div>
-        `).join('');
-        
-    } catch (error) {
-        listDiv.innerHTML = `<div class="message error">Failed to load tasks: ${error.message}</div>`;
-    }
-}
-
-async function showCreateTask() {
-    // Load available tasks for parent and dependency selection
-    try {
-        const tasks = await apiCall('/tasks?include_self=true&include_aligned=true');
-        
-        const parentSelect = document.getElementById('task-parent');
-        const depsSelect = document.getElementById('task-dependencies');
-        
-        parentSelect.innerHTML = '<option value="">None</option>' +
-            tasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('');
-        
-        depsSelect.innerHTML = tasks.map(t => 
-            `<option value="${t.id}">${t.title} (${t.owner_name})</option>`
-        ).join('');
-        
-        document.getElementById('create-task-modal').classList.remove('hidden');
-    } catch (error) {
-        alert('Failed to load tasks: ' + error.message);
-    }
-}
-
-function hideCreateTask() {
-    document.getElementById('create-task-modal').classList.add('hidden');
-    document.getElementById('task-title').value = '';
-    document.getElementById('task-description').value = '';
-    document.getElementById('task-children').value = '';
-}
-
-async function createTask() {
-    const title = document.getElementById('task-title').value.trim();
-    const description = document.getElementById('task-description').value.trim();
-    const parentId = document.getElementById('task-parent').value || null;
-    const childrenInput = document.getElementById('task-children').value.trim();
-    const dependenciesSelect = document.getElementById('task-dependencies');
-    
-    if (!title) {
-        alert('Please enter a task title');
-        return;
-    }
-    
-    // Parse children (comma-separated task titles)
-    const children = childrenInput ? 
-        childrenInput.split(',').map(s => s.trim()).filter(s => s) : 
-        null;
-    
-    // Get selected dependencies
-    const dependencies = Array.from(dependenciesSelect.selectedOptions)
-        .map(opt => opt.value)
-        .filter(v => v);
-    
-    try {
-        await apiCall('/tasks', {
-            method: 'POST',
-            body: JSON.stringify({ 
-                title, 
-                description: description || null,
-                parent_id: parentId,
-                children: children,
-                dependencies: dependencies.length > 0 ? dependencies : null
-            })
-        });
-        
-        hideCreateTask();
-        loadTasks();
-        
-        // Refresh graph if we're on that section
-        const graphSection = document.getElementById('graph-section');
-        if (graphSection && graphSection.classList.contains('active')) {
-            loadTaskGraph();
-        }
-    } catch (error) {
-        alert('Failed to create task: ' + error.message);
-    }
-}
 
 // ============================================================================
 // Dashboard - Alignments
@@ -2663,7 +2330,6 @@ async function sendMessageToRobin() {
         const hasUpdates = data.messages.some(m => m.metadata && m.metadata.updates_applied);
         if (hasUpdates) {
             setTimeout(() => {
-                loadTasks();
                 loadMisalignments();
             }, 500);
         }
@@ -2699,8 +2365,12 @@ function scrollToBottom() {
 }
 
 function formatTimestamp(isoString) {
-    const date = new Date(isoString);
+    // Backend sends UTC timestamps without 'Z' suffix - add it for correct parsing
+    const isoStringUTC = isoString.endsWith('Z') ? isoString : isoString + 'Z';
+    const date = new Date(isoStringUTC);
     const now = new Date();
+    
+    // Calculate difference in milliseconds
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
     
@@ -2710,6 +2380,10 @@ function formatTimestamp(isoString) {
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}h ago`;
     
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    // For older messages, show the actual date in local time
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 }
 
@@ -2780,7 +2454,7 @@ async function loadPendingQuestions() {
             </div>
         `;
         
-        // Display as a table
+        // Display as a table with answer inputs
         html += `
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
@@ -2790,7 +2464,9 @@ async function loadPendingQuestions() {
                             <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Reason</th>
                             <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Task</th>
                             <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Attribute</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Your Answer</th>
                             <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">About</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2801,13 +2477,42 @@ async function loadPendingQuestions() {
                               p.reason === 'stale' ? '#0066cc' : '#dc3545';
             const reasonBadge = `<span style="display: inline-block; padding: 4px 8px; background: ${reasonColor}; color: white; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">${p.reason.toUpperCase()}</span>`;
             
+            // Create appropriate input based on attribute type
+            let inputHtml = '';
+            if (p.attribute_type === 'enum' && p.allowed_values) {
+                const options = p.allowed_values.map(v => `<option value="${v}">${v}</option>`).join('');
+                inputHtml = `<select id="input-${p.id}" style="width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 4px;">
+                    <option value="">Select...</option>
+                    ${options}
+                </select>`;
+            } else if (p.attribute_type === 'bool') {
+                inputHtml = `<select id="input-${p.id}" style="width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 4px;">
+                    <option value="">Select...</option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>`;
+            } else if (p.attribute_type === 'int' || p.attribute_type === 'float') {
+                const step = p.attribute_type === 'float' ? '0.1' : '1';
+                inputHtml = `<input type="number" id="input-${p.id}" step="${step}" style="width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 4px;" placeholder="Enter number">`;
+            } else {
+                // String or other
+                inputHtml = `<input type="text" id="input-${p.id}" style="width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 4px;" placeholder="Type your answer">`;
+            }
+            
             html += `
-                <tr style="border-bottom: 1px solid #dee2e6;">
+                <tr style="border-bottom: 1px solid #dee2e6;" id="row-${p.id}">
                     <td style="padding: 12px; color: #666;">#${p.priority}</td>
                     <td style="padding: 12px;">${reasonBadge}</td>
                     <td style="padding: 12px; font-weight: 500; color: #333;">${p.task_title || 'User-level'}</td>
                     <td style="padding: 12px; color: #0066cc; font-weight: 500;">${p.attribute_label}</td>
+                    <td style="padding: 12px;">${inputHtml}</td>
                     <td style="padding: 12px; color: #666;">${p.target_user_name}</td>
+                    <td style="padding: 12px;">
+                        <button onclick="savePendingAnswer('${p.id}', '${p.task_id}', '${p.target_user_id}', '${p.attribute_name}')" 
+                                class="primary-btn" style="padding: 6px 12px; font-size: 0.85rem;">
+                            💾 Save
+                        </button>
+                    </td>
                 </tr>
             `;
         }
@@ -2820,10 +2525,11 @@ async function loadPendingQuestions() {
         
         html += `
             <div style="margin-top: 24px; padding: 16px; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #0066cc;">
-                <h4 style="margin: 0 0 8px 0; color: #004085;">💡 How to Fill These</h4>
+                <h4 style="margin: 0 0 8px 0; color: #004085;">💡 Tip</h4>
                 <p style="margin: 0; color: #004085; line-height: 1.6;">
-                    Go to <strong>🤖 Chat with Robin</strong> and type <code style="background: white; padding: 2px 6px; border-radius: 3px;">collect_data</code> 
-                    to have Robin guide you through answering these questions in a conversational way.
+                    Fill in your answers above and click <strong>💾 Save</strong> for each one. 
+                    Or, go to <strong>🤖 Chat with Robin</strong> and type <code style="background: white; padding: 2px 6px; border-radius: 3px;">collect_data</code> 
+                    to have Robin guide you through answering these questions conversationally.
                 </p>
             </div>
         `;
@@ -2841,6 +2547,49 @@ async function loadPendingQuestions() {
         `;
     }
 }
+
+async function savePendingAnswer(pendingId, taskId, targetUserId, attributeName) {
+    const input = document.getElementById(`input-${pendingId}`);
+    const value = input.value.trim();
+    
+    if (!value) {
+        alert('Please enter a value before saving');
+        return;
+    }
+    
+    try {
+        // Call the direct answer API
+        const response = await apiCall('/pending-questions/answer', {
+            method: 'POST',
+            body: JSON.stringify({
+                task_id: taskId === 'null' ? null : taskId,
+                target_user_id: targetUserId,
+                attribute_name: attributeName,
+                value: value,
+                refused: false
+            })
+        });
+        
+        // Success! Remove the row and show success message
+        const row = document.getElementById(`row-${pendingId}`);
+        row.style.backgroundColor = '#d4edda';
+        row.innerHTML = `
+            <td colspan="7" style="padding: 12px; text-align: center; color: #155724; font-weight: 500;">
+                ✅ Answer saved successfully! Refreshing list...
+            </td>
+        `;
+        
+        // Reload after a short delay
+        setTimeout(() => {
+            loadPendingQuestions();
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Error saving answer:', error);
+        alert('Failed to save answer: ' + error.message);
+    }
+}
+
 
 // ============================================================================
 // Debug Functions
@@ -2874,7 +2623,7 @@ function closeDebugPrompt() {
 
 window.addEventListener('DOMContentLoaded', () => {
     if (loadUser()) {
-        showChat();
+        showDashboard();
     } else {
         showPage('auth-page');
     }

@@ -201,16 +201,33 @@ def _get_system_prompt(mode: str, has_relevant_pending: bool) -> str:
 Your goals:
 - Give this user a very short overview of today's situation over their top tasks: what's done, what's in progress, what's blocked, and what deserves attention next.
 - You may ask at most two focused follow-up questions, but only about the tasks and attributes listed in the pending items.
+- If the user provides information in response, create updates for it.
 
 Rules:
 - Start with the brief (1–3 short bullet points or short paragraphs).
 - Only then, if it clearly fits, embed at most two questions at the end.
 - Do not ask about anything that is not in the pending list.
+- When user provides task information, create an update in the updates array.
 
 Output format - you MUST respond with valid JSON:
+
+When giving brief or asking:
 {
   "display_messages": ["brief text", "optional question 1", "optional question 2"],
   "updates": []
+}
+
+When receiving answers:
+{
+  "display_messages": ["Thanks, updated!"],
+  "updates": [
+    {
+      "task_id": "task-uuid",
+      "target_user_id": "user-uuid",
+      "attribute_name": "status",
+      "value": "Done"
+    }
+  ]
 }"""
         else:
             return """Mode: Morning brief, no pending questions.
@@ -229,64 +246,151 @@ Output format - you MUST respond with valid JSON:
     
     elif mode == "user_question":
         if has_relevant_pending:
-            return """Mode: Answer user question with a related follow-up.
+            return """Mode: Answer user question.
 
-Your goals:
-- First, answer the user's question as clearly and directly as you can using the provided context.
-- Then you may ask one short follow-up question, but only about one of the pending items shown in the context that is directly related to the user's question.
+⚠️ CRITICAL: If user provides task information (status, priority, goal, etc.) → ADD TO "updates" array!
+
+Goals:
+1. Answer their question clearly in MAX 100 words
+2. If they gave info → create update
+3. Optionally ask 1 related follow-up
+
+Output format - VALID JSON:
+{
+  "display_messages": ["your answer"],
+  "updates": [{"task_id": "uuid", "target_user_id": "uuid", "attribute_name": "status", "value": "Done"}]
+}
+
+EXAMPLE - User provides info:
+(Context: Dana answering about her own task "Implement OAuth 2.0 provider")
+User: "The OAuth task is done"
+You respond:
+{
+  "display_messages": ["Great! I've marked OAuth as Done."],
+  "updates": [
+    {
+      "task_id": "Implement OAuth 2.0 provider",
+      "target_user_id": "Dana Cohen",
+      "attribute_name": "status",
+      "value": "Done"
+    }
+  ]
+}
 
 Rules:
-- Always answer their question before asking anything back.
-- Ask at most one follow-up question.
-- The follow-up must be obviously related to their question and to one of the pending items.
-- If none of the pending items fit naturally, skip the follow-up.
-
-Output format - you MUST respond with valid JSON:
-{
-  "display_messages": ["answer", "optional follow-up question"],
-  "updates": []
-}"""
+- Include updates ONLY when user gives information
+- Empty updates [] if just answering/asking
+- Use TASK NAMES and USER NAMES from context (not UUIDs!)
+- task_id: exact task name from TASKS section
+- target_user_id: TASK OWNER name (who the question is about), from TASKS section "owner" field"""
         else:
             return """Mode: Answer user question, no pending follow-up.
 
 Your goal is to answer the user's question as clearly and directly as you can using the provided context.
 
 Rules:
+- Answer in MAX 100 words - be concise!
 - Do not ask the user any follow-up questions.
 - If you don't know something, say so briefly.
+- When user provides task information (status, priority, etc.), create an update in the updates array.
 
 Output format - you MUST respond with valid JSON:
 {
   "display_messages": ["answer"],
-  "updates": []
-}"""
+  "updates": [
+    {
+      "task_id": "task-uuid-from-context",
+      "target_user_id": "user-uuid-from-context", 
+      "attribute_name": "status",
+      "value": "Done"
+    }
+  ]
+}
+
+IMPORTANT: Only include updates when the user has actually provided information. Leave updates empty if just answering questions."""
     
     elif mode == "collect_data":
         if has_relevant_pending:
             return """Mode: Collect perception data for pending items.
 
-Your goal is to update the missing or stale attributes for the tasks and attributes listed in the pending items in the context.
+⚠️ CRITICAL RULE: If the user provides ANY information (like "Done", "High", "Blocked", etc.), you MUST include it in the "updates" array. Never leave "updates" empty when user answers!
+
+Your goal: Update missing/stale attributes for tasks in the pending items.
+
+KEEP ALL RESPONSES UNDER 100 WORDS!
+
+How to respond:
+1. If ASKING a question → "updates": []
+2. If user GIVES information → "updates": [{task_id, target_user_id, attribute_name, value}]
+
+Output format - VALID JSON ONLY:
+{
+  "display_messages": ["your message here"],
+  "updates": [{"task_id": "uuid", "target_user_id": "uuid", "attribute_name": "status", "value": "Done"}]
+}
+
+EXAMPLE 1 - Asking:
+User: "collect_data"
+You respond:
+{
+  "display_messages": ["What is the status of Q1 Engineering Strategy?"],
+  "updates": []
+}
+
+EXAMPLE 2 - Receiving answer (CRITICAL!):
+(Context shows: Q1 Engineering Strategy owned by Sarah Feldman, Dana is answering)
+User: "Done"
+You MUST respond:
+{
+  "display_messages": ["Perfect, marked as Done!"],
+  "updates": [
+    {
+      "task_id": "Q1 Engineering Strategy",
+      "target_user_id": "Sarah Feldman",
+      "attribute_name": "status",
+      "value": "Done"
+    }
+  ]
+}
+
+CRITICAL: 
+- task_id = task name from pending items
+- target_user_id = THE PERSON THE TASK/ATTRIBUTE IS ABOUT (usually the task owner), NOT the person answering!
+- Use names directly from context - you don't need UUIDs!
+
+EXAMPLE 3 - User confirms with "yes":
+(Previous context: Dana answering about Sarah Feldman's "Q1 Engineering Strategy")
+User: "yes, it's done"  
+You MUST respond:
+{
+  "display_messages": ["Great, updating to Done!"],
+  "updates": [
+    {
+      "task_id": "Q1 Engineering Strategy",
+      "target_user_id": "Sarah Feldman",
+      "attribute_name": "status",
+      "value": "Done"
+    }
+  ]
+}
 
 Rules:
-- Ask the minimal number of questions needed to cover the pending items.
-- Group related attributes for the same task into one question when possible (e.g. "For Apollo, what is the current status and main goal?").
-- Stay strictly within the tasks and attributes listed in the pending items.
-- Ask at most three questions in this turn.
-- Keep each question short and clear.
-
-Output format - you MUST respond with valid JSON:
-{
-  "display_messages": ["question 1", "question 2", "question 3"],
-  "updates": []
-}"""
+- NEVER say "I've updated" unless you actually include it in "updates"!
+- If user says a status/priority/value → ADD TO UPDATES
+- task_id: Use TASK NAME from pending items
+- target_user_id: Use TASK OWNER name (from pending items "task" field or TASKS section owner)
+- attribute_name options: "status", "priority", "main_goal"
+- IMPORTANT: target_user_id is WHO THE QUESTION IS ABOUT (task owner), NOT who is answering!
+- Don't use UUIDs - use actual names!"""
         else:
             return """Mode: Collect perception data, but no pending items.
 
 There are no pending items to update for this user right now.
 
 Rules:
+- Keep response under 100 words.
 - Do not ask the user any questions.
-- Optionally, you may say briefly that everything looks up to date, then stop.
+- Say briefly that everything looks up to date.
 
 Output format - you MUST respond with valid JSON:
 {
@@ -297,33 +401,81 @@ Output format - you MUST respond with valid JSON:
     return ""
 
 
+def _get_recent_chat_messages(db: Session, thread_id: UUID, limit: int) -> List[dict]:
+    """Get recent chat messages for context"""
+    messages = db.query(ChatMessage).filter(
+        ChatMessage.thread_id == thread_id
+    ).order_by(ChatMessage.created_at.desc()).limit(limit).all()
+    
+    # Reverse to get chronological order
+    messages = list(reversed(messages))
+    
+    return [
+        {
+            "sender": msg.sender,
+            "text": msg.text[:200]  # Truncate long messages
+        }
+        for msg in messages
+    ]
+
+
 def _build_context_string(
     mode: str,
     user_snapshot: dict,
     task_snapshot: List[dict],
-    pending_relevant: List[PendingQuestion]
+    pending_relevant: List[PendingQuestion],
+    db: Session,
+    thread_id: UUID,
+    recent_messages: List[dict]
 ) -> str:
     """
     Build context string based on mode.
     
     Most modes: user name, employees, manager, user tasks, aligned tasks
     collect_data: user name, only tasks/users related to pending items
+    
+    Includes recent chat history:
+    - user_question mode: last 3 messages
+    - other modes: last 2 messages
     """
     
+    # Helper function to get task title and owner by ID
+    def get_task_info(task_id: UUID) -> tuple:
+        task = db.query(Task).filter(Task.id == task_id).first()
+        if task:
+            owner = db.query(User).filter(User.id == task.owner_user_id).first()
+            return (task.title, owner.name if owner else "Unknown")
+        return ("Unknown Task", "Unknown")
+    
     if mode == "collect_data":
-        # Simplified context: just the pending items
+        # Simplified context: just the pending items with task names AND owners
         pending_summary = []
         for p in pending_relevant:
+            if p.task_id:
+                task_title, task_owner = get_task_info(p.task_id)
+            else:
+                task_title = "User-level"
+                # Get target user name
+                target_user = db.query(User).filter(User.id == p.target_user_id).first()
+                task_owner = target_user.name if target_user else "Unknown"
+            
             pending_summary.append({
-                "task_title": f"Task ID {p.task_id}" if p.task_id else "User-level",
+                "task": task_title,
+                "task_owner": task_owner,
                 "attribute": p.attribute_label,
                 "reason": p.reason
             })
         
-        return f"""USER: {user_snapshot.get('name', 'Unknown')}
+        context = f"""USER: {user_snapshot.get('name', 'Unknown')}
 
 PENDING ITEMS TO COLLECT:
 {json.dumps(pending_summary, indent=2)}"""
+        
+        # Add recent chat history (last 2 messages for collect_data)
+        if recent_messages:
+            context += f"\n\nRECENT CHAT HISTORY:\n{json.dumps(recent_messages, indent=2)}"
+        
+        return context
     
     else:
         # For morning_brief and user_question: full context
@@ -335,15 +487,26 @@ TASKS (showing {len(task_snapshot)}):
 {json.dumps(task_snapshot, indent=2)}"""
         
         if pending_relevant:
-            pending_summary = [
-                {
-                    "task_title": f"Task ID {p.task_id}" if p.task_id else "User-level",
+            pending_summary = []
+            for p in pending_relevant:
+                if p.task_id:
+                    task_title, task_owner = get_task_info(p.task_id)
+                else:
+                    task_title = "User-level"
+                    target_user = db.query(User).filter(User.id == p.target_user_id).first()
+                    task_owner = target_user.name if target_user else "Unknown"
+                
+                pending_summary.append({
+                    "task": task_title,
+                    "task_owner": task_owner,
                     "attribute": p.attribute_label,
                     "reason": p.reason
-                }
-                for p in pending_relevant
-            ]
+                })
             context += f"\n\nRELEVANT PENDING ITEMS:\n{json.dumps(pending_summary, indent=2)}"
+        
+        # Add recent chat history (last 3 messages for user_question, last 2 for morning_brief)
+        if recent_messages:
+            context += f"\n\nRECENT CHAT HISTORY:\n{json.dumps(recent_messages, indent=2)}"
         
         return context
 
@@ -392,9 +555,14 @@ async def generate_robin_reply(
         has_relevant_pending = len(pending_relevant) > 0
         logger.info(f"Filtered to {len(pending_relevant)} relevant pending items")
         
+        # Step 4.5: Get recent chat messages based on mode
+        # user_question: 3 messages, others: 2 messages
+        message_limit = 3 if mode == "user_question" else 2
+        recent_messages = _get_recent_chat_messages(db, thread_id, message_limit)
+        
         # Step 5: Build mode-specific context and prompt
         system_prompt = _get_system_prompt(mode, has_relevant_pending)
-        context_str = _build_context_string(mode, user_snapshot, task_snapshot, pending_relevant)
+        context_str = _build_context_string(mode, user_snapshot, task_snapshot, pending_relevant, db, thread_id, recent_messages)
         
         # Build messages for OpenAI
         openai_messages = [
@@ -444,15 +612,52 @@ async def generate_robin_reply(
             updates = []
             for upd in parsed.get("updates", []):
                 try:
-                    task_id = UUID(upd["task_id"]) if upd.get("task_id") and upd["task_id"] != "null" else None
-                    target_user_id = UUID(upd["target_user_id"])
+                    # Helper to convert task name/ID to UUID
+                    def get_task_uuid(task_ref: str) -> UUID | None:
+                        if not task_ref or task_ref == "null":
+                            return None
+                        try:
+                            # Try as UUID first
+                            return UUID(task_ref)
+                        except:
+                            # Try as task name
+                            task = db.query(Task).filter(Task.title == task_ref).first()
+                            if task:
+                                logger.info(f"Resolved task name '{task_ref}' to UUID {task.id}")
+                                return task.id
+                            logger.warning(f"Could not resolve task reference: {task_ref}")
+                            return None
                     
-                    updates.append(StructuredUpdate(
-                        task_id=task_id,
-                        target_user_id=target_user_id,
-                        attribute_name=upd["attribute_name"],
-                        value=upd["value"]
-                    ))
+                    # Helper to convert user name/ID to UUID
+                    def get_user_uuid(user_ref: str) -> UUID | None:
+                        if not user_ref or user_ref == "null":
+                            return None
+                        try:
+                            # Try as UUID first
+                            return UUID(user_ref)
+                        except:
+                            # Try as user name
+                            user = db.query(User).filter(User.name == user_ref).first()
+                            if user:
+                                logger.info(f"Resolved user name '{user_ref}' to UUID {user.id}")
+                                return user.id
+                            logger.warning(f"Could not resolve user reference: {user_ref}")
+                            return None
+                    
+                    task_id = get_task_uuid(upd.get("task_id"))
+                    target_user_id = get_user_uuid(upd.get("target_user_id"))
+                    
+                    if target_user_id:  # target_user_id is required
+                        updates.append(StructuredUpdate(
+                            task_id=task_id,
+                            target_user_id=target_user_id,
+                            attribute_name=upd["attribute_name"],
+                            value=upd["value"]
+                        ))
+                        logger.info(f"Parsed update: task={task_id}, user={target_user_id}, attr={upd['attribute_name']}, value={upd['value']}")
+                    else:
+                        logger.warning(f"Skipping update - could not resolve target_user_id: {upd}")
+                        
                 except Exception as e:
                     logger.warning(f"Failed to parse update: {upd}, error: {e}")
             
