@@ -78,6 +78,7 @@
         <div class="dashboard-container">
             <div class="dashboard-nav">
                 <button onclick="showSection('robin')" class="nav-btn active" id="robin-nav">🤖 Chat with Robin</button>
+                <button onclick="showSection('pending')" class="nav-btn" id="pending-nav">📋 Pending Questions</button>
                 <button onclick="showSection('tasks')" class="nav-btn" id="tasks-nav">My Tasks</button>
                 <button onclick="showSection('graph')" class="nav-btn" id="graph-nav">🔗 Task Graph</button>
                 <button onclick="showSection('orgchart')" class="nav-btn" id="orgchart-nav">👥 Org Chart</button>
@@ -125,6 +126,17 @@
                             <span>Send</span>
                         </button>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Pending Questions Section -->
+            <div id="pending-section" class="section">
+                <div class="section-header">
+                    <h3>📋 Pending Questions for Data Collection</h3>
+                    <button onclick="loadPendingQuestions()" class="primary-btn">🔄 Refresh</button>
+                </div>
+                <div id="pending-questions-container">
+                    <p style="text-align: center; color: #666; padding: 40px;">Loading pending questions...</p>
                 </div>
             </div>
             

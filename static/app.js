@@ -161,6 +161,8 @@ function showSection(sectionName) {
     // Load data for specific sections
     if (sectionName === 'robin') {
         loadRobinChat();
+    } else if (sectionName === 'pending') {
+        loadPendingQuestions();
     } else if (sectionName === 'tasks') {
         loadTasks();
     } else if (sectionName === 'alignments') {
@@ -2715,6 +2717,129 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ============================================================================
+// Pending Questions Functions
+// ============================================================================
+
+async function loadPendingQuestions() {
+    if (!currentUser || !currentUser.id) {
+        console.error('No current user found');
+        return;
+    }
+    
+    const container = document.getElementById('pending-questions-container');
+    container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Loading pending questions...</p>';
+    
+    try {
+        const response = await fetch('/pending-questions', {
+            headers: {
+                'X-User-Id': currentUser.id
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load pending questions');
+        }
+        
+        const pending = await response.json();
+        
+        if (pending.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+                    <h3 style="color: #2c5f2d; margin-bottom: 8px;">All Caught Up!</h3>
+                    <p style="color: #666;">You have no pending questions. All your task attributes are up to date.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Group by reason
+        const grouped = {
+            missing: pending.filter(p => p.reason === 'missing'),
+            stale: pending.filter(p => p.reason === 'stale'),
+            misaligned: pending.filter(p => p.reason === 'misaligned')
+        };
+        
+        let html = `
+            <div style="margin-bottom: 20px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
+                <h4 style="margin: 0 0 8px 0; color: #333;">Summary</h4>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="padding: 8px 16px; background: #fff3cd; border-radius: 6px; border-left: 3px solid #ffc107;">
+                        <strong>${grouped.missing.length}</strong> Missing
+                    </div>
+                    <div style="padding: 8px 16px; background: #cce5ff; border-radius: 6px; border-left: 3px solid #0066cc;">
+                        <strong>${grouped.stale.length}</strong> Stale (>7 days)
+                    </div>
+                    <div style="padding: 8px 16px; background: #f8d7da; border-radius: 6px; border-left: 3px solid #dc3545;">
+                        <strong>${grouped.misaligned.length}</strong> Misaligned
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Display as a table
+        html += `
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <thead>
+                        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Priority</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Reason</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Task</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Attribute</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">About</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        for (const p of pending) {
+            const reasonColor = p.reason === 'missing' ? '#ffc107' : 
+                              p.reason === 'stale' ? '#0066cc' : '#dc3545';
+            const reasonBadge = `<span style="display: inline-block; padding: 4px 8px; background: ${reasonColor}; color: white; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">${p.reason.toUpperCase()}</span>`;
+            
+            html += `
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 12px; color: #666;">#${p.priority}</td>
+                    <td style="padding: 12px;">${reasonBadge}</td>
+                    <td style="padding: 12px; font-weight: 500; color: #333;">${p.task_title || 'User-level'}</td>
+                    <td style="padding: 12px; color: #0066cc; font-weight: 500;">${p.attribute_label}</td>
+                    <td style="padding: 12px; color: #666;">${p.target_user_name}</td>
+                </tr>
+            `;
+        }
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        html += `
+            <div style="margin-top: 24px; padding: 16px; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #0066cc;">
+                <h4 style="margin: 0 0 8px 0; color: #004085;">💡 How to Fill These</h4>
+                <p style="margin: 0; color: #004085; line-height: 1.6;">
+                    Go to <strong>🤖 Chat with Robin</strong> and type <code style="background: white; padding: 2px 6px; border-radius: 3px;">collect_data</code> 
+                    to have Robin guide you through answering these questions in a conversational way.
+                </p>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading pending questions:', error);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #dc3545;">
+                <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+                <p>Failed to load pending questions. Please try again.</p>
+                <button onclick="loadPendingQuestions()" class="primary-btn" style="margin-top: 16px;">Retry</button>
+            </div>
+        `;
+    }
 }
 
 // ============================================================================

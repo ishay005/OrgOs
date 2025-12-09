@@ -11,7 +11,7 @@ import os
 from app.database import init_db, SessionLocal
 from app.seed import seed_database
 from app.routers import (
-    users, tasks, questions, misalignments, debug, users_orgchart, alignment_stats, chat
+    users, tasks, questions, misalignments, debug, users_orgchart, alignment_stats, chat, pending_questions
 )
 
 # Configure logging
@@ -63,6 +63,7 @@ app.include_router(misalignments.router)
 app.include_router(debug.router)
 app.include_router(alignment_stats.router)
 app.include_router(chat.router)  # Robin chat assistant
+app.include_router(pending_questions.router)  # Pending questions for data collection
 
 
 # Mount static files
