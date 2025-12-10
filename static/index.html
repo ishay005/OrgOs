@@ -243,6 +243,16 @@
                             <small style="color: #666; display: block; margin-top: 5px;">This will be saved with the version for future reference</small>
                         </div>
                         
+                        <div class="prompt-editor-section">
+                            <label><strong>👁️ Live Preview - Full Prompt with Context:</strong></label>
+                            <div style="background: #f0f0f0; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                                <small style="color: #666;">This shows how the prompt will look with sample context data based on your selected filters. Updates as you type!</small>
+                            </div>
+                            <div id="prompt-preview" style="background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; max-height: 500px; overflow-y: auto; line-height: 1.5;">
+                                <span style="color: #888;">Preview will appear here...</span>
+                            </div>
+                        </div>
+                        
                         <div class="prompt-editor-actions">
                             <button onclick="savePrompt()" class="primary-btn">💾 Save New Version</button>
                             <button onclick="activateSelectedVersion()" class="secondary-btn">✅ Activate Selected Version</button>

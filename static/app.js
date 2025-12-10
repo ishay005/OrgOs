@@ -2737,6 +2737,33 @@ function setupPromptEventListeners() {
         });
     }
     
+    // Add listeners for all prompt/context fields to update preview
+    const promptText = document.getElementById('prompt-text');
+    if (promptText) {
+        promptText.addEventListener('input', updatePromptPreview);
+    }
+    
+    // Add listeners for all context checkboxes
+    const contextFields = [
+        'ctx-history-size',
+        'ctx-include-personal-tasks',
+        'ctx-include-manager-tasks',
+        'ctx-include-employee-tasks',
+        'ctx-include-aligned-tasks',
+        'ctx-include-all-org-tasks',
+        'ctx-include-employees',
+        'ctx-include-aligned-users',
+        'ctx-include-all-users',
+        'ctx-include-pending'
+    ];
+    
+    contextFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('change', updatePromptPreview);
+        }
+    });
+    
     promptEventListenersSetup = true;
     console.log('Prompt event listeners setup complete');
 }
@@ -2864,6 +2891,9 @@ function populatePromptForm(prompt) {
         const activeStatus = prompt.is_active ? '🟢 Active' : '⚪ Inactive';
         versionInfo.textContent = `Version ${prompt.version} | ${activeStatus} | Created: ${createdDate} | By: ${prompt.created_by || 'System'}`;
     }
+    
+    // Update preview with the loaded prompt
+    updatePromptPreview();
 }
 
 async function loadPromptVersion() {
@@ -3002,4 +3032,87 @@ async function activateSelectedVersion() {
         showPromptStatus('❌ Failed to activate version: ' + error.message, 'error');
     }
 }
+
+async function updatePromptPreview() {
+    const promptText = document.getElementById('prompt-text')?.value || '';
+    const previewDiv = document.getElementById('prompt-preview');
+    const modeSelect = document.getElementById('prompt-mode-select');
+    
+    if (!previewDiv || !modeSelect || !currentUser) return;
+    
+    // Show loading
+    previewDiv.innerHTML = '<span style="color: #888;">Loading preview...</span>';
+    
+    const [mode, hasPendingStr] = modeSelect.value.split('_');
+    const hasPending = hasPendingStr === 'true';
+    
+    // Build context config from form
+    const contextConfig = {
+        history_size: parseInt(document.getElementById('ctx-history-size')?.value) || 2,
+        include_personal_tasks: document.getElementById('ctx-include-personal-tasks')?.checked || false,
+        include_manager_tasks: document.getElementById('ctx-include-manager-tasks')?.checked || false,
+        include_employee_tasks: document.getElementById('ctx-include-employee-tasks')?.checked || false,
+        include_aligned_tasks: document.getElementById('ctx-include-aligned-tasks')?.checked || false,
+        include_all_org_tasks: document.getElementById('ctx-include-all-org-tasks')?.checked || false,
+        include_user_info: true,
+        include_manager: true,
+        include_employees: document.getElementById('ctx-include-employees')?.checked || false,
+        include_aligned_users: document.getElementById('ctx-include-aligned-users')?.checked || false,
+        include_all_users: document.getElementById('ctx-include-all-users')?.checked || false,
+        include_pending: document.getElementById('ctx-include-pending')?.checked || false
+    };
+    
+    try {
+        const response = await fetch('/prompts/preview', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': currentUser.id
+            },
+            body: JSON.stringify({
+                mode: mode,
+                has_pending: hasPending,
+                prompt_text: promptText,
+                context_config: contextConfig
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Format exactly like the debug prompt - as JSON with syntax highlighting
+        const formatted = JSON.stringify(data.full_prompt, null, 2);
+        
+        // Apply syntax highlighting (same as showLastPrompt)
+        const highlighted = formatted
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        
+        previewDiv.innerHTML = `<pre style="margin: 0;">${highlighted}</pre>`;
+        
+    } catch (error) {
+        console.error('Error updating preview:', error);
+        previewDiv.innerHTML = `<span style="color: #f48771;">Error loading preview: ${error.message}</span>`;
+    }
+}
+
 
