@@ -2779,7 +2779,10 @@ async function loadSelectedPrompt() {
     
     const key = select.value;
     console.log(`Selected key: ${key}`);
-    const [mode, hasPendingStr] = key.split('_');
+    // Split on the LAST underscore to handle modes like "morning_brief"
+    const lastUnderscore = key.lastIndexOf('_');
+    const mode = key.substring(0, lastUnderscore);
+    const hasPendingStr = key.substring(lastUnderscore + 1);
     const hasPending = hasPendingStr === 'true';
     
     // Load version history for this mode
@@ -2913,11 +2916,22 @@ async function loadPromptVersion() {
 
 async function savePrompt() {
     const select = document.getElementById('prompt-mode-select');
-    const [mode, hasPendingStr] = select.value.split('_');
+    const key = select.value;
+    // Split on the LAST underscore to handle modes like "morning_brief"
+    const lastUnderscore = key.lastIndexOf('_');
+    const mode = key.substring(0, lastUnderscore);
+    const hasPendingStr = key.substring(lastUnderscore + 1);
     const hasPending = hasPendingStr === 'true';
     
-    const promptText = document.getElementById('prompt-text').value;
+    const promptTextEl = document.getElementById('prompt-text');
+    const promptText = promptTextEl ? promptTextEl.value : '';
     const notes = document.getElementById('prompt-notes').value;
+    
+    console.log('💾 Saving prompt...');
+    console.log('Mode:', mode, 'Has Pending:', hasPending);
+    console.log('Prompt text length:', promptText.length);
+    console.log('Prompt text (first 100 chars):', promptText.substring(0, 100));
+    console.log('Notes:', notes);
     
     // Build context config from individual fields
     const contextConfig = {
@@ -2953,27 +2967,36 @@ async function savePrompt() {
     }
     
     try {
+        const payload = {
+            mode: mode,
+            has_pending: hasPending,
+            prompt_text: promptText,
+            context_config: contextConfig,
+            created_by: currentUser.name,
+            notes: notes || null
+        };
+        
+        console.log('📤 Sending payload:', JSON.stringify(payload).substring(0, 200) + '...');
+        
         const response = await fetch('/prompts/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-User-Id': currentUser.id
             },
-            body: JSON.stringify({
-                mode: mode,
-                has_pending: hasPending,
-                prompt_text: promptText,
-                context_config: contextConfig,
-                created_by: currentUser.name,
-                notes: notes || null
-            })
+            body: JSON.stringify(payload)
         });
         
+        console.log('📥 Response status:', response.status);
+        
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ Server error:', errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
         const newPrompt = await response.json();
+        console.log('✅ Saved successfully! New version:', newPrompt.version);
         
         showPromptStatus(`✅ Saved! New version ${newPrompt.version} is now active.`, 'success');
         
@@ -2981,7 +3004,7 @@ async function savePrompt() {
         await loadPrompts();
         
     } catch (error) {
-        console.error('Error saving prompt:', error);
+        console.error('❌ Error saving prompt:', error);
         showPromptStatus('Failed to save prompt: ' + error.message, 'error');
     }
 }
@@ -3043,7 +3066,11 @@ async function updatePromptPreview() {
     // Show loading
     previewDiv.innerHTML = '<span style="color: #888;">Loading preview...</span>';
     
-    const [mode, hasPendingStr] = modeSelect.value.split('_');
+    const key = modeSelect.value;
+    // Split on the LAST underscore to handle modes like "morning_brief"
+    const lastUnderscore = key.lastIndexOf('_');
+    const mode = key.substring(0, lastUnderscore);
+    const hasPendingStr = key.substring(lastUnderscore + 1);
     const hasPending = hasPendingStr === 'true';
     
     // Build context config from form

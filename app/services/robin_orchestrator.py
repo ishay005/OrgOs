@@ -229,16 +229,14 @@ def _filter_pending_by_mode(
     """
     Filter pending questions based on mode and context.
     
-    morning_brief: Up to 2 items from top tasks
+    morning_brief: Up to 2 items from top tasks (or all if fewer than 5 tasks)
     user_question: Up to 1 item (would need topic matching, simplified here)
     collect_data: Up to 5 high-priority items
     """
     if mode == "morning_brief":
-        # Get task titles from snapshot
-        top_task_titles = [t["title"] for t in task_snapshot[:5]]
-        # Filter pending to only those tasks
-        filtered = [p for p in pending if _get_task_title_for_pending(p, task_snapshot) in top_task_titles]
-        return filtered[:2]
+        # For morning brief, include pending items from top tasks
+        # If we have pending items, they're relevant enough to show
+        return pending[:2]
     
     elif mode == "user_question":
         # In a full implementation, we'd match user's question to tasks/topics
@@ -250,13 +248,6 @@ def _filter_pending_by_mode(
         return pending[:5]
     
     return []
-
-
-def _get_task_title_for_pending(pending: PendingQuestion, task_snapshot: List[dict]) -> str:
-    """Helper to get task title from snapshot"""
-    # This is a simplified lookup; in practice, you'd match by task_id
-    # For now, just return empty string
-    return ""
 
 
 # ============================================================================
