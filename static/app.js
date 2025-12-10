@@ -2458,7 +2458,7 @@ function updateDailySyncIndicator() {
         
         // Format phase name nicely
         const phaseNames = {
-            'morning_brief': '☀️ Morning Brief',
+            'opening_brief': '🌅 Opening Brief',
             'questions': '💬 Questions',
             'summary': '📝 Summary',
             'done': '✅ Complete'
@@ -2534,7 +2534,7 @@ async function startDailySync() {
         // Update UI immediately (optimistic update)
         dailySyncActive = true;
         updateDailySyncButton();
-        updateDailySyncIndicator();
+        // Don't update indicator yet - we don't have the phase!
         
         // Show typing indicator while waiting for LLM
         showTypingIndicator();

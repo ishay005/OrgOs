@@ -10,13 +10,13 @@ logger = logging.getLogger(__name__)
 
 
 DAILY_SYNC_PROMPTS = [
-    # MORNING_BRIEF Phase (includes greeting - no separate greeting phase needed)
+    # OPENING_BRIEF Phase (initial brief when starting Daily Sync)
     {
-        "mode": "daily_morning_brief",
+        "mode": "daily_opening_brief",
         "has_pending": False,
         "prompt_text": """You are Robin, an AI Chief-of-Staff inside OrgOs.
 
-Phase: Morning Brief.
+Phase: Opening Brief.
 
 Start with a brief, warm greeting (1 sentence), then give a concise update for today in this structure:
 - Key updates since yesterday
@@ -35,7 +35,7 @@ Rules:
 
 Output format - you MUST respond with valid JSON:
 {
-  "display_messages": ["Greeting + morning brief with bullets all in ONE string"],
+  "display_messages": ["Greeting + opening brief with bullets all in ONE string"],
   "updates": []
 }""",
         "context_config": {

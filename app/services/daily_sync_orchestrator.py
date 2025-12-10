@@ -108,7 +108,7 @@ def create_daily_session(
     session = DailySyncSession(
         user_id=user_id,
         thread_id=thread_id,
-        phase=DailySyncPhase.MORNING_BRIEF,  # Start directly with morning brief (includes greeting)
+        phase=DailySyncPhase.OPENING_BRIEF,  # Start with opening brief
         insight_questions=questions_json,
         asked_question_ids=[],
         answered_question_ids=[],
@@ -284,7 +284,7 @@ def _get_daily_sync_prompt(db: Session, phase: DailySyncPhase, has_pending: bool
     """Load prompt and context config for a Daily Sync phase from database"""
     # Map phase to mode name
     mode_map = {
-        DailySyncPhase.MORNING_BRIEF: "daily_morning_brief",
+        DailySyncPhase.OPENING_BRIEF: "daily_opening_brief",
         DailySyncPhase.QUESTIONS: "daily_questions",  # Combined user + robin questions
         DailySyncPhase.SUMMARY: "daily_summary"
     }
@@ -325,7 +325,7 @@ def _build_daily_sync_context(
         sections.append(f"Employees: {', '.join(user_ctx.employees)}")
     
     # Situation context (for morning brief and questions)
-    if phase in [DailySyncPhase.MORNING_BRIEF, DailySyncPhase.QUESTIONS]:
+    if phase in [DailySyncPhase.OPENING_BRIEF, DailySyncPhase.QUESTIONS]:
         sections.append("\n=== SITUATION ===")
         if situation_ctx.tasks_in_progress:
             sections.append(f"In Progress: {', '.join([t['title'] for t in situation_ctx.tasks_in_progress])}")
@@ -452,18 +452,18 @@ def _determine_next_phase(
     Determine next phase based on current phase and context.
     
     Simplified flow:
-    1. MORNING_BRIEF → QUESTIONS (when user responds)
+    1. OPENING_BRIEF → QUESTIONS (when user responds)
     2. QUESTIONS → SUMMARY (when conversation seems done)
     3. SUMMARY → DONE
     """
     
-    if current_phase == DailySyncPhase.MORNING_BRIEF:
-        # Stay in morning brief until user responds
+    if current_phase == DailySyncPhase.OPENING_BRIEF:
+        # Stay in opening brief until user responds
         if user_message:
             return DailySyncPhase.QUESTIONS
         else:
             # Initial brief - stay in this phase
-            return DailySyncPhase.MORNING_BRIEF
+            return DailySyncPhase.OPENING_BRIEF
     
     elif current_phase == DailySyncPhase.QUESTIONS:
         # Check if user wants to wrap up
@@ -510,11 +510,21 @@ async def handle_daily_sync_turn(
     current_phase = session.phase
     logger.info(f"🔄 Daily Sync turn - Phase: {current_phase}, User message: {user_message}")
     
-    # Determine if we have pending questions (for QUESTIONS phase)
-    has_pending = (current_phase == DailySyncPhase.QUESTIONS and len(session.insight_questions) > 0)
+    # Determine which phase's prompt to use
+    # If user is responding to opening brief, we should use questions prompt!
+    if current_phase == DailySyncPhase.OPENING_BRIEF and user_message:
+        # User responded to opening brief -> use questions phase prompt
+        prompt_phase = DailySyncPhase.QUESTIONS
+        logger.info(f"🔀 User responded to opening brief -> using QUESTIONS prompt")
+    else:
+        # Use current phase's prompt
+        prompt_phase = current_phase
     
-    # Load prompt for this phase
-    system_prompt, context_config = _get_daily_sync_prompt(db, current_phase, has_pending)
+    # Determine if we have pending questions (for QUESTIONS phase)
+    has_pending = (prompt_phase == DailySyncPhase.QUESTIONS and len(session.insight_questions) > 0)
+    
+    # Load prompt for the appropriate phase
+    system_prompt, context_config = _get_daily_sync_prompt(db, prompt_phase, has_pending)
     
     # Build context
     recent_messages = _get_recent_daily_sync_messages(db, session.thread_id, limit=5)
@@ -534,7 +544,7 @@ async def handle_daily_sync_turn(
     
     full_prompt_debug = {
         "model": "gpt-5-mini",
-        "mode": f"daily_{current_phase.value}",
+        "mode": f"daily_{prompt_phase.value}",  # Use prompt_phase, not current_phase!
         "messages": messages_for_llm
     }
     
@@ -549,7 +559,7 @@ async def handle_daily_sync_turn(
         robin_messages = [RobinMessage(
             text=combined_text,
             metadata={
-                "phase": current_phase.value,
+                "phase": prompt_phase.value,  # Use prompt_phase for consistency with debug mode
                 "debug_prompt": full_prompt_debug,
                 "full_response": llm_response
             }
@@ -573,9 +583,11 @@ async def handle_daily_sync_turn(
         session.asked_question_ids = list(asked_ids)
     
     # Determine next phase
+    logger.info(f"🔍 Before phase transition - Current: {current_phase}, User message: {'Yes' if user_message else 'No'}")
     next_phase = _determine_next_phase(current_phase, user_message, session, llm_response)
     
     logger.info(f"✅ Phase transition: {current_phase} → {next_phase}")
+    logger.info(f"📊 Session will be updated with new phase: {next_phase}")
     
     return DailySyncTurnResult(
         messages=robin_messages,

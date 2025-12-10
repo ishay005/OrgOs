@@ -45,10 +45,12 @@ async def start_daily_sync(
     and returns initial messages.
     """
     user_id = UUID(x_user_id)
+    logger.info(f"🚀 /daily/start called for user {user_id}")
     
     # Check if there's already an active session
     existing_session = daily_sync_orchestrator.get_active_daily_session(db, user_id)
     if existing_session:
+        logger.warning(f"⚠️  User {user_id} already has active Daily Sync session in phase {existing_session.phase}")
         raise HTTPException(
             status_code=400,
             detail=f"Daily Sync already in progress (phase: {existing_session.phase}). Complete or cancel it first."
@@ -136,14 +138,18 @@ async def send_daily_sync_message(
     Send a message during an active Daily Sync session.
     """
     user_id = UUID(x_user_id)
+    logger.info(f"📨 /daily/send called for user {user_id}, message: '{request.text[:50]}'")
     
     # Get active session
     session = daily_sync_orchestrator.get_active_daily_session(db, user_id)
     if not session:
+        logger.error(f"❌ No active Daily Sync session for user {user_id}")
         raise HTTPException(
             status_code=404,
             detail="No active Daily Sync session. Start one with POST /daily/start"
         )
+    
+    logger.info(f"📊 Current session phase: {session.phase}")
     
     # Store user message
     user_msg = ChatMessage(

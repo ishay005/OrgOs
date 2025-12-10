@@ -262,7 +262,7 @@ class PromptTemplate(Base):
 
 class DailySyncPhase(str, enum.Enum):
     """Phases of the Daily Sync conversation flow"""
-    MORNING_BRIEF = "morning_brief"  # Greeting + brief combined
+    OPENING_BRIEF = "opening_brief"  # Initial brief when starting Daily Sync
     QUESTIONS = "questions"  # User questions + Robin questions combined
     SUMMARY = "summary"
     DONE = "done"
@@ -275,7 +275,7 @@ class DailySyncSession(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
     thread_id = Column(UUID(as_uuid=True), ForeignKey('chat_threads.id'), nullable=False)
-    phase = Column(SQLEnum(DailySyncPhase), nullable=False, default=DailySyncPhase.MORNING_BRIEF)
+    phase = Column(SQLEnum(DailySyncPhase, values_callable=lambda x: [e.value for e in x]), nullable=False, default=DailySyncPhase.OPENING_BRIEF)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = Column(Boolean, nullable=False, default=True)
