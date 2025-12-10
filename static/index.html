@@ -70,12 +70,18 @@
                 <div class="section-header">
                     <h3>🤖 Chat with Robin</h3>
                     <div style="display: flex; gap: 8px;">
-                        <button onclick="showLastPrompt()" class="secondary-btn" style="font-size: 0.85rem;">🐛 View Last Prompt</button>
                         <button onclick="triggerMorningBrief()" class="primary-btn">☀️ Morning Brief</button>
+                        <button id="daily-sync-btn" onclick="toggleDailySync()" class="primary-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🌅 Start Daily Sync</button>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #888; margin-top: 8px;">
+                        💡 Tip: Click on any Robin message to view debug data (prompt + response)
                     </div>
                 </div>
                 
                 <div class="robin-chat-container">
+                    <div id="daily-sync-indicator" style="display: none; padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 0.9rem; font-weight: 500; border-radius: 8px; margin-bottom: 12px; text-align: center;">
+                        <span id="daily-sync-phase-text">Daily Sync: Greeting</span>
+                    </div>
                     <div id="robin-messages" class="chat-messages-list">
                         <div class="chat-message system">
                             <div class="message-content">
@@ -111,6 +117,34 @@
                     <h3>📋 Pending Questions for Data Collection</h3>
                     <button onclick="loadPendingQuestions()" class="primary-btn">🔄 Refresh</button>
                 </div>
+                
+                <!-- Quick Add Task Form -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 2px dashed #6366f1;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="font-size: 1.1rem; font-weight: 600; color: #4f46e5; white-space: nowrap;">➕ Quick Add Task</div>
+                        <div style="flex: 1; display: flex; gap: 12px; align-items: center;">
+                            <input type="text" 
+                                   id="quick-task-name" 
+                                   placeholder="Enter task name..." 
+                                   style="flex: 2; padding: 10px 14px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.95rem; transition: border-color 0.2s;"
+                                   onfocus="this.style.borderColor='#6366f1'"
+                                   onblur="this.style.borderColor='#e0e7ff'">
+                            <select id="quick-task-owner" 
+                                    style="flex: 1; padding: 10px 14px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.95rem; background: white; cursor: pointer; transition: border-color 0.2s;"
+                                    onfocus="this.style.borderColor='#6366f1'"
+                                    onblur="this.style.borderColor='#e0e7ff'">
+                                <option value="">Select owner...</option>
+                            </select>
+                            <button onclick="quickAddTask()" 
+                                    style="padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.95rem; white-space: nowrap; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"
+                                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.3)'">
+                                ➕ Add Task
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
                 <div id="pending-questions-container">
                     <p style="text-align: center; color: #666; padding: 40px;">Loading pending questions...</p>
                 </div>
@@ -134,6 +168,11 @@
                                 <option value="user_question_false">User Question (without pending)</option>
                                 <option value="collect_data_true">Collect Data (with pending)</option>
                                 <option value="collect_data_false">Collect Data (without pending)</option>
+                                <optgroup label="Daily Sync">
+                                    <option value="daily_morning_brief_false">Daily: Morning Brief (includes greeting)</option>
+                                    <option value="daily_questions_true">Daily: Questions (user + Robin, with pending)</option>
+                                    <option value="daily_summary_false">Daily: Summary</option>
+                                </optgroup>
                             </select>
                         </div>
                         

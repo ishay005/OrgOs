@@ -11,7 +11,7 @@ from datetime import datetime
 from app.database import get_db
 from app.auth import get_current_user
 from app.models import (
-    User, ChatThread, ChatMessage, MessageSender,
+    User, ChatThread, ChatMessage, MessageSender, MessageDebugData,
     Task, AttributeDefinition, AttributeAnswer
 )
 from app.services.robin_orchestrator import generate_robin_reply, StructuredUpdate
@@ -285,6 +285,16 @@ async def send_message(
             db.commit()
             db.refresh(chat_message)
             
+            # Save debug data if available
+            if robin_msg.metadata and ('debug_prompt' in robin_msg.metadata or 'full_response' in robin_msg.metadata):
+                debug_data = MessageDebugData(
+                    message_id=chat_message.id,
+                    full_prompt=robin_msg.metadata.get('debug_prompt', {}),
+                    full_response=robin_msg.metadata.get('full_response', {})
+                )
+                db.add(debug_data)
+                db.commit()
+            
             response_messages.append(
                 ChatMessageResponse(
                     id=str(chat_message.id),
@@ -340,3 +350,48 @@ async def trigger_morning_brief(
         db=db
     )
 
+
+
+@router.get("/message/{message_id}/debug")
+async def get_message_debug_data(
+    message_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get debug data (prompt + response) for a specific message.
+    """
+    from uuid import UUID
+    
+    try:
+        msg_uuid = UUID(message_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid message ID")
+    
+    # Get the message to verify it belongs to the user's thread
+    message = db.query(ChatMessage).filter(ChatMessage.id == msg_uuid).first()
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    # Verify the message belongs to user's thread
+    thread = db.query(ChatThread).filter(
+        ChatThread.id == message.thread_id,
+        ChatThread.user_id == current_user.id
+    ).first()
+    if not thread:
+        raise HTTPException(status_code=403, detail="Not authorized to view this message")
+    
+    # Get debug data
+    debug_data = db.query(MessageDebugData).filter(
+        MessageDebugData.message_id == msg_uuid
+    ).first()
+    
+    if not debug_data:
+        raise HTTPException(status_code=404, detail="No debug data available for this message")
+    
+    return {
+        "message_id": str(message.id),
+        "full_prompt": debug_data.full_prompt,
+        "full_response": debug_data.full_response,
+        "created_at": debug_data.created_at.isoformat()
+    }

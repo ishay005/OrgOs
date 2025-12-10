@@ -2136,6 +2136,13 @@ let isRobinTyping = false;
 
 async function loadRobinChat() {
     try {
+        // Check for active Daily Sync session
+        await checkDailySyncStatus();
+        if (dailySyncActive) {
+            console.log(`📅 Active Daily Sync session detected (phase: ${dailySyncPhase})`);
+        }
+        updateDailySyncButton();
+        
         const response = await fetch('/chat/history?limit=50', {
             headers: {
                 'X-User-Id': currentUser.id
@@ -2211,6 +2218,14 @@ function appendMessageToUI(message) {
             <div class="message-timestamp">${formatTimestamp(message.created_at)}</div>
         </div>
     `;
+    
+    // Add click handler for Robin messages to show debug data
+    if (message.sender === 'robin' && message.id) {
+        messageDiv.style.cursor = 'pointer';
+        messageDiv.title = 'Click to view debug data (prompt + response)';
+        messageDiv.dataset.messageId = message.id;
+        messageDiv.addEventListener('click', () => showMessageDebugData(message.id));
+    }
     
     container.appendChild(messageDiv);
     scrollToBottom();
@@ -2288,7 +2303,25 @@ async function sendMessageToRobin() {
         // Show typing indicator
         showTypingIndicator();
         
-        // Send to backend
+        // Check if we're in Daily Sync mode (but allow "morning_brief" to bypass)
+        if (dailySyncActive && text !== 'morning_brief') {
+            console.log('📅 Routing to Daily Sync endpoint');
+            hideTypingIndicator();
+            await sendDailySyncMessage(text);
+            sendBtn.disabled = false;
+            sendBtn.classList.remove('loading');
+            return;
+        }
+        
+        // If "morning_brief" while in Daily Sync, end the session first
+        if (dailySyncActive && text === 'morning_brief') {
+            console.log('⚠️ Ending Daily Sync to trigger morning_brief');
+            dailySyncActive = false;
+            dailySyncSessionId = null;
+            dailySyncPhase = null;
+        }
+        
+        // Send to backend (normal chat)
         const response = await fetch('/chat/send', {
             method: 'POST',
             headers: {
@@ -2321,10 +2354,16 @@ async function sendMessageToRobin() {
         data.messages.forEach(msg => {
             appendMessageToUI(msg);
             
-            // Capture debug prompt from Robin's message metadata
-            if (msg.sender === 'robin' && msg.metadata && msg.metadata.debug_prompt) {
-                lastRobinPrompt = msg.metadata.debug_prompt;
-                console.log('🐛 Debug prompt captured for last message');
+            // Capture debug prompt and full response from Robin's message metadata
+            if (msg.sender === 'robin' && msg.metadata) {
+                if (msg.metadata.debug_prompt) {
+                    lastRobinPrompt = msg.metadata.debug_prompt;
+                    console.log('🐛 Debug prompt captured for last message');
+                }
+                if (msg.metadata.full_response) {
+                    lastRobinResponse = msg.metadata.full_response;
+                    console.log('📊 Full response captured for last message');
+                }
             }
         });
         
@@ -2357,6 +2396,251 @@ async function triggerMorningBrief() {
     const input = document.getElementById('robin-input');
     input.value = 'morning_brief';
     await sendMessageToRobin();
+}
+
+// ===== Daily Sync Functions =====
+let dailySyncActive = false;
+let dailySyncSessionId = null;
+let dailySyncPhase = null;
+
+async function checkDailySyncStatus() {
+    try {
+        const response = await fetch('/daily/status', {
+            headers: {
+                'X-User-Id': currentUser.id
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.has_active_session) {
+                dailySyncActive = true;
+                dailySyncSessionId = data.session_id;
+                dailySyncPhase = data.phase;
+                return true;
+            }
+        }
+        
+        dailySyncActive = false;
+        dailySyncSessionId = null;
+        dailySyncPhase = null;
+        return false;
+    } catch (error) {
+        console.error('Error checking Daily Sync status:', error);
+        return false;
+    }
+}
+
+function updateDailySyncButton() {
+    const btn = document.getElementById('daily-sync-btn');
+    if (!btn) return;
+    
+    if (dailySyncActive) {
+        btn.textContent = '🛑 Stop Daily Sync';
+        btn.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+    } else {
+        btn.textContent = '🌅 Start Daily Sync';
+        btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    }
+    
+    updateDailySyncIndicator();
+}
+
+function updateDailySyncIndicator() {
+    const indicator = document.getElementById('daily-sync-indicator');
+    const phaseText = document.getElementById('daily-sync-phase-text');
+    
+    if (!indicator || !phaseText) return;
+    
+    if (dailySyncActive && dailySyncPhase) {
+        // Show indicator with current phase
+        indicator.style.display = 'block';
+        
+        // Format phase name nicely
+        const phaseNames = {
+            'morning_brief': '☀️ Morning Brief',
+            'questions': '💬 Questions',
+            'summary': '📝 Summary',
+            'done': '✅ Complete'
+        };
+        
+        const phaseName = phaseNames[dailySyncPhase] || dailySyncPhase;
+        phaseText.textContent = `Daily Sync Mode: ${phaseName}`;
+    } else {
+        // Hide indicator
+        indicator.style.display = 'none';
+    }
+}
+
+async function toggleDailySync() {
+    if (dailySyncActive) {
+        // Stop Daily Sync - call backend to end session
+        try {
+            const response = await fetch('/daily/end', {
+                method: 'POST',
+                headers: {
+                    'X-User-Id': currentUser.id
+                }
+            });
+            
+            if (!response.ok) {
+                console.error('Failed to end Daily Sync session');
+            }
+        } catch (error) {
+            console.error('Error ending Daily Sync:', error);
+        }
+        
+        // Update frontend state
+        dailySyncActive = false;
+        dailySyncSessionId = null;
+        dailySyncPhase = null;
+        updateDailySyncButton();
+        updateDailySyncIndicator();
+        
+        const container = document.getElementById('robin-messages');
+        const systemMsg = document.createElement('div');
+        systemMsg.className = 'chat-message system';
+        systemMsg.innerHTML = `
+            <div class="message-avatar">ℹ️</div>
+            <div>
+                <div class="message-content">
+                    <p>Daily Sync ended. You can now use normal chat.</p>
+                </div>
+                <div class="message-timestamp">${formatTimestamp(new Date().toISOString())}</div>
+            </div>
+        `;
+        container.appendChild(systemMsg);
+        scrollToBottom();
+    } else {
+        // Start Daily Sync
+        await startDailySync();
+    }
+}
+
+async function startDailySync() {
+    if (!currentUser) {
+        alert('Please log in first');
+        return;
+    }
+    
+    try {
+        // Check if already in progress
+        const hasActive = await checkDailySyncStatus();
+        if (hasActive) {
+            alert(`Daily Sync already in progress (phase: ${dailySyncPhase})`);
+            return;
+        }
+        
+        // Update UI immediately (optimistic update)
+        dailySyncActive = true;
+        updateDailySyncButton();
+        updateDailySyncIndicator();
+        
+        // Show typing indicator while waiting for LLM
+        showTypingIndicator();
+        
+        // Start new Daily Sync
+        const response = await fetch('/daily/start', {
+            method: 'POST',
+            headers: {
+                'X-User-Id': currentUser.id,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            // Hide typing indicator and revert button state on error
+            hideTypingIndicator();
+            dailySyncActive = false;
+            updateDailySyncButton();
+            updateDailySyncIndicator();
+            alert(`Failed to start Daily Sync: ${error.detail || 'Unknown error'}`);
+            return;
+        }
+        
+        const data = await response.json();
+        
+        // Hide typing indicator before showing real messages
+        hideTypingIndicator();
+        
+        // Update state with actual session data
+        dailySyncSessionId = data.session_id;
+        dailySyncPhase = data.phase;
+        updateDailySyncIndicator();
+        
+        // Display messages
+        for (const msg of data.messages) {
+            appendMessageToUI(msg);
+        }
+        
+        scrollToBottom();
+        
+        console.log('✅ Daily Sync started:', data);
+    } catch (error) {
+        console.error('Error starting Daily Sync:', error);
+        // Hide typing indicator and revert button state on error
+        hideTypingIndicator();
+        dailySyncActive = false;
+        updateDailySyncButton();
+        updateDailySyncIndicator();
+        alert('Failed to start Daily Sync. Check console for details.');
+    }
+}
+
+async function sendDailySyncMessage(text) {
+    try {
+        // Show typing indicator while waiting for LLM
+        showTypingIndicator();
+        
+        const response = await fetch('/daily/send', {
+            method: 'POST',
+            headers: {
+                'X-User-Id': currentUser.id,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            hideTypingIndicator();
+            throw new Error(error.detail || 'Unknown error');
+        }
+        
+        const data = await response.json();
+        
+        // Hide typing indicator before showing real messages
+        hideTypingIndicator();
+        
+        // Update phase
+        dailySyncPhase = data.phase;
+        updateDailySyncIndicator();
+        
+        // If complete, deactivate
+        if (data.is_complete) {
+            dailySyncActive = false;
+            dailySyncSessionId = null;
+            dailySyncPhase = null;
+            updateDailySyncButton();
+            console.log('✅ Daily Sync completed');
+        }
+        
+        // Display Robin's messages
+        for (const msg of data.messages) {
+            appendMessageToUI(msg);
+        }
+        
+        scrollToBottom();
+    } catch (error) {
+        console.error('Error sending Daily Sync message:', error);
+        hideTypingIndicator();
+        appendMessageToUI({
+            sender: 'system',
+            text: `Error: ${error.message}`,
+            created_at: new Date().toISOString()
+        });
+    }
 }
 
 function scrollToBottom() {
@@ -2404,6 +2688,9 @@ async function loadPendingQuestions() {
         console.error('No current user found');
         return;
     }
+    
+    // Populate owner dropdown
+    await populateTaskOwnerDropdown();
     
     const container = document.getElementById('pending-questions-container');
     container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Loading pending questions...</p>';
@@ -2592,12 +2879,89 @@ async function savePendingAnswer(pendingId, taskId, targetUserId, attributeName)
     }
 }
 
+async function populateTaskOwnerDropdown() {
+    try {
+        // apiCall already returns parsed JSON
+        const users = await apiCall('/users', {
+            method: 'GET'
+        });
+        
+        const dropdown = document.getElementById('quick-task-owner');
+        
+        if (dropdown) {
+            // Set current user as default
+            dropdown.innerHTML = users.map(u => {
+                const isCurrentUser = currentUser && u.id === currentUser.id;
+                const label = isCurrentUser ? `${u.name} (You)` : u.name;
+                const selected = isCurrentUser ? 'selected' : '';
+                return `<option value="${u.id}" ${selected}>${label}</option>`;
+            }).join('');
+        }
+        
+    } catch (error) {
+        console.error('Error loading users for task owner dropdown:', error);
+    }
+}
+
+async function quickAddTask() {
+    const nameInput = document.getElementById('quick-task-name');
+    const ownerSelect = document.getElementById('quick-task-owner');
+    
+    const taskName = nameInput.value.trim();
+    const ownerId = ownerSelect.value;
+    
+    if (!taskName) {
+        alert('Please enter a task name');
+        return;
+    }
+    
+    if (!ownerId) {
+        alert('Please select a task owner');
+        return;
+    }
+    
+    try {
+        // Create the task (apiCall already returns parsed JSON)
+        const newTask = await apiCall('/tasks', {
+            method: 'POST',
+            body: JSON.stringify({
+                title: taskName,
+                description: '',
+                owner_user_id: ownerId
+            })
+        });
+        
+        // Show success feedback
+        nameInput.value = '';
+        nameInput.style.borderColor = '#10b981';
+        nameInput.style.background = '#d1fae5';
+        nameInput.placeholder = `✅ Task "${taskName}" created successfully!`;
+        
+        // Reset after 2 seconds
+        setTimeout(() => {
+            nameInput.style.borderColor = '#e0e7ff';
+            nameInput.style.background = 'white';
+            nameInput.placeholder = 'Enter task name...';
+            
+            // Refresh pending questions (new task may generate pending questions)
+            loadPendingQuestions();
+        }, 2000);
+        
+        console.log('✅ Task created:', newTask);
+        
+    } catch (error) {
+        console.error('Error creating task:', error);
+        alert('Failed to create task: ' + error.message);
+    }
+}
+
 
 // ============================================================================
 // Debug Functions
 // ============================================================================
 
 let lastRobinPrompt = null;
+let lastRobinResponse = null;
 
 function showLastPrompt() {
     if (!lastRobinPrompt) {
@@ -2639,6 +3003,108 @@ function showLastPrompt() {
 
 function closeDebugPrompt() {
     document.getElementById('debug-prompt-modal').classList.add('hidden');
+}
+
+function showLastResponse() {
+    if (!lastRobinResponse) {
+        alert('No response available yet. Send a message to Robin first!');
+        return;
+    }
+    
+    const modal = document.getElementById('debug-prompt-modal');
+    const content = document.getElementById('debug-prompt-content');
+    
+    // Format the response with syntax highlighting
+    const formatted = JSON.stringify(lastRobinResponse, null, 2);
+    
+    // Apply simple syntax highlighting
+    const highlighted = formatted
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            let cls = 'json-number';
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'json-key';
+                } else {
+                    cls = 'json-string';
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'json-boolean';
+            } else if (/null/.test(match)) {
+                cls = 'json-null';
+            }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
+    
+    content.innerHTML = `<pre style="margin: 0;">${highlighted}</pre>`;
+    modal.classList.remove('hidden');
+}
+
+async function showMessageDebugData(messageId) {
+    if (!currentUser || !currentUser.id) {
+        alert('Please log in first');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/chat/message/${messageId}/debug`, {
+            headers: {
+                'X-User-Id': currentUser.id
+            }
+        });
+        
+        if (!response.ok) {
+            if (response.status === 404) {
+                alert('No debug data available for this message');
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return;
+        }
+        
+        const data = await response.json();
+        
+        // Create a combined view of prompt + response
+        const debugInfo = {
+            "📥 FULL PROMPT": data.full_prompt,
+            "📤 FULL RESPONSE": data.full_response,
+            "⏰ Created": data.created_at
+        };
+        
+        const modal = document.getElementById('debug-prompt-modal');
+        const content = document.getElementById('debug-prompt-content');
+        
+        // Format with syntax highlighting
+        const formatted = JSON.stringify(debugInfo, null, 2);
+        const highlighted = formatted
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        
+        content.innerHTML = `<pre style="margin: 0;">${highlighted}</pre>`;
+        modal.classList.remove('hidden');
+        
+    } catch (error) {
+        console.error('Error fetching debug data:', error);
+        alert('Failed to load debug data: ' + error.message);
+    }
 }
 
 // ============================================================================

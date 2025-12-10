@@ -840,11 +840,12 @@ async def generate_robin_reply(
             
             logger.info(f"Parsed {len(messages)} messages and {len(updates)} updates")
             
-            # Add debug info to first message
-            if messages:
-                if messages[0].metadata is None:
-                    messages[0].metadata = {}
-                messages[0].metadata["debug_prompt"] = full_prompt_debug
+            # Add debug info to ALL messages (so each message bubble can show debug data)
+            for msg in messages:
+                if msg.metadata is None:
+                    msg.metadata = {}
+                msg.metadata["debug_prompt"] = full_prompt_debug
+                msg.metadata["full_response"] = parsed  # Store full LLM response
             
             return RobinReply(messages=messages, updates=updates)
             

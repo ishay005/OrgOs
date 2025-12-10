@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, time
 from sqlalchemy import (
     Column, String, Text, Boolean, Integer, Float, DateTime, Time, 
-    ForeignKey, Enum as SQLEnum, JSON
+    ForeignKey, Enum as SQLEnum, JSON, Index
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -52,6 +52,7 @@ class User(Base):
     answers_about = relationship("AttributeAnswer", foreign_keys="AttributeAnswer.target_user_id", back_populates="target_user")
     questions_answered = relationship("QuestionLog", foreign_keys="QuestionLog.answered_by_user_id", back_populates="answered_by_user")
     questions_about = relationship("QuestionLog", foreign_keys="QuestionLog.target_user_id", back_populates="target_user")
+    daily_sync_sessions = relationship("DailySyncSession", back_populates="user")
 
 
 class AlignmentEdge(Base):
@@ -257,4 +258,70 @@ class PromptTemplate(Base):
     
     def __repr__(self):
         return f"<PromptTemplate mode={self.mode} has_pending={self.has_pending} v{self.version} active={self.is_active}>"
+
+
+class DailySyncPhase(str, enum.Enum):
+    """Phases of the Daily Sync conversation flow"""
+    MORNING_BRIEF = "morning_brief"  # Greeting + brief combined
+    QUESTIONS = "questions"  # User questions + Robin questions combined
+    SUMMARY = "summary"
+    DONE = "done"
+
+
+class DailySyncSession(Base):
+    """Tracks an active Daily Sync session for a user"""
+    __tablename__ = "daily_sync_sessions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+    thread_id = Column(UUID(as_uuid=True), ForeignKey('chat_threads.id'), nullable=False)
+    phase = Column(SQLEnum(DailySyncPhase), nullable=False, default=DailySyncPhase.MORNING_BRIEF)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = Column(Boolean, nullable=False, default=True)
+    
+    # Store snapshot of insight questions for this session (as JSON)
+    # Format: [{"id": "uuid", "text": "...", "value": 10, "reason": "..."}, ...]
+    insight_questions = Column(JSON, nullable=False, default=[])
+    
+    # Track which questions have been asked and answered (list of IDs)
+    asked_question_ids = Column(JSON, nullable=False, default=[])
+    answered_question_ids = Column(JSON, nullable=False, default=[])
+    
+    # Relationships
+    user = relationship("User", back_populates="daily_sync_sessions")
+    thread = relationship("ChatThread")
+    
+    __table_args__ = (
+        Index('idx_daily_sync_active', 'user_id', 'is_active'),
+    )
+    
+    def __repr__(self):
+        return f"<DailySyncSession user={self.user_id} phase={self.phase} active={self.is_active}>"
+
+
+class MessageDebugData(Base):
+    """Stores debug information (prompt + response) for Robin messages"""
+    __tablename__ = "message_debug_data"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    message_id = Column(UUID(as_uuid=True), ForeignKey('chat_messages.id'), nullable=False, unique=True)
+    
+    # Full prompt sent to LLM (includes system prompt, context, user message)
+    full_prompt = Column(JSON, nullable=False)
+    
+    # Full response from LLM (parsed JSON with display_messages and updates)
+    full_response = Column(JSON, nullable=False)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    message = relationship("ChatMessage", backref="debug_data")
+    
+    __table_args__ = (
+        Index('idx_message_debug_message_id', 'message_id'),
+    )
+    
+    def __repr__(self):
+        return f"<MessageDebugData message_id={self.message_id}>"
 
