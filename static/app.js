@@ -147,6 +147,8 @@ function showSection(sectionName) {
         loadRobinChat();
     } else if (sectionName === 'pending') {
         loadPendingQuestions();
+    } else if (sectionName === 'prompts') {
+        loadPrompts().catch(err => console.error('Error loading prompts:', err));
     } else if (sectionName === 'alignments') {
         loadAlignments();
     } else if (sectionName === 'misalignments') {
@@ -2606,9 +2608,31 @@ function showLastPrompt() {
     const modal = document.getElementById('debug-prompt-modal');
     const content = document.getElementById('debug-prompt-content');
     
-    // Format the prompt nicely
+    // Format the prompt with syntax highlighting
     const formatted = JSON.stringify(lastRobinPrompt, null, 2);
-    content.textContent = formatted;
+    
+    // Apply simple syntax highlighting
+    const highlighted = formatted
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            let cls = 'json-number';
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'json-key';
+                } else {
+                    cls = 'json-string';
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'json-boolean';
+            } else if (/null/.test(match)) {
+                cls = 'json-null';
+            }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
+    
+    content.innerHTML = `<pre style="margin: 0;">${highlighted}</pre>`;
     
     modal.classList.remove('hidden');
 }
@@ -2628,4 +2652,354 @@ window.addEventListener('DOMContentLoaded', () => {
         showPage('auth-page');
     }
 });
+
+
+// ============================================================================
+// Prompt Editor Functions
+// ============================================================================
+
+let currentPrompts = {};
+let promptVersionHistory = {};
+
+async function loadPrompts() {
+    console.log('loadPrompts() called');
+    
+    try {
+        if (!currentUser || !currentUser.id) {
+            console.error('No user logged in');
+            return;
+        }
+        
+        console.log('Fetching prompts from API...');
+        const response = await fetch('/prompts/', {
+            headers: {
+                'X-User-Id': currentUser.id
+            }
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const prompts = await response.json();
+        console.log('Received prompts:', prompts.length);
+        
+        // Store prompts by key
+        currentPrompts = {};
+        prompts.forEach(p => {
+            const key = `${p.mode}_${p.has_pending}`;
+            currentPrompts[key] = p;
+            console.log(`Stored prompt: ${key}`);
+        });
+        
+        console.log('All prompts stored:', Object.keys(currentPrompts));
+        
+        // Setup event listeners (only once)
+        setupPromptEventListeners();
+        
+        // Load the selected prompt and its history
+        await loadSelectedPrompt();
+        
+        console.log('Prompts loaded successfully!');
+        
+    } catch (error) {
+        console.error('Error loading prompts:', error);
+        showPromptStatus('Failed to load prompts: ' + error.message, 'error');
+        
+        // Show error in UI
+        const promptText = document.getElementById('prompt-text');
+        if (promptText) {
+            promptText.value = `Error loading prompts: ${error.message}\n\nPlease check the browser console for details.`;
+        }
+    }
+}
+
+let promptEventListenersSetup = false;
+
+function setupPromptEventListeners() {
+    if (promptEventListenersSetup) return;
+    
+    const modeSelect = document.getElementById('prompt-mode-select');
+    const versionSelect = document.getElementById('prompt-version-select');
+    
+    if (modeSelect) {
+        modeSelect.addEventListener('change', () => {
+            console.log('Mode changed to:', modeSelect.value);
+            loadSelectedPrompt().catch(err => console.error('Error loading prompt:', err));
+        });
+    }
+    
+    if (versionSelect) {
+        versionSelect.addEventListener('change', () => {
+            console.log('Version changed to:', versionSelect.value);
+            loadPromptVersion().catch(err => console.error('Error loading version:', err));
+        });
+    }
+    
+    promptEventListenersSetup = true;
+    console.log('Prompt event listeners setup complete');
+}
+
+async function loadSelectedPrompt() {
+    console.log('loadSelectedPrompt() called');
+    
+    const select = document.getElementById('prompt-mode-select');
+    if (!select) {
+        console.error('❌ Prompt mode select not found');
+        return;
+    }
+    
+    const key = select.value;
+    console.log(`Selected key: ${key}`);
+    const [mode, hasPendingStr] = key.split('_');
+    const hasPending = hasPendingStr === 'true';
+    
+    // Load version history for this mode
+    await loadVersionHistory(mode, hasPending);
+    
+    const prompt = currentPrompts[key];
+    
+    if (!prompt) {
+        console.error('❌ Prompt not found for key:', key);
+        console.log('Available keys:', Object.keys(currentPrompts));
+        const promptText = document.getElementById('prompt-text');
+        const versionInfo = document.getElementById('prompt-version-info');
+        if (promptText) promptText.value = `Error: Prompt not found for ${key}\n\nAvailable: ${Object.keys(currentPrompts).join(', ')}`;
+        if (versionInfo) versionInfo.textContent = `Error: Prompt not found`;
+        return;
+    }
+    
+    console.log('✅ Found prompt:', prompt.mode, 'v' + prompt.version);
+    
+    // Populate the form with this prompt
+    populatePromptForm(prompt);
+    
+    console.log('✅ Form populated');
+}
+
+async function loadVersionHistory(mode, hasPending) {
+    try {
+        const response = await fetch(`/prompts/history/${mode}/${hasPending}`, {
+            headers: {
+                'X-User-Id': currentUser.id
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const versions = await response.json();
+        const key = `${mode}_${hasPending}`;
+        promptVersionHistory[key] = versions;
+        
+        // Populate version dropdown
+        const versionSelect = document.getElementById('prompt-version-select');
+        if (versionSelect) {
+            versionSelect.innerHTML = versions.map(v => {
+                const label = v.is_active 
+                    ? `v${v.version} (Active) - ${v.notes || 'No description'}` 
+                    : `v${v.version} - ${v.notes || 'No description'}`;
+                return `<option value="${v.id}">${label}</option>`;
+            }).join('');
+        }
+        
+    } catch (error) {
+        console.error('Error loading version history:', error);
+    }
+}
+
+function populatePromptForm(prompt) {
+    // Populate prompt text
+    const promptTextArea = document.getElementById('prompt-text');
+    if (promptTextArea) {
+        promptTextArea.value = prompt.prompt_text || '';
+    }
+    
+    // Populate context config individual fields
+    const ctx = prompt.context_config || {};
+    
+    // Chat history
+    const historySize = document.getElementById('ctx-history-size');
+    if (historySize) historySize.value = ctx.history_size || 2;
+    
+    // Task filters (backward compatibility: if old "include_tasks" exists, map to personal_tasks)
+    const includePersonalTasks = document.getElementById('ctx-include-personal-tasks');
+    if (includePersonalTasks) includePersonalTasks.checked = ctx.include_personal_tasks !== false || ctx.include_tasks !== false;
+    
+    const includeManagerTasks = document.getElementById('ctx-include-manager-tasks');
+    if (includeManagerTasks) includeManagerTasks.checked = ctx.include_manager_tasks === true;
+    
+    const includeEmployeeTasks = document.getElementById('ctx-include-employee-tasks');
+    if (includeEmployeeTasks) includeEmployeeTasks.checked = ctx.include_employee_tasks === true;
+    
+    const includeAlignedTasks = document.getElementById('ctx-include-aligned-tasks');
+    if (includeAlignedTasks) includeAlignedTasks.checked = ctx.include_aligned_tasks === true;
+    
+    const includeAllOrgTasks = document.getElementById('ctx-include-all-org-tasks');
+    if (includeAllOrgTasks) includeAllOrgTasks.checked = ctx.include_all_org_tasks === true;
+    
+    // Organization structure (user info and manager are always included)
+    const includeEmployees = document.getElementById('ctx-include-employees');
+    if (includeEmployees) includeEmployees.checked = ctx.include_employees === true;
+    
+    const includeAlignedUsers = document.getElementById('ctx-include-aligned-users');
+    if (includeAlignedUsers) includeAlignedUsers.checked = ctx.include_aligned_users === true;
+    
+    const includeAllUsers = document.getElementById('ctx-include-all-users');
+    if (includeAllUsers) includeAllUsers.checked = ctx.include_all_users === true;
+    
+    // Pending questions
+    const includePending = document.getElementById('ctx-include-pending');
+    if (includePending) includePending.checked = ctx.include_pending !== false;
+    
+    // Clear notes and show version
+    const notesField = document.getElementById('prompt-notes');
+    if (notesField) notesField.value = '';
+    
+    const versionInfo = document.getElementById('prompt-version-info');
+    if (versionInfo) {
+        const createdDate = new Date(prompt.created_at).toLocaleDateString();
+        const activeStatus = prompt.is_active ? '🟢 Active' : '⚪ Inactive';
+        versionInfo.textContent = `Version ${prompt.version} | ${activeStatus} | Created: ${createdDate} | By: ${prompt.created_by || 'System'}`;
+    }
+}
+
+async function loadPromptVersion() {
+    const versionSelect = document.getElementById('prompt-version-select');
+    const promptId = versionSelect.value;
+    
+    const select = document.getElementById('prompt-mode-select');
+    const key = select.value;
+    const versions = promptVersionHistory[key] || [];
+    
+    const selectedVersion = versions.find(v => v.id === promptId);
+    
+    if (selectedVersion) {
+        populatePromptForm(selectedVersion);
+    }
+}
+
+async function savePrompt() {
+    const select = document.getElementById('prompt-mode-select');
+    const [mode, hasPendingStr] = select.value.split('_');
+    const hasPending = hasPendingStr === 'true';
+    
+    const promptText = document.getElementById('prompt-text').value;
+    const notes = document.getElementById('prompt-notes').value;
+    
+    // Build context config from individual fields
+    const contextConfig = {
+        // Chat history
+        history_size: parseInt(document.getElementById('ctx-history-size').value) || 2,
+        
+        // Task filters
+        include_personal_tasks: document.getElementById('ctx-include-personal-tasks').checked,
+        include_manager_tasks: document.getElementById('ctx-include-manager-tasks').checked,
+        include_employee_tasks: document.getElementById('ctx-include-employee-tasks').checked,
+        include_aligned_tasks: document.getElementById('ctx-include-aligned-tasks').checked,
+        include_all_org_tasks: document.getElementById('ctx-include-all-org-tasks').checked,
+        
+        // Organization structure (user info and manager are always included)
+        include_user_info: true,
+        include_manager: true,
+        include_employees: document.getElementById('ctx-include-employees').checked,
+        include_aligned_users: document.getElementById('ctx-include-aligned-users').checked,
+        include_all_users: document.getElementById('ctx-include-all-users').checked,
+        
+        // Pending questions
+        include_pending: document.getElementById('ctx-include-pending').checked
+    };
+    
+    if (!promptText.trim()) {
+        showPromptStatus('❌ Prompt text cannot be empty', 'error');
+        return;
+    }
+    
+    if (!notes.trim()) {
+        showPromptStatus('❌ Commit message is required', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/prompts/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': currentUser.id
+            },
+            body: JSON.stringify({
+                mode: mode,
+                has_pending: hasPending,
+                prompt_text: promptText,
+                context_config: contextConfig,
+                created_by: currentUser.name,
+                notes: notes || null
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const newPrompt = await response.json();
+        
+        showPromptStatus(`✅ Saved! New version ${newPrompt.version} is now active.`, 'success');
+        
+        // Reload prompts
+        await loadPrompts();
+        
+    } catch (error) {
+        console.error('Error saving prompt:', error);
+        showPromptStatus('Failed to save prompt: ' + error.message, 'error');
+    }
+}
+
+function showPromptStatus(message, type) {
+    const statusDiv = document.getElementById('prompt-save-status');
+    statusDiv.textContent = message;
+    statusDiv.style.display = 'block';
+    statusDiv.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
+    statusDiv.style.color = type === 'success' ? '#155724' : '#721c24';
+    statusDiv.style.border = `1px solid ${type === 'success' ? '#c3e6cb' : '#f5c6cb'}`;
+    
+    // Hide after 5 seconds
+    setTimeout(() => {
+        statusDiv.style.display = 'none';
+    }, 5000);
+}
+
+async function activateSelectedVersion() {
+    const versionSelect = document.getElementById('prompt-version-select');
+    const promptId = versionSelect.value;
+    
+    if (!promptId) {
+        showPromptStatus('❌ No version selected', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/prompts/${promptId}/activate`, {
+            method: 'POST',
+            headers: {
+                'X-User-Id': currentUser.id
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        showPromptStatus(`✅ ${result.message}`, 'success');
+        
+        // Reload to refresh active status
+        await loadPrompts();
+        
+    } catch (error) {
+        console.error('Error activating version:', error);
+        showPromptStatus('❌ Failed to activate version: ' + error.message, 'error');
+    }
+}
 

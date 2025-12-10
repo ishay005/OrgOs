@@ -55,6 +55,7 @@
             <div class="dashboard-nav">
                 <button onclick="showSection('robin')" class="nav-btn active" id="robin-nav">🤖 Chat with Robin</button>
                 <button onclick="showSection('pending')" class="nav-btn" id="pending-nav">📋 Pending Questions</button>
+                <button onclick="showSection('prompts')" class="nav-btn" id="prompts-nav">⚙️ Prompt Editor</button>
                 <button onclick="showSection('graph')" class="nav-btn" id="graph-nav">🔗 Task Graph</button>
                 <button onclick="showSection('orgchart')" class="nav-btn" id="orgchart-nav">👥 Org Chart</button>
                 <button onclick="showSection('alignments')" class="nav-btn" id="alignments-nav">Team</button>
@@ -112,6 +113,144 @@
                 </div>
                 <div id="pending-questions-container">
                     <p style="text-align: center; color: #666; padding: 40px;">Loading pending questions...</p>
+                </div>
+            </div>
+            
+            <!-- Prompt Editor Section -->
+            <div id="prompts-section" class="section">
+                <div class="section-header">
+                    <h3>⚙️ Robin Prompt Editor</h3>
+                    <p class="subtitle">Edit Robin's behavior and context configuration</p>
+                </div>
+                
+                <div class="prompts-container">
+                    <div class="prompt-controls-row">
+                        <div class="prompt-mode-selector">
+                            <label>Mode:</label>
+                            <select id="prompt-mode-select">
+                                <option value="morning_brief_true">Morning Brief (with pending)</option>
+                                <option value="morning_brief_false">Morning Brief (without pending)</option>
+                                <option value="user_question_true">User Question (with pending)</option>
+                                <option value="user_question_false">User Question (without pending)</option>
+                                <option value="collect_data_true">Collect Data (with pending)</option>
+                                <option value="collect_data_false">Collect Data (without pending)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="prompt-version-selector">
+                            <label>Version History:</label>
+                            <select id="prompt-version-select">
+                                <option value="current">Current (Active)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="prompt-editor-container">
+                        <div class="prompt-info">
+                            <span id="prompt-version-info">Loading prompt data...</span>
+                        </div>
+                        
+                        <div class="prompt-editor-section">
+                            <label><strong>System Prompt:</strong></label>
+                            <textarea id="prompt-text" rows="20" style="width: 100%; font-family: monospace; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Loading prompt..."></textarea>
+                        </div>
+                        
+                        <div class="prompt-editor-section">
+                            <label><strong>Context Configuration:</strong></label>
+                            <div class="context-config-grid">
+                                <div class="context-field">
+                                    <label>💬 Chat History Size:</label>
+                                    <input type="number" id="ctx-history-size" min="0" max="10" value="3">
+                                </div>
+                                
+                                <div class="context-section-header">📋 Tasks to Include:</div>
+                                <div class="context-field-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="ctx-include-personal-tasks" checked>
+                                        <span>Personal Tasks (owned by user)</span>
+                                    </label>
+                                </div>
+                                <div class="context-field-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="ctx-include-manager-tasks">
+                                        <span>Manager's Tasks</span>
+                                    </label>
+                                </div>
+                                <div class="context-field-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="ctx-include-employee-tasks">
+                                        <span>Employee Tasks</span>
+                                    </label>
+                                </div>
+                                <div class="context-field-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="ctx-include-aligned-tasks">
+                                        <span>Aligned Users' Tasks</span>
+                                    </label>
+                                </div>
+                                <div class="context-field-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="ctx-include-all-org-tasks">
+                                        <span>All Org Tasks</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="context-section-header">👥 Organization Structure:</div>
+                                <div class="context-field-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="ctx-include-user-info" checked disabled>
+                                        <span>User Info (always included) ✓</span>
+                                    </label>
+                                </div>
+                                <div class="context-field-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="ctx-include-manager" checked disabled>
+                                        <span>Manager Info (always included) ✓</span>
+                                    </label>
+                                </div>
+                                <div class="context-field-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="ctx-include-employees">
+                                        <span>Employee List</span>
+                                    </label>
+                                </div>
+                                <div class="context-field-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="ctx-include-aligned-users">
+                                        <span>Aligned Users List</span>
+                                    </label>
+                                </div>
+                                <div class="context-field-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="ctx-include-all-users">
+                                        <span>All Org Users</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="context-section-header">❓ Questions:</div>
+                                <div class="context-field-checkbox">
+                                    <label>
+                                        <input type="checkbox" id="ctx-include-pending" checked>
+                                        <span>Include Pending Questions</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="prompt-editor-section">
+                            <label><strong>💬 Commit Message (required for saving):</strong></label>
+                            <input type="text" id="prompt-notes" placeholder="Describe what you changed in this version..." style="width: 100%; padding: 10px; border: 2px solid #6366f1; border-radius: 4px; font-size: 14px;">
+                            <small style="color: #666; display: block; margin-top: 5px;">This will be saved with the version for future reference</small>
+                        </div>
+                        
+                        <div class="prompt-editor-actions">
+                            <button onclick="savePrompt()" class="primary-btn">💾 Save New Version</button>
+                            <button onclick="activateSelectedVersion()" class="secondary-btn">✅ Activate Selected Version</button>
+                            <button onclick="loadPrompts()" class="secondary-btn">🔄 Reload</button>
+                        </div>
+                    </div>
+                    
+                    <div id="prompt-save-status" style="margin-top: 15px; padding: 10px; border-radius: 4px; display: none;"></div>
                 </div>
             </div>
             

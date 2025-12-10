@@ -220,3 +220,41 @@ class ChatMessage(Base):
     # Relationships
     thread = relationship("ChatThread", back_populates="messages")
 
+
+class PromptTemplate(Base):
+    """
+    Dynamic prompt templates for Robin.
+    Allows editing prompts and context configuration through the UI.
+    """
+    __tablename__ = "prompt_templates"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mode = Column(String, nullable=False)  # morning_brief, user_question, collect_data
+    has_pending = Column(Boolean, nullable=False)  # Whether there are pending questions
+    
+    # The actual prompt text
+    prompt_text = Column(Text, nullable=False)
+    
+    # Context configuration (JSON)
+    # {
+    #   "history_size": 3,
+    #   "include_tasks": true,
+    #   "include_pending": true,
+    #   "include_user_info": true,
+    #   "include_manager": true,
+    #   "include_employees": true
+    # }
+    context_config = Column(JSON, nullable=False, default={})
+    
+    # Versioning
+    version = Column(Integer, nullable=False, default=1)
+    is_active = Column(Boolean, nullable=False, default=True)
+    
+    # Metadata
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(String, nullable=True)  # User who created this version
+    notes = Column(Text, nullable=True)  # Optional notes about this version
+    
+    def __repr__(self):
+        return f"<PromptTemplate mode={self.mode} has_pending={self.has_pending} v{self.version} active={self.is_active}>"
+

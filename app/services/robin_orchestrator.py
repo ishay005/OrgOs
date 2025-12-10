@@ -80,47 +80,121 @@ def _classify_mode(user_message: str) -> str:
 # Context Building (Simplified per Mode)
 # ============================================================================
 
-def _get_user_snapshot(db: Session, user_id: UUID) -> dict:
-    """Get basic user info: name, manager, employees"""
+def _get_user_snapshot(db: Session, user_id: UUID, context_config: dict = None) -> dict:
+    """Get user info based on context_config filters"""
+    if context_config is None:
+        context_config = {}
+    
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return {}
     
-    manager = db.query(User).filter(User.id == user.manager_id).first() if user.manager_id else None
-    employees = db.query(User).filter(User.manager_id == user_id).all()
-    
-    return {
+    snapshot = {
         "name": user.name,
-        "manager": manager.name if manager else None,
-        "employees": [e.name for e in employees] if employees else []
+        "manager": None,
+        "employees": [],
+        "aligned_users": [],
+        "all_users": []
     }
+    
+    # Manager is always included (per requirement)
+    if user.manager_id:
+        manager = db.query(User).filter(User.id == user.manager_id).first()
+        snapshot["manager"] = manager.name if manager else None
+    
+    # Employees list (optional)
+    if context_config.get('include_employees', True):
+        employees = db.query(User).filter(User.manager_id == user_id).all()
+        snapshot["employees"] = [e.name for e in employees] if employees else []
+    
+    # Aligned users list (optional)
+    if context_config.get('include_aligned_users', False):
+        alignments = db.query(AlignmentEdge).filter(
+            AlignmentEdge.source_user_id == user_id
+        ).all()
+        aligned_ids = [a.target_user_id for a in alignments]
+        if aligned_ids:
+            aligned_users = db.query(User).filter(User.id.in_(aligned_ids)).all()
+            snapshot["aligned_users"] = [u.name for u in aligned_users]
+    
+    # All org users (optional)
+    if context_config.get('include_all_users', False):
+        all_users = db.query(User).all()
+        snapshot["all_users"] = [u.name for u in all_users if u.id != user_id]
+    
+    return snapshot
 
 
-def _get_task_snapshot(db: Session, user_id: UUID) -> List[dict]:
-    """Get user's tasks and aligned users' tasks with key attributes"""
-    # Get user's own tasks
-    my_tasks = db.query(Task).filter(
-        Task.owner_user_id == user_id,
-        Task.is_active == True
-    ).all()
+def _get_task_snapshot(db: Session, user_id: UUID, context_config: dict = None) -> List[dict]:
+    """Get tasks based on context_config filters"""
+    if context_config is None:
+        context_config = {}
     
-    # Get aligned users
-    alignments = db.query(AlignmentEdge).filter(
-        AlignmentEdge.source_user_id == user_id
-    ).all()
-    aligned_user_ids = [a.target_user_id for a in alignments]
+    # Get user info
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return []
     
-    # Get aligned users' tasks
-    aligned_tasks = db.query(Task).filter(
-        Task.owner_user_id.in_(aligned_user_ids),
-        Task.is_active == True
-    ).limit(10).all() if aligned_user_ids else []
+    all_tasks = []
     
-    all_tasks = list(my_tasks) + list(aligned_tasks)
+    # 1. Personal Tasks (owned by user)
+    if context_config.get('include_personal_tasks', True):
+        my_tasks = db.query(Task).filter(
+            Task.owner_user_id == user_id,
+            Task.is_active == True
+        ).all()
+        all_tasks.extend(my_tasks)
+    
+    # 2. Manager's Tasks
+    if context_config.get('include_manager_tasks', False) and user.manager_id:
+        manager_tasks = db.query(Task).filter(
+            Task.owner_user_id == user.manager_id,
+            Task.is_active == True
+        ).all()
+        all_tasks.extend(manager_tasks)
+    
+    # 3. Employee Tasks
+    if context_config.get('include_employee_tasks', False):
+        employee_ids = [emp.id for emp in user.employees]
+        if employee_ids:
+            employee_tasks = db.query(Task).filter(
+                Task.owner_user_id.in_(employee_ids),
+                Task.is_active == True
+            ).all()
+            all_tasks.extend(employee_tasks)
+    
+    # 4. Aligned Users' Tasks
+    if context_config.get('include_aligned_tasks', False):
+        alignments = db.query(AlignmentEdge).filter(
+            AlignmentEdge.source_user_id == user_id
+        ).all()
+        aligned_user_ids = [a.target_user_id for a in alignments]
+        
+        if aligned_user_ids:
+            aligned_tasks = db.query(Task).filter(
+                Task.owner_user_id.in_(aligned_user_ids),
+                Task.is_active == True
+            ).all()
+            all_tasks.extend(aligned_tasks)
+    
+    # 5. All Org Tasks
+    if context_config.get('include_all_org_tasks', False):
+        all_org_tasks = db.query(Task).filter(
+            Task.is_active == True
+        ).all()
+        all_tasks = all_org_tasks  # Override with all tasks
+    
+    # Remove duplicates (keep unique by task.id)
+    seen_ids = set()
+    unique_tasks = []
+    for task in all_tasks:
+        if task.id not in seen_ids:
+            seen_ids.add(task.id)
+            unique_tasks.append(task)
     
     # Build task summaries
     task_summaries = []
-    for task in all_tasks[:15]:  # Limit to 15 tasks
+    for task in unique_tasks[:20]:  # Limit to 20 tasks
         # Get key attributes
         answers = db.query(AttributeAnswer).filter(
             AttributeAnswer.task_id == task.id,
@@ -189,14 +263,51 @@ def _get_task_title_for_pending(pending: PendingQuestion, task_snapshot: List[di
 # System Prompts (Mode-Specific, Short)
 # ============================================================================
 
-def _get_system_prompt(mode: str, has_relevant_pending: bool) -> str:
+def _get_system_prompt(mode: str, has_relevant_pending: bool, db: Session) -> tuple[str, dict]:
     """
-    Return mode-specific system prompt based on whether relevant pending items exist.
-    """
+    Return mode-specific system prompt and context config from database.
+    Falls back to hardcoded prompts if database lookup fails.
     
+    Returns: (prompt_text, context_config)
+    """
+    # Try to load from database first
+    try:
+        from app.models import PromptTemplate
+        prompt = db.query(PromptTemplate).filter(
+            PromptTemplate.mode == mode,
+            PromptTemplate.has_pending == has_relevant_pending,
+            PromptTemplate.is_active == True
+        ).order_by(PromptTemplate.version.desc()).first()
+        
+        if prompt:
+            logger.info(f"📝 Loaded prompt from DB: mode={mode}, has_pending={has_relevant_pending}, v{prompt.version}")
+            context_config = prompt.context_config if prompt.context_config else {}
+            return prompt.prompt_text, context_config
+        else:
+            logger.warning(f"⚠️  No DB prompt found for mode={mode}, has_pending={has_relevant_pending}, using fallback")
+    except Exception as e:
+        logger.warning(f"⚠️  Error loading prompt from DB: {e}, using fallback")
+    
+    # Default context config for fallback prompts
+    default_config = {
+        "history_size": 3 if mode == "user_question" else 2,
+        "include_personal_tasks": True,
+        "include_manager_tasks": False,
+        "include_employee_tasks": True,
+        "include_aligned_tasks": False,
+        "include_all_org_tasks": False,
+        "include_user_info": True,
+        "include_manager": True,
+        "include_employees": True,
+        "include_aligned_users": False,
+        "include_all_users": False,
+        "include_pending": True
+    }
+    
+    # Fallback to hardcoded prompts
     if mode == "morning_brief":
         if has_relevant_pending:
-            return """Mode: Morning brief with pending questions.
+            return ("""Mode: Morning brief with pending questions.
 
 Your goals:
 - Give this user a very short overview of today's situation over their top tasks: what's done, what's in progress, what's blocked, and what deserves attention next.
@@ -235,9 +346,9 @@ When receiving answers:
       "value": "Done"
     }
   ]
-}"""
+}""", default_config)
         else:
-            return """Mode: Morning brief, no pending questions.
+            return ("""Mode: Morning brief, no pending questions.
 
 Your only goal is to give this user a very short overview of today's situation over their top tasks: what's done, what's in progress, what's blocked, and what deserves attention next.
 
@@ -249,11 +360,11 @@ Output format - you MUST respond with valid JSON:
 {
   "display_messages": ["brief text"],
   "updates": []
-}"""
+}""", default_config)
     
     elif mode == "user_question":
         if has_relevant_pending:
-            return """Mode: Answer user question.
+            return ("""Mode: Answer user question.
 
 ⚠️ CRITICAL: If user provides task information (status, priority, goal, etc.) → ADD TO "updates" array!
 
@@ -298,8 +409,9 @@ Rules:
 - target_user_id: TASK OWNER name (who the question is about), from TASKS section "owner" field
 - To CREATE A NEW TASK: use attribute_name="create_task", task_id=null, value=task_title
 - attribute_name must be EXACT: "priority", "status", "main_goal", "perceived_owner", "impact_size", "resources"
+""", default_config)
         else:
-            return """Mode: Answer user question, no pending follow-up.
+            return ("""Mode: Answer user question, no pending follow-up.
 
 Your goal is to answer the user's question as clearly and directly as you can using the provided context.
 
@@ -338,11 +450,11 @@ You respond:
   ]
 }
 
-IMPORTANT: Only include updates when the user has actually provided information. Leave updates empty if just answering questions."""
+IMPORTANT: Only include updates when the user has actually provided information. Leave updates empty if just answering questions.""", default_config)
     
     elif mode == "collect_data":
         if has_relevant_pending:
-            return """Mode: Collect perception data for pending items.
+            return ("""Mode: Collect perception data for pending items.
 
 ⚠️ CRITICAL RULE: If the user provides ANY information (like "Done", "High", "Blocked", etc.), you MUST include it in the "updates" array. Never leave "updates" empty when user answers!
 
@@ -414,9 +526,9 @@ Rules:
 - 🚫 NEVER use made-up attributes not in this list!
 - IMPORTANT: target_user_id is WHO THE QUESTION IS ABOUT (task owner), NOT who is answering!
 - Don't use UUIDs - use actual names!
-- ONLY ask about attributes shown in "PENDING ITEMS TO COLLECT" section"""
+- ONLY ask about attributes shown in "PENDING ITEMS TO COLLECT" section""", default_config)
         else:
-            return """Mode: Collect perception data, but no pending items.
+            return ("""Mode: Collect perception data, but no pending items.
 
 There are no pending items to update for this user right now.
 
@@ -429,9 +541,9 @@ Output format - you MUST respond with valid JSON:
 {
   "display_messages": ["Everything looks up to date!"],
   "updates": []
-}"""
+}""", default_config)
     
-    return ""
+    return ("", default_config)
 
 
 def _get_recent_chat_messages(db: Session, thread_id: UUID, limit: int) -> List[dict]:
@@ -459,10 +571,17 @@ def _build_context_string(
     pending_relevant: List[PendingQuestion],
     db: Session,
     thread_id: UUID,
-    recent_messages: List[dict]
+    recent_messages: List[dict],
+    context_config: dict = None
 ) -> str:
     """
-    Build context string based on mode.
+    Build context string based on mode and context_config.
+    
+    context_config controls what to include in the context:
+    - Task filters: include_personal_tasks, include_manager_tasks, include_employee_tasks, 
+      include_aligned_tasks, include_all_org_tasks
+    - User filters: include_employees, include_aligned_users, include_all_users
+    - User info and manager are always included
     
     Most modes: user name, employees, manager, user tasks, aligned tasks
     collect_data: user name, only tasks/users related to pending items
@@ -471,6 +590,9 @@ def _build_context_string(
     - user_question mode: last 3 messages
     - other modes: last 2 messages
     """
+    # Use defaults if no config provided
+    if context_config is None:
+        context_config = {}
     
     # Helper function to get task title and owner by ID
     def get_task_info(task_id: UUID) -> tuple:
@@ -579,9 +701,20 @@ async def generate_robin_reply(
         pending = _get_pending_sync(db, user_id)
         logger.info(f"Found {len(pending)} pending questions")
         
-        # Step 3: Build context
-        user_snapshot = _get_user_snapshot(db, user_id)
-        task_snapshot = _get_task_snapshot(db, user_id)
+        # Step 2.5: Get prompt config early to use for context building
+        # We need to know the context config before building snapshots
+        from app.models import PromptTemplate
+        prompt_template = db.query(PromptTemplate).filter(
+            PromptTemplate.mode == mode,
+            PromptTemplate.has_pending == False,  # Use non-pending for initial config
+            PromptTemplate.is_active == True
+        ).order_by(PromptTemplate.version.desc()).first()
+        
+        initial_context_config = prompt_template.context_config if prompt_template and prompt_template.context_config else {}
+        
+        # Step 3: Build context using config
+        user_snapshot = _get_user_snapshot(db, user_id, initial_context_config)
+        task_snapshot = _get_task_snapshot(db, user_id, initial_context_config)
         
         # Step 4: Filter pending by mode
         pending_relevant = _filter_pending_by_mode(pending, mode, task_snapshot)
@@ -589,13 +722,12 @@ async def generate_robin_reply(
         logger.info(f"Filtered to {len(pending_relevant)} relevant pending items")
         
         # Step 4.5: Get recent chat messages based on mode
-        # user_question: 3 messages, others: 2 messages
-        message_limit = 3 if mode == "user_question" else 2
+        message_limit = initial_context_config.get('history_size', 3 if mode == "user_question" else 2)
         recent_messages = _get_recent_chat_messages(db, thread_id, message_limit)
         
-        # Step 5: Build mode-specific context and prompt
-        system_prompt = _get_system_prompt(mode, has_relevant_pending)
-        context_str = _build_context_string(mode, user_snapshot, task_snapshot, pending_relevant, db, thread_id, recent_messages)
+        # Step 5: Build mode-specific context and prompt (get final config based on has_relevant_pending)
+        system_prompt, context_config = _get_system_prompt(mode, has_relevant_pending, db)
+        context_str = _build_context_string(mode, user_snapshot, task_snapshot, pending_relevant, db, thread_id, recent_messages, context_config)
         
         # Build messages for OpenAI
         openai_messages = [

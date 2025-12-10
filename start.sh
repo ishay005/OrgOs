@@ -11,6 +11,10 @@ python3 init_db.py
 echo "🌱 Seeding attribute definitions..."
 python3 app/seed.py
 
+# Seed prompt templates (idempotent - only seeds if empty)
+echo "📝 Seeding prompt templates..."
+python3 seed_prompts.py || echo "⚠️  Prompt seeding failed (not critical)"
+
 # Clear all data (optional - for resetting production)
 if [ "$RUN_CLEAR_DATA" = "true" ]; then
     echo "🗑️  Clearing all user data..."
