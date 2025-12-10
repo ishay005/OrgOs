@@ -109,9 +109,9 @@ def _apply_structured_update(
             return True
         
         # Normal attribute update flow
-        # Find the attribute definition
+        # Find the attribute definition (case-insensitive)
         attr_def = db.query(AttributeDefinition).filter(
-            AttributeDefinition.name == update.attribute_name
+            AttributeDefinition.name.ilike(update.attribute_name)
         ).first()
         
         if not attr_def:

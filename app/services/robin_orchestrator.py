@@ -203,11 +203,18 @@ Your goals:
 - You may ask at most two focused follow-up questions, but only about the tasks and attributes listed in the pending items.
 - If the user provides information in response, create updates for it.
 
+
+
 Rules:
 - Start with the brief (1–3 short bullet points or short paragraphs).
 - Only then, if it clearly fits, embed at most two questions at the end.
-- Do not ask about anything that is not in the pending list.
 - When user provides task information, create an update in the updates array.
+
+🚫 NEVER ASK ABOUT:
+- Attributes NOT in the "RELEVANT PENDING ITEMS" section
+
+✅ ONLY ASK ABOUT attributes actually listed in RELEVANT PENDING ITEMS section with their exact names:
+- priority, status, main_goal, perceived_owner, impact_size, resources
 
 Output format - you MUST respond with valid JSON:
 
@@ -253,7 +260,13 @@ Output format - you MUST respond with valid JSON:
 Goals:
 1. Answer their question clearly in MAX 100 words
 2. If they gave info → create update
-3. Optionally ask 1 related follow-up
+3. Optionally ask 1 related follow-up ONLY about attributes in "RELEVANT PENDING ITEMS"
+
+🚫 NEVER ASK ABOUT:
+- Attributes NOT in the "RELEVANT PENDING ITEMS" section
+
+✅ ONLY ASK ABOUT attributes actually listed in RELEVANT PENDING ITEMS section with their exact names:
+- priority, status, main_goal, perceived_owner, impact_size, resources
 
 Output format - VALID JSON:
 {
@@ -283,7 +296,8 @@ Rules:
 - Use TASK NAMES and USER NAMES from context (not UUIDs!)
 - task_id: exact task name from TASKS section
 - target_user_id: TASK OWNER name (who the question is about), from TASKS section "owner" field
-- To CREATE A NEW TASK: use attribute_name="create_task", task_id=null, value=task_title"""
+- To CREATE A NEW TASK: use attribute_name="create_task", task_id=null, value=task_title
+- attribute_name must be EXACT: "priority", "status", "main_goal", "perceived_owner", "impact_size", "resources"
         else:
             return """Mode: Answer user question, no pending follow-up.
 
@@ -396,9 +410,11 @@ Rules:
 - If user says a status/priority/value → ADD TO UPDATES
 - task_id: Use TASK NAME from pending items
 - target_user_id: Use TASK OWNER name (from pending items "task" field or TASKS section owner)
-- attribute_name options: "status", "priority", "main_goal"
+- attribute_name EXACT options (lowercase): "status", "priority", "main_goal", "perceived_owner", "impact_size", "resources"
+- 🚫 NEVER use made-up attributes not in this list!
 - IMPORTANT: target_user_id is WHO THE QUESTION IS ABOUT (task owner), NOT who is answering!
-- Don't use UUIDs - use actual names!"""
+- Don't use UUIDs - use actual names!
+- ONLY ask about attributes shown in "PENDING ITEMS TO COLLECT" section"""
         else:
             return """Mode: Collect perception data, but no pending items.
 
@@ -637,12 +653,33 @@ async def generate_robin_reply(
                             # Try as UUID first
                             return UUID(task_ref)
                         except:
-                            # Try as task name
-                            task = db.query(Task).filter(Task.title == task_ref).first()
-                            if task:
-                                logger.info(f"Resolved task name '{task_ref}' to UUID {task.id}")
-                                return task.id
-                            logger.warning(f"Could not resolve task reference: {task_ref}")
+                            # Try as task name - search user's tasks and aligned users' tasks
+                            # Get user's accessible tasks
+                            my_tasks = db.query(Task).filter(
+                                Task.owner_user_id == user_id,
+                                Task.is_active == True
+                            ).all()
+                            
+                            # Get aligned users' tasks
+                            alignments = db.query(AlignmentEdge).filter(
+                                AlignmentEdge.source_user_id == user_id
+                            ).all()
+                            aligned_user_ids = [a.target_user_id for a in alignments]
+                            
+                            aligned_tasks = db.query(Task).filter(
+                                Task.owner_user_id.in_(aligned_user_ids),
+                                Task.is_active == True
+                            ).all() if aligned_user_ids else []
+                            
+                            all_accessible_tasks = list(my_tasks) + list(aligned_tasks)
+                            
+                            # Search by exact title match (case-insensitive)
+                            for task in all_accessible_tasks:
+                                if task.title.lower() == task_ref.lower():
+                                    logger.info(f"Resolved task name '{task_ref}' to UUID {task.id}")
+                                    return task.id
+                            
+                            logger.warning(f"Could not resolve task reference: {task_ref} (searched {len(all_accessible_tasks)} accessible tasks)")
                             return None
                     
                     # Helper to convert user name/ID to UUID

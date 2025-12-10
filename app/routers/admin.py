@@ -65,6 +65,8 @@ async def update_schema(db: Session = Depends(get_db)):
     Removes: value_type, is_blocked, blocking_reason, direction_confidence, perceived_dependencies
     Adds: resources (if not exists)
     """
+    return {"message": "This endpoint is not available. Please use the command line instead."}
+    
     try:
         logger.info("🔧 Updating database schema...")
         
