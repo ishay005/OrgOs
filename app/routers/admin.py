@@ -81,3 +81,70 @@ async def update_schema(db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Schema update failed: {str(e)}")
+
+
+@router.api_route("/fix-daily-sync-enum", methods=["GET", "POST"])
+async def fix_daily_sync_enum(db: Session = Depends(get_db)):
+    """
+    Fix the DailySyncPhase enum in PostgreSQL.
+    This drops and recreates the daily_sync_sessions table with the correct enum values.
+    
+    New enum values: opening_brief, questions, summary, done
+    """
+    results = {"actions": []}
+    
+    try:
+        # Step 1: Drop the existing daily_sync_sessions table
+        try:
+            db.execute(text("DROP TABLE IF EXISTS daily_sync_sessions CASCADE"))
+            results["actions"].append("Dropped daily_sync_sessions table")
+        except Exception as e:
+            results["actions"].append(f"Drop table error: {str(e)}")
+        
+        # Step 2: Drop the old enum type
+        try:
+            db.execute(text("DROP TYPE IF EXISTS dailysyncphase CASCADE"))
+            results["actions"].append("Dropped old dailysyncphase enum")
+        except Exception as e:
+            results["actions"].append(f"Drop enum error: {str(e)}")
+        
+        # Step 3: Create the new enum type
+        try:
+            db.execute(text("""
+                CREATE TYPE dailysyncphase AS ENUM ('opening_brief', 'questions', 'summary', 'done')
+            """))
+            results["actions"].append("Created new dailysyncphase enum")
+        except Exception as e:
+            results["actions"].append(f"Create enum error: {str(e)}")
+        
+        # Step 4: Recreate the daily_sync_sessions table
+        try:
+            db.execute(text("""
+                CREATE TABLE daily_sync_sessions (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID NOT NULL REFERENCES users(id),
+                    thread_id UUID NOT NULL REFERENCES chat_threads(id),
+                    phase dailysyncphase NOT NULL DEFAULT 'opening_brief',
+                    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+                    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+                    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                    insight_questions JSON NOT NULL DEFAULT '[]',
+                    asked_question_ids JSON NOT NULL DEFAULT '[]',
+                    answered_question_ids JSON NOT NULL DEFAULT '[]'
+                )
+            """))
+            results["actions"].append("Recreated daily_sync_sessions table")
+        except Exception as e:
+            results["actions"].append(f"Create table error: {str(e)}")
+        
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "DailySyncPhase enum fixed successfully!",
+            "results": results,
+            "note": "All existing Daily Sync sessions were cleared. Users can start new sessions now."
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Enum fix failed: {str(e)}")
