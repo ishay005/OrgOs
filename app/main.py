@@ -11,7 +11,7 @@ import os
 from app.database import init_db, SessionLocal
 from app.seed import seed_database
 from app.routers import (
-    users, tasks, questions, misalignments, debug, users_orgchart, alignment_stats, chat, pending_questions, admin, prompts, prompt_preview, daily_sync
+    users, tasks, questions, misalignments, debug, users_orgchart, alignment_stats, chat, pending_questions, admin, prompts, prompt_preview, daily_sync, import_export
 )
 
 # Configure logging
@@ -68,6 +68,7 @@ app.include_router(pending_questions.router)  # Pending questions for data colle
 app.include_router(admin.router)  # Admin endpoints
 app.include_router(prompts.router)  # Prompt management
 app.include_router(prompt_preview.router)  # Prompt preview with real data
+app.include_router(import_export.router)  # Import/Export data
 
 
 # Mount static files

@@ -996,6 +996,14 @@ function showMisalignmentView(view) {
 }
 
 async function loadMisalignments(userId = null, userName = null) {
+    // Check if user is logged in
+    if (!currentUser || !currentUser.id) {
+        console.error('No current user - cannot load misalignments');
+        const statsDiv = document.getElementById('misalignment-stats');
+        if (statsDiv) statsDiv.innerHTML = '<div class="error">Please log in to view misalignments.</div>';
+        return;
+    }
+    
     const statsDiv = document.getElementById('misalignment-stats');
     const chartsDiv = document.getElementById('misalignment-charts');
     const listDiv = document.getElementById('misalignments-list');
@@ -3605,6 +3613,224 @@ async function updatePromptPreview() {
     } catch (error) {
         console.error('Error updating preview:', error);
         previewDiv.innerHTML = `<span style="color: #f48771;">Error loading preview: ${error.message}</span>`;
+    }
+}
+
+
+// ============================================================================
+// Import/Export Functions
+// ============================================================================
+
+async function exportData() {
+    try {
+        showImportExportStatus('📊 Generating export file...', 'info');
+        
+        const response = await fetch('/import-export/export', {
+            method: 'GET',
+            headers: {
+                'X-User-Id': currentUser.id
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Export failed: ${response.statusText}`);
+        }
+        
+        // Download the file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `orgos_data_export_${new Date().toISOString().slice(0,10)}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        showImportExportStatus('✅ Export successful! File downloaded.', 'success');
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        showImportExportStatus('❌ Export failed: ' + error.message, 'error');
+    }
+}
+
+async function exportTemplate() {
+    try {
+        showImportExportStatus('📋 Generating template file...', 'info');
+        
+        const response = await fetch('/import-export/template', {
+            method: 'GET',
+            headers: {
+                'X-User-Id': currentUser.id
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Template export failed: ${response.statusText}`);
+        }
+        
+        // Download the file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'orgos_import_template.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        showImportExportStatus('✅ Template downloaded! Fill it in and import.', 'success');
+        
+    } catch (error) {
+        console.error('Template export error:', error);
+        showImportExportStatus('❌ Template export failed: ' + error.message, 'error');
+    }
+}
+
+async function handleImportFile(replaceMode) {
+    const fileInput = replaceMode ? document.getElementById('import-replace-file') : document.getElementById('import-file');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showImportExportStatus('❌ No file selected', 'error');
+        return;
+    }
+    
+    // Show confirmation for replace mode
+    if (replaceMode) {
+        const confirmed = confirm(
+            '⚠️ REPLACE MODE WARNING ⚠️\n\n' +
+            'This will DELETE all existing users, tasks, and their data!\n\n' +
+            'Prompts will be kept, but new prompts from the file will be added as latest versions.\n\n' +
+            'Are you ABSOLUTELY SURE you want to continue?'
+        );
+        
+        if (!confirmed) {
+            fileInput.value = '';  // Clear selection
+            return;
+        }
+    }
+    
+    try {
+        const mode = replaceMode ? 'REPLACE' : 'APPEND';
+        showImportExportStatus(`📥 Importing data (${mode} mode)...`, 'info');
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const endpoint = replaceMode ? '/import-export/import-replace' : '/import-export/import';
+        
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'X-User-Id': currentUser.id
+            },
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+            // Show validation errors
+            if (result.detail && result.detail.errors) {
+                const errorList = result.detail.errors.map(e => `  • ${e}`).join('\n');
+                showImportExportStatus(
+                    `❌ Import Failed - File Format Errors:\n\n${errorList}\n\nPlease fix these errors and try again.`,
+                    'error'
+                );
+            } else {
+                throw new Error(result.detail || 'Import failed');
+            }
+        } else {
+            // Success!
+            let message = `✅ ${result.message}\n\n`;
+            message += '📊 Statistics:\n';
+            message += `  • Users imported: ${result.stats.users_imported}`;
+            if (result.stats.users_skipped > 0) message += ` (${result.stats.users_skipped} skipped)`;
+            message += '\n';
+            message += `  • Tasks imported: ${result.stats.tasks_imported}`;
+            if (result.stats.tasks_skipped > 0) message += ` (${result.stats.tasks_skipped} skipped)`;
+            message += '\n';
+            message += `  • Dependencies: ${result.stats.dependencies_imported}\n`;
+            message += `  • Prompts: ${result.stats.prompts_imported}\n`;
+            message += `  • Attributes: ${result.stats.attributes_imported || 0}`;
+            if (result.stats.attributes_skipped > 0) message += ` (${result.stats.attributes_skipped} skipped)`;
+            message += '\n';
+            message += `  • Perception Data: ${result.stats.perception_imported || 0}`;
+            if (result.stats.perception_skipped > 0) message += ` (${result.stats.perception_skipped} skipped)`;
+            message += '\n';
+            message += '\nℹ️ Similarity scores will be calculated automatically when viewed.\n';
+            
+            if (result.warnings && result.warnings.length > 0) {
+                message += '\n⚠️ Warnings:\n';
+                message += result.warnings.map(w => `  • ${w}`).join('\n');
+            }
+            
+            showImportExportStatus(message, 'success');
+            
+            // Reload the page after a short delay to show new data
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        }
+        
+        // Clear file input
+        fileInput.value = '';
+        
+    } catch (error) {
+        console.error('Import error:', error);
+        showImportExportStatus('❌ Import failed: ' + error.message, 'error');
+        fileInput.value = '';
+    }
+}
+
+function confirmReplace() {
+    const confirmed = confirm(
+        '⚠️ REPLACE MODE ⚠️\n\n' +
+        'You are about to use REPLACE mode.\n\n' +
+        'This will DELETE ALL existing:\n' +
+        '  • Users\n' +
+        '  • Tasks\n' +
+        '  • Answers\n' +
+        '  • Alignments\n\n' +
+        'And replace them with data from your file.\n\n' +
+        'Prompts will be kept (new prompts are added).\n\n' +
+        'Do you want to continue?'
+    );
+    
+    if (confirmed) {
+        document.getElementById('import-replace-file').click();
+    }
+}
+
+function showImportExportStatus(message, type) {
+    const statusDiv = document.getElementById('import-export-status');
+    statusDiv.textContent = message;
+    statusDiv.style.display = 'block';
+    statusDiv.style.whiteSpace = 'pre-wrap';
+    statusDiv.style.fontFamily = 'monospace';
+    
+    if (type === 'success') {
+        statusDiv.style.backgroundColor = '#d4edda';
+        statusDiv.style.color = '#155724';
+        statusDiv.style.border = '2px solid #c3e6cb';
+    } else if (type === 'error') {
+        statusDiv.style.backgroundColor = '#f8d7da';
+        statusDiv.style.color = '#721c24';
+        statusDiv.style.border = '2px solid #f5c6cb';
+    } else {
+        statusDiv.style.backgroundColor = '#d1ecf1';
+        statusDiv.style.color = '#0c5460';
+        statusDiv.style.border = '2px solid #bee5eb';
+    }
+    
+    // Auto-hide after 10 seconds for success/info
+    if (type !== 'error') {
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+        }, 10000);
     }
 }
 

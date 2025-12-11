@@ -37,6 +37,7 @@ class User(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False)
     email = Column(String, nullable=True)
+    team = Column(String, nullable=True)  # Team name for grouping
     timezone = Column(String, default="UTC")
     notification_time = Column(Time, default=time(10, 0))
     manager_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)  # Team hierarchy

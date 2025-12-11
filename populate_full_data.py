@@ -40,25 +40,25 @@ def create_org_structure(db):
     print("\n👥 Creating organizational structure...")
     
     # Create VP of Engineering
-    vp = User(name="Sarah Feldman", email="sarah@company.com", manager_id=None)
+    vp = User(name="Sarah Feldman", email="sarah@company.com", team="Executive", manager_id=None)
     db.add(vp)
     db.flush()
     
     # Create Team Leads reporting to VP
-    dana = User(name="Dana Cohen", email="dana@company.com", manager_id=vp.id)
-    amir = User(name="Amir Levi", email="amir@company.com", manager_id=vp.id)
+    dana = User(name="Dana Cohen", email="dana@company.com", team="Platform", manager_id=vp.id)
+    amir = User(name="Amir Levi", email="amir@company.com", team="Product", manager_id=vp.id)
     db.add_all([dana, amir])
     db.flush()
     
     # Platform Team (reports to Dana)
-    yael = User(name="Yael Shapira", email="yael@company.com", manager_id=dana.id)
-    omer = User(name="Omer Ben-David", email="omer@company.com", manager_id=dana.id)
-    noa = User(name="Noa Mizrahi", email="noa@company.com", manager_id=dana.id)
+    yael = User(name="Yael Shapira", email="yael@company.com", team="Platform", manager_id=dana.id)
+    omer = User(name="Omer Ben-David", email="omer@company.com", team="Platform", manager_id=dana.id)
+    noa = User(name="Noa Mizrahi", email="noa@company.com", team="Platform", manager_id=dana.id)
     
     # Product Team (reports to Amir)
-    eitan = User(name="Eitan Goldberg", email="eitan@company.com", manager_id=amir.id)
-    michal = User(name="Michal Avraham", email="michal@company.com", manager_id=amir.id)
-    roi = User(name="Roi Weiss", email="roi@company.com", manager_id=amir.id)
+    eitan = User(name="Eitan Goldberg", email="eitan@company.com", team="Product", manager_id=amir.id)
+    michal = User(name="Michal Avraham", email="michal@company.com", team="Product", manager_id=amir.id)
+    roi = User(name="Roi Weiss", email="roi@company.com", team="Product", manager_id=amir.id)
     
     db.add_all([yael, omer, noa, eitan, michal, roi])
     db.commit()

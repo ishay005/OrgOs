@@ -56,6 +56,7 @@
                 <button onclick="showSection('robin')" class="nav-btn active" id="robin-nav">🤖 Chat with Robin</button>
                 <button onclick="showSection('pending')" class="nav-btn" id="pending-nav">📋 Pending Questions</button>
                 <button onclick="showSection('prompts')" class="nav-btn" id="prompts-nav">⚙️ Prompt Editor</button>
+                <button onclick="showSection('import-export')" class="nav-btn" id="import-export-nav">💾 Import/Export</button>
                 <button onclick="showSection('graph')" class="nav-btn" id="graph-nav">🔗 Task Graph</button>
                 <button onclick="showSection('orgchart')" class="nav-btn" id="orgchart-nav">👥 Org Chart</button>
                 <button onclick="showSection('alignments')" class="nav-btn" id="alignments-nav">Team</button>
@@ -300,6 +301,90 @@
                     </div>
                     
                     <div id="prompt-save-status" style="margin-top: 15px; padding: 10px; border-radius: 4px; display: none;"></div>
+                </div>
+            </div>
+            
+            <!-- Import/Export Section -->
+            <div id="import-export-section" class="section">
+                <div class="section-header">
+                    <h3>💾 Import / Export Data</h3>
+                    <p class="subtitle">Backup, restore, or migrate your OrgOs data using Excel files</p>
+                </div>
+                
+                <div class="import-export-container">
+                    <!-- Export Section -->
+                    <div class="import-export-card">
+                        <div class="card-header">
+                            <h4>📤 Export Data</h4>
+                            <p>Download all your system data to an Excel file</p>
+                        </div>
+                        <div class="card-body">
+                            <button onclick="exportData()" class="primary-btn" style="width: 100%;">
+                                📥 Download Current Data
+                            </button>
+                            <small style="color: #666; display: block; margin-top: 8px;">
+                                Includes: Users, Tasks, Prompts, Answers, Alignments
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Template Section -->
+                    <div class="import-export-card">
+                        <div class="card-header">
+                            <h4>📋 Download Template</h4>
+                            <p>Get an empty template showing the required format</p>
+                        </div>
+                        <div class="card-body">
+                            <button onclick="exportTemplate()" class="secondary-btn" style="width: 100%;">
+                                📄 Download Empty Template
+                            </button>
+                            <small style="color: #666; display: block; margin-top: 8px;">
+                                Use this to prepare data for import
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Import (Append) Section -->
+                    <div class="import-export-card">
+                        <div class="card-header">
+                            <h4>📥 Import Data (Add)</h4>
+                            <p>Add new data from Excel file without deleting existing data</p>
+                        </div>
+                        <div class="card-body">
+                            <input type="file" id="import-file" accept=".xlsx,.numbers" style="display: none;" onchange="handleImportFile(false)">
+                            <button onclick="document.getElementById('import-file').click()" class="primary-btn" style="width: 100%;">
+                                ➕ Select File to Import (Append)
+                            </button>
+                            <small style="color: #666; display: block; margin-top: 8px;">
+                                Safe: Adds new data alongside existing data
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Import (Replace) Section -->
+                    <div class="import-export-card warning">
+                        <div class="card-header">
+                            <h4>⚠️ Import Data (Replace)</h4>
+                            <p>Replace all users/tasks with data from Excel file</p>
+                        </div>
+                        <div class="card-body">
+                            <input type="file" id="import-replace-file" accept=".xlsx,.numbers" style="display: none;" onchange="handleImportFile(true)">
+                            <button onclick="confirmReplace()" class="danger-btn" style="width: 100%;">
+                                🗑️ Select File to Import (Replace)
+                            </button>
+                            <small style="color: #dc3545; display: block; margin-top: 8px; font-weight: 500;">
+                                ⚠️ Warning: Deletes all existing users & tasks!
+                            </small>
+                            <small style="color: #666; display: block; margin-top: 4px;">
+                                Prompts are kept, new prompts are added as latest versions
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status/Result Display -->
+                <div id="import-export-status" style="margin-top: 20px; padding: 16px; border-radius: 8px; display: none;">
+                    <!-- Will be populated dynamically -->
                 </div>
             </div>
             
