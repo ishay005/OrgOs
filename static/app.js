@@ -3622,6 +3622,11 @@ async function updatePromptPreview() {
 // ============================================================================
 
 async function exportData() {
+    if (!currentUser || !currentUser.id) {
+        showImportExportStatus('❌ Please log in to export data', 'error');
+        return;
+    }
+    
     try {
         showImportExportStatus('📊 Generating export file...', 'info');
         
@@ -3656,6 +3661,11 @@ async function exportData() {
 }
 
 async function exportTemplate() {
+    if (!currentUser || !currentUser.id) {
+        showImportExportStatus('❌ Please log in to download template', 'error');
+        return;
+    }
+    
     try {
         showImportExportStatus('📋 Generating template file...', 'info');
         
@@ -3690,6 +3700,11 @@ async function exportTemplate() {
 }
 
 async function handleImportFile(replaceMode) {
+    if (!currentUser || !currentUser.id) {
+        showImportExportStatus('❌ Please log in to import data', 'error');
+        return;
+    }
+    
     const fileInput = replaceMode ? document.getElementById('import-replace-file') : document.getElementById('import-file');
     const file = fileInput.files[0];
     
@@ -3787,6 +3802,11 @@ async function handleImportFile(replaceMode) {
 }
 
 function confirmReplace() {
+    if (!currentUser || !currentUser.id) {
+        showImportExportStatus('❌ Please log in to import data', 'error');
+        return;
+    }
+    
     const confirmed = confirm(
         '⚠️ REPLACE MODE ⚠️\n\n' +
         'You are about to use REPLACE mode.\n\n' +
