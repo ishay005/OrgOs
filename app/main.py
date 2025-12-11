@@ -1,9 +1,10 @@
 """
 Main FastAPI application for OrgOs - Perception Alignment System
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
+from starlette.staticfiles import StaticFiles as StarletteStaticFiles
 from contextlib import asynccontextmanager
 import logging
 import os
@@ -13,6 +14,16 @@ from app.seed import seed_database
 from app.routers import (
     users, tasks, questions, misalignments, debug, users_orgchart, alignment_stats, chat, pending_questions, admin, prompts, prompt_preview, daily_sync, import_export
 )
+
+
+class NoCacheStaticFiles(StarletteStaticFiles):
+    """Static files handler that adds no-cache headers"""
+    async def get_response(self, path: str, scope) -> Response:
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -77,8 +88,8 @@ logger.info(f"Static directory path: {static_dir}")
 logger.info(f"Static directory exists: {os.path.exists(static_dir)}")
 
 if os.path.exists(static_dir):
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-    logger.info("✅ Static files mounted")
+    app.mount("/static", NoCacheStaticFiles(directory=static_dir), name="static")
+    logger.info("✅ Static files mounted (no-cache)")
 else:
     logger.warning("⚠️  Static directory not found")
 
@@ -91,7 +102,14 @@ async def root():
     static_index = os.path.join(static_dir, "index.html")
     if os.path.exists(static_index):
         logger.info("Serving index.html")
-        return FileResponse(static_index)
+        return FileResponse(
+            static_index,
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
     
     logger.info("Serving API info (static files not found)")
     return {
