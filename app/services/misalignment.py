@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.models import (
-    User, Task, AttributeDefinition, AttributeAnswer, AlignmentEdge, EntityType
+    User, Task, AttributeDefinition, AttributeAnswer, EntityType, TaskRelevantUser
 )
 from app.services.similarity import compute_similarity, AttributeType
 from app.config import settings
@@ -59,13 +59,12 @@ async def compute_misalignments_for_user(
         List of MisalignmentDTO objects representing perception gaps
     
     Logic:
-        1. Find all users V that user U aligns with (AlignmentEdge)
-        2. For each aligned user V:
-           a. For each task T owned by V
-           b. For each task attribute A
-           c. Get U's answer about V's task (answered_by=U, target=V, task=T)
-           d. Get V's self-answer (answered_by=V, target=V, task=T)
-           e. If both answers exist and not refused:
+        1. Find all tasks where user U is in the relevant_users list
+        2. For each such task T (owned by user V):
+           a. For each task attribute A
+           b. Get U's answer about V's task (answered_by=U, target=V, task=T)
+           c. Get V's self-answer (answered_by=V, target=V, task=T)
+           d. If both answers exist and not refused:
               - Compute similarity using embeddings/type-specific logic
               - If similarity < threshold, report as misalignment
     """
@@ -79,110 +78,107 @@ async def compute_misalignments_for_user(
     
     misalignments = []
     
-    # Find all users this user aligns with
-    alignments = db.query(AlignmentEdge).filter(
-        AlignmentEdge.source_user_id == user_id
+    # Find all tasks where this user is marked as relevant
+    relevant_entries = db.query(TaskRelevantUser).filter(
+        TaskRelevantUser.user_id == user_id
     ).all()
     
+    # Get unique task owners (excluding self)
+    task_owner_pairs = []  # (task, owner)
+    for entry in relevant_entries:
+        task = db.query(Task).filter(Task.id == entry.task_id, Task.is_active == True).first()
+        if task and task.owner_user_id != user_id:
+            owner = db.query(User).filter(User.id == task.owner_user_id).first()
+            if owner:
+                task_owner_pairs.append((task, owner))
+    
     logger.info(
-        f"Computing misalignments for user {user.name} with {len(alignments)} alignments"
+        f"Computing misalignments for user {user.name} with {len(task_owner_pairs)} relevant tasks"
     )
     
-    for alignment in alignments:
-        # Get the aligned user
-        other_user = db.query(User).filter(
-            User.id == alignment.target_user_id
-        ).first()
-        
-        if not other_user:
+    # Process each task-owner pair
+    processed_pairs = set()
+    for task, other_user in task_owner_pairs:
+        pair_key = (task.id, other_user.id)
+        if pair_key in processed_pairs:
             continue
+        processed_pairs.add(pair_key)
         
-        # Get all active tasks owned by the other user
-        tasks = db.query(Task).filter(
-            Task.owner_user_id == other_user.id,
-            Task.is_active == True
+        # Get all task attributes
+        task_attributes = db.query(AttributeDefinition).filter(
+            AttributeDefinition.entity_type == EntityType.TASK
         ).all()
         
-        logger.debug(
-            f"Checking {len(tasks)} tasks for alignment with {other_user.name}"
-        )
-        
-        for task in tasks:
-            # Get all task attributes
-            task_attributes = db.query(AttributeDefinition).filter(
-                AttributeDefinition.entity_type == EntityType.TASK
-            ).all()
+        for attribute in task_attributes:
+            # Get current user's answer about other user's task
+            my_answer = db.query(AttributeAnswer).filter(
+                AttributeAnswer.answered_by_user_id == user_id,
+                AttributeAnswer.target_user_id == other_user.id,
+                AttributeAnswer.task_id == task.id,
+                AttributeAnswer.attribute_id == attribute.id,
+                AttributeAnswer.refused == False
+            ).first()
             
-            for attribute in task_attributes:
-                # Get current user's answer about other user's task
-                my_answer = db.query(AttributeAnswer).filter(
-                    AttributeAnswer.answered_by_user_id == user_id,
-                    AttributeAnswer.target_user_id == other_user.id,
-                    AttributeAnswer.task_id == task.id,
-                    AttributeAnswer.attribute_id == attribute.id,
-                    AttributeAnswer.refused == False
-                ).first()
+            # Get other user's self-answer about their own task
+            their_answer = db.query(AttributeAnswer).filter(
+                AttributeAnswer.answered_by_user_id == other_user.id,
+                AttributeAnswer.target_user_id == other_user.id,
+                AttributeAnswer.task_id == task.id,
+                AttributeAnswer.attribute_id == attribute.id,
+                AttributeAnswer.refused == False
+            ).first()
+            
+            # Both answers must exist
+            if not my_answer or not their_answer:
+                continue
+            
+            if not my_answer.value or not their_answer.value:
+                continue
+            
+            # Compute similarity using the similarity engine
+            try:
+                # Convert attribute type to AttributeType enum
+                attr_type = AttributeType(attribute.type.value)
                 
-                # Get other user's self-answer about their own task
-                their_answer = db.query(AttributeAnswer).filter(
-                    AttributeAnswer.answered_by_user_id == other_user.id,
-                    AttributeAnswer.target_user_id == other_user.id,
-                    AttributeAnswer.task_id == task.id,
-                    AttributeAnswer.attribute_id == attribute.id,
-                    AttributeAnswer.refused == False
-                ).first()
+                similarity_score = await compute_similarity(
+                    value_a=my_answer.value,
+                    value_b=their_answer.value,
+                    attribute_type=attr_type,
+                    allowed_values=attribute.allowed_values,
+                    attribute_name=attribute.name
+                )
                 
-                # Both answers must exist
-                if not my_answer or not their_answer:
-                    continue
-                
-                if not my_answer.value or not their_answer.value:
-                    continue
-                
-                # Compute similarity using the similarity engine
-                try:
-                    # Convert attribute type to AttributeType enum
-                    attr_type = AttributeType(attribute.type.value)
-                    
-                    similarity_score = await compute_similarity(
-                        value_a=my_answer.value,
-                        value_b=their_answer.value,
-                        attribute_type=attr_type,
-                        allowed_values=attribute.allowed_values,
-                        attribute_name=attribute.name
+                # Include if below threshold (or if include_all is True)
+                if include_all or similarity_score < threshold:
+                    misalignment = MisalignmentDTO(
+                        other_user_id=other_user.id,
+                        other_user_name=other_user.name,
+                        task_id=task.id,
+                        task_title=task.title,
+                        attribute_id=attribute.id,
+                        attribute_name=attribute.name,
+                        attribute_label=attribute.label,
+                        your_value=my_answer.value,
+                        their_value=their_answer.value,
+                        similarity_score=similarity_score
                     )
                     
-                    # Include if below threshold (or if include_all is True)
-                    if include_all or similarity_score < threshold:
-                        misalignment = MisalignmentDTO(
-                            other_user_id=other_user.id,
-                            other_user_name=other_user.name,
-                            task_id=task.id,
-                            task_title=task.title,
-                            attribute_id=attribute.id,
-                            attribute_name=attribute.name,
-                            attribute_label=attribute.label,
-                            your_value=my_answer.value,
-                            their_value=their_answer.value,
-                            similarity_score=similarity_score
+                    misalignments.append(misalignment)
+                    
+                    if similarity_score < threshold:
+                        logger.info(
+                            f"Misalignment found: {user.name} vs {other_user.name} "
+                            f"on {task.title}/{attribute.label}: "
+                            f"'{my_answer.value}' vs '{their_answer.value}' "
+                            f"(score={similarity_score:.3f})"
                         )
-                        
-                        misalignments.append(misalignment)
-                        
-                        if similarity_score < threshold:
-                            logger.info(
-                                f"Misalignment found: {user.name} vs {other_user.name} "
-                                f"on {task.title}/{attribute.label}: "
-                                f"'{my_answer.value}' vs '{their_answer.value}' "
-                                f"(score={similarity_score:.3f})"
-                            )
-                
-                except Exception as e:
-                    logger.error(
-                        f"Error computing similarity for {attribute.name}: {e}",
-                        exc_info=True
-                    )
-                    continue
+            
+            except Exception as e:
+                logger.error(
+                    f"Error computing similarity for {attribute.name}: {e}",
+                    exc_info=True
+                )
+                continue
     
     logger.info(
         f"Found {len(misalignments)} misalignment(s) for {user.name} "
@@ -221,16 +217,20 @@ async def compute_user_misalignments(
     if not user:
         return []
     
-    # Find aligned users
-    alignments = db.query(AlignmentEdge).filter(
-        AlignmentEdge.source_user_id == user_id
+    # Find aligned users from TaskRelevantUser (task owners where this user is relevant)
+    relevant_entries = db.query(TaskRelevantUser).filter(
+        TaskRelevantUser.user_id == user_id
     ).all()
     
-    for alignment in alignments:
-        other_user = db.query(User).filter(
-            User.id == alignment.target_user_id
-        ).first()
-        
+    # Get unique other users (task owners)
+    other_user_ids = set()
+    for entry in relevant_entries:
+        task = db.query(Task).filter(Task.id == entry.task_id).first()
+        if task and task.owner_user_id != user_id:
+            other_user_ids.add(task.owner_user_id)
+    
+    for other_user_id in other_user_ids:
+        other_user = db.query(User).filter(User.id == other_user_id).first()
         if not other_user:
             continue
         

@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
     User, Task, AttributeDefinition, AttributeAnswer, 
-    AlignmentEdge, SimilarityScore
+    SimilarityScore, TaskRelevantUser
 )
 
 
@@ -54,27 +54,45 @@ async def get_pending_questions_for_user(
     if not user:
         return []
     
-    # Get aligned users
-    alignment_result = await db.execute(
-        select(AlignmentEdge.target_user_id)
-        .where(AlignmentEdge.source_user_id == user_id)
-    )
-    aligned_user_ids = [row[0] for row in alignment_result.fetchall()]
-    
-    # All users to consider (self + aligned)
-    all_target_user_ids = [user_id] + aligned_user_ids
-    
-    # Get all tasks for these users
-    tasks_result = await db.execute(
+    # Get tasks owned by user
+    owned_tasks_result = await db.execute(
         select(Task)
         .where(
             and_(
-                Task.owner_user_id.in_(all_target_user_ids),
+                Task.owner_user_id == user_id,
                 Task.is_active == True
             )
         )
     )
-    tasks = tasks_result.scalars().all()
+    owned_tasks = owned_tasks_result.scalars().all()
+    
+    # Get tasks where user is marked as relevant
+    relevant_result = await db.execute(
+        select(TaskRelevantUser.task_id)
+        .where(TaskRelevantUser.user_id == user_id)
+    )
+    relevant_task_ids = [row[0] for row in relevant_result.fetchall()]
+    
+    relevant_tasks = []
+    if relevant_task_ids:
+        relevant_tasks_result = await db.execute(
+            select(Task)
+            .where(
+                and_(
+                    Task.id.in_(relevant_task_ids),
+                    Task.is_active == True
+                )
+            )
+        )
+        relevant_tasks = relevant_tasks_result.scalars().all()
+    
+    # Combine and dedupe
+    task_ids_seen = set()
+    tasks = []
+    for t in list(owned_tasks) + list(relevant_tasks):
+        if t.id not in task_ids_seen:
+            task_ids_seen.add(t.id)
+            tasks.append(t)
     
     # Get all task attributes
     attrs_result = await db.execute(

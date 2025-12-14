@@ -1469,7 +1469,30 @@ async function showTaskDetails(taskId) {
     modal.classList.remove('hidden');
     
     try {
-        const data = await apiCall(`/tasks/${taskId}/answers`, { skipAuth: true });
+        // Fetch all data in parallel
+        const [data, relevantUsers, permissions, allUsers, taskAttributes, dependencies, allTasks] = await Promise.all([
+            apiCall(`/tasks/${taskId}/answers`, { skipAuth: true }),
+            apiCall(`/tasks/${taskId}/relevant-users`).catch(() => []),
+            apiCall(`/tasks/${taskId}/permissions`).catch(() => ({})),
+            apiCall('/users').catch(() => []),
+            apiCall('/task-attributes').catch(() => []),
+            apiCall(`/tasks/${taskId}/dependencies`).catch(() => []),
+            apiCall('/tasks?include_self=true&include_aligned=true').catch(() => [])
+        ]);
+        
+        // Store task data for save operations
+        window.currentEditingTask = {
+            id: taskId,
+            title: data.task_title,
+            description: data.task_description || '',
+            owner_id: data.owner_id,
+            owner_name: data.owner_name,
+            permissions: permissions,
+            relevantUsers: relevantUsers,
+            allUsers: allUsers,
+            taskAttributes: taskAttributes,
+            answers: data.answers_by_attribute
+        };
         
         // Update title
         title.textContent = data.task_title;
@@ -1477,10 +1500,32 @@ async function showTaskDetails(taskId) {
         // Build content
         let html = '';
         
-        // Task info section
-        html += `
-            <div class="task-info-section">
-                <h4>📋 Task Information</h4>
+        // === Task Info Section (Editable if permitted) ===
+        html += '<div class="task-info-section">';
+        html += '<h4>📋 Task Information</h4>';
+        
+        if (permissions.can_edit_task) {
+            // Editable fields
+            html += `
+                <div class="task-info-row">
+                    <span class="task-info-label">Title:</span>
+                    <input type="text" id="edit-task-title" value="${escapeHtml(data.task_title)}" class="edit-input" style="flex:1;">
+                </div>
+                <div class="task-info-row">
+                    <span class="task-info-label">Description:</span>
+                    <textarea id="edit-task-description" class="edit-input" style="flex:1; min-height:50px;">${escapeHtml(data.task_description || '')}</textarea>
+                </div>
+                <div class="task-info-row">
+                    <span class="task-info-label">Owner:</span>
+                    <select id="edit-task-owner" class="edit-input" style="flex:1;">
+                        ${allUsers.map(u => `<option value="${u.id}" ${u.id === data.owner_id ? 'selected' : ''}>${u.name}</option>`).join('')}
+                    </select>
+                </div>
+                <button onclick="saveTaskInfo('${taskId}')" class="save-btn" style="margin-top:10px;">💾 Save Task Info</button>
+            `;
+        } else {
+            // Read-only display
+            html += `
                 <div class="task-info-row">
                     <span class="task-info-label">Owner:</span>
                     <span class="task-info-value">${data.owner_name}</span>
@@ -1491,64 +1536,193 @@ async function showTaskDetails(taskId) {
                         <span class="task-info-value">${data.task_description}</span>
                     </div>
                 ` : ''}
-            </div>
-        `;
+            `;
+        }
+        html += '</div>';
         
-        // Answers section as table
+        // === Relevant Users Section ===
+        html += '<div class="task-info-section">';
+        html += '<h4>👥 Relevant Users</h4>';
+        
+        if (relevantUsers.length > 0) {
+            html += '<div class="relevant-users-list">';
+            relevantUsers.forEach(ru => {
+                const canRemove = permissions.can_manage_all_relevant || 
+                    (permissions.can_manage_self_relevant && ru.user_id === currentUser?.id);
+                html += `
+                    <span class="relevant-user-tag">
+                        ${ru.user_name}
+                        ${canRemove ? `<button onclick="removeRelevantUser('${taskId}', '${ru.user_id}')" class="remove-btn" title="Remove">×</button>` : ''}
+                    </span>
+                `;
+            });
+            html += '</div>';
+        } else {
+            html += '<div class="no-answers">No relevant users assigned yet.</div>';
+        }
+        
+        // Add relevant user controls
+        const currentUserInList = relevantUsers.some(ru => ru.user_id === currentUser?.id);
+        
+        if (permissions.can_manage_self_relevant && !currentUserInList) {
+            html += `<button onclick="addRelevantUser('${taskId}', '${currentUser?.id}')" class="add-btn" style="margin-top:10px;">➕ Add Myself</button>`;
+        }
+        
+        if (permissions.can_manage_all_relevant) {
+            html += `
+                <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+                    <select id="add-relevant-user-select" class="edit-input" style="flex:1;">
+                        <option value="">Select user to add...</option>
+                        ${allUsers.filter(u => !relevantUsers.some(ru => ru.user_id === u.id)).map(u => 
+                            `<option value="${u.id}">${u.name}</option>`
+                        ).join('')}
+                    </select>
+                    <button onclick="addSelectedRelevantUser('${taskId}')" class="add-btn">➕ Add</button>
+                </div>
+            `;
+        }
+        html += '</div>';
+        
+        // === Dependencies Section ===
+        html += '<div class="task-info-section">';
+        html += '<h4>🔗 Dependencies</h4>';
+        
+        if (dependencies.length > 0) {
+            html += '<div class="dependencies-list">';
+            dependencies.forEach(dep => {
+                html += `
+                    <div class="dependency-item">
+                        <span class="dependency-title">${dep.task_title}</span>
+                        <span class="dependency-owner">(${dep.owner_name})</span>
+                        ${permissions.can_manage_dependencies ? 
+                            `<button onclick="removeDependency('${taskId}', '${dep.task_id}')" class="remove-btn" title="Remove">×</button>` 
+                            : ''}
+                    </div>
+                `;
+            });
+            html += '</div>';
+        } else {
+            html += '<div class="no-answers">No dependencies.</div>';
+        }
+        
+        // Add dependency controls
+        if (permissions.can_manage_dependencies) {
+            const availableTasks = allTasks.filter(t => 
+                t.id !== taskId && 
+                !dependencies.some(d => d.task_id === t.id)
+            );
+            
+            html += `
+                <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+                    <select id="add-dependency-select" class="edit-input" style="flex:1;">
+                        <option value="">Select task to add as dependency...</option>
+                        ${availableTasks.map(t => 
+                            `<option value="${t.id}">${t.title} (${t.owner_name})</option>`
+                        ).join('')}
+                    </select>
+                    <button onclick="addDependency('${taskId}')" class="add-btn">➕ Add</button>
+                </div>
+            `;
+        }
+        html += '</div>';
+        
+        // === Perceptions Section (with edit capabilities) ===
+        html += '<div class="task-info-section"><h4>💭 Perceptions</h4>';
+        
         const attributeKeys = Object.keys(data.answers_by_attribute);
         
-        if (attributeKeys.length > 0) {
-            // Get all unique users who answered
-            const allUsers = new Set();
-            attributeKeys.forEach(attrKey => {
-                const attr = data.answers_by_attribute[attrKey];
-                if (attr.answers) {
-                    attr.answers.forEach(answer => {
-                        allUsers.add(JSON.stringify({
-                            id: answer.user_id,
-                            name: answer.user_name,
-                            is_owner: answer.is_owner
-                        }));
-                    });
-                }
-            });
-            
-            const users = Array.from(allUsers).map(u => JSON.parse(u));
-            // Sort so owner is first
-            users.sort((a, b) => b.is_owner - a.is_owner);
-            
-            html += '<div class="task-info-section"><h4>💭 What People Think</h4>';
-            html += '<table class="answers-table">';
+        // Get all unique users who answered
+        const answeringUsers = new Set();
+        attributeKeys.forEach(attrKey => {
+            const attr = data.answers_by_attribute[attrKey];
+            if (attr.answers) {
+                attr.answers.forEach(answer => {
+                    answeringUsers.add(JSON.stringify({
+                        id: answer.user_id,
+                        name: answer.user_name,
+                        is_owner: answer.is_owner
+                    }));
+                });
+            }
+        });
+        
+        const users = Array.from(answeringUsers).map(u => JSON.parse(u));
+        // Sort so owner is first
+        users.sort((a, b) => b.is_owner - a.is_owner);
+        
+        // Ensure current user is in the list for editing their own perception
+        if (currentUser && !users.find(u => u.id === currentUser.id)) {
+            users.push({ id: currentUser.id, name: currentUser.name, is_owner: false, is_current: true });
+        }
+        
+        if (taskAttributes.length > 0) {
+            html += '<table class="answers-table editable-table">';
             
             // Header row
             html += '<thead><tr><th>Attribute</th>';
             users.forEach(user => {
                 const ownerLabel = user.is_owner ? ' 👑' : '';
-                html += `<th class="${user.is_owner ? 'owner-column' : ''}">${user.name}${ownerLabel}</th>`;
+                const isCurrentUser = user.id === currentUser?.id;
+                html += `<th class="${user.is_owner ? 'owner-column' : ''} ${isCurrentUser ? 'current-user-column' : ''}">${user.name}${ownerLabel}</th>`;
             });
             html += '</tr></thead>';
             
-            // Data rows
+            // Data rows - for each attribute
             html += '<tbody>';
-            attributeKeys.forEach(attrKey => {
-                const attr = data.answers_by_attribute[attrKey];
-                html += `<tr><td class="attr-label">${attr.attribute_label}</td>`;
+            taskAttributes.forEach(attr => {
+                const existingData = data.answers_by_attribute[attr.name];
+                html += `<tr><td class="attr-label">${attr.label}</td>`;
                 
                 users.forEach(user => {
-                    const answer = attr.answers?.find(a => a.user_id === user.id);
+                    const existingAnswer = existingData?.answers?.find(a => a.user_id === user.id);
+                    const currentValue = existingAnswer?.value || '';
                     const cellClass = user.is_owner ? 'owner-column' : '';
-                    html += `<td class="${cellClass}">${answer ? answer.value : '-'}</td>`;
+                    const isCurrentUser = user.id === currentUser?.id;
+                    
+                    if (isCurrentUser && permissions.can_edit_own_perception) {
+                        // Editable cell for current user
+                        const inputId = `perception-${attr.name}-${user.id}`;
+                        if (attr.type === 'enum' && attr.allowed_values) {
+                            html += `<td class="${cellClass} current-user-column editable-cell">
+                                <select id="${inputId}" class="perception-input" data-attr="${attr.name}" data-target="${data.owner_id}">
+                                    <option value="">-</option>
+                                    ${attr.allowed_values.map(v => 
+                                        `<option value="${v}" ${currentValue === v ? 'selected' : ''}>${v}</option>`
+                                    ).join('')}
+                                </select>
+                            </td>`;
+                        } else {
+                            html += `<td class="${cellClass} current-user-column editable-cell">
+                                <input type="text" id="${inputId}" class="perception-input" value="${escapeHtml(currentValue)}" 
+                                       data-attr="${attr.name}" data-target="${data.owner_id}" placeholder="-">
+                            </td>`;
+                        }
+                    } else {
+                        // Read-only cell
+                        html += `<td class="${cellClass}">${currentValue || '-'}</td>`;
+                    }
                 });
                 
                 html += '</tr>';
             });
-            html += '</tbody></table></div>';
+            html += '</tbody></table>';
+            
+            // Save button for perceptions
+            if (permissions.can_edit_own_perception) {
+                html += `<button onclick="savePerceptions('${taskId}', '${data.owner_id}')" class="save-btn" style="margin-top:10px;">💾 Save My Perceptions</button>`;
+            }
         } else {
+            html += '<div class="no-answers">No attributes defined for tasks.</div>';
+        }
+        
+        html += '</div>';
+        
+        // === Delete Task Section ===
+        if (permissions.can_delete) {
             html += `
-                <div class="task-info-section">
-                    <div class="no-answers">
-                        No one has answered questions about this task yet.
-                    </div>
+                <div class="task-info-section delete-section">
+                    <h4>⚠️ Danger Zone</h4>
+                    <button onclick="deleteTask('${taskId}', '${escapeHtml(data.task_title)}')" class="danger-btn">🗑️ Delete Task</button>
                 </div>
             `;
         }
@@ -1556,7 +1730,192 @@ async function showTaskDetails(taskId) {
         content.innerHTML = html;
         
     } catch (error) {
+        console.error('Error loading task details:', error);
         content.innerHTML = `<div class="message error">Failed to load task details: ${error.message}</div>`;
+    }
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Save task info (title, description, owner)
+async function saveTaskInfo(taskId) {
+    const title = document.getElementById('edit-task-title')?.value;
+    const description = document.getElementById('edit-task-description')?.value;
+    const ownerId = document.getElementById('edit-task-owner')?.value;
+    
+    try {
+        await apiCall(`/tasks/${taskId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                title: title,
+                description: description,
+                owner_user_id: ownerId
+            })
+        });
+        
+        showToast('Task info saved successfully!', 'success');
+        // Refresh the popup
+        showTaskDetails(taskId);
+        // Refresh the graph if visible
+        if (document.getElementById('graph-section')?.classList.contains('active')) {
+            loadTaskGraph();
+        }
+    } catch (error) {
+        showToast('Failed to save task info: ' + error.message, 'error');
+    }
+}
+
+// Save perceptions
+async function savePerceptions(taskId, targetUserId) {
+    const inputs = document.querySelectorAll('.perception-input');
+    const updates = [];
+    
+    inputs.forEach(input => {
+        const attrName = input.dataset.attr;
+        const value = input.value.trim();
+        
+        if (value) {
+            updates.push({
+                task_id: taskId,
+                target_user_id: targetUserId,
+                attribute_name: attrName,
+                value: value
+            });
+        }
+    });
+    
+    try {
+        for (const update of updates) {
+            await apiCall('/pending-questions/answer', {
+                method: 'POST',
+                body: JSON.stringify(update)
+            });
+        }
+        
+        showToast(`Saved ${updates.length} perception(s)!`, 'success');
+        // Refresh the popup
+        showTaskDetails(taskId);
+        // Refresh misalignment stats if visible
+        if (document.getElementById('misalignments-section')?.classList.contains('active')) {
+            loadMisalignments();
+        }
+    } catch (error) {
+        showToast('Failed to save perceptions: ' + error.message, 'error');
+    }
+}
+
+// Add relevant user
+async function addRelevantUser(taskId, userId) {
+    try {
+        await apiCall(`/tasks/${taskId}/relevant-users/${userId}`, { method: 'POST' });
+        showToast('User added to relevant list!', 'success');
+        showTaskDetails(taskId);
+    } catch (error) {
+        showToast('Failed to add user: ' + error.message, 'error');
+    }
+}
+
+// Add selected relevant user from dropdown
+async function addSelectedRelevantUser(taskId) {
+    const select = document.getElementById('add-relevant-user-select');
+    const userId = select?.value;
+    if (!userId) {
+        showToast('Please select a user first', 'warning');
+        return;
+    }
+    await addRelevantUser(taskId, userId);
+}
+
+// Remove relevant user
+async function removeRelevantUser(taskId, userId) {
+    if (!confirm('Remove this user from the relevant list?')) return;
+    
+    try {
+        await apiCall(`/tasks/${taskId}/relevant-users/${userId}`, { method: 'DELETE' });
+        showToast('User removed from relevant list!', 'success');
+        showTaskDetails(taskId);
+    } catch (error) {
+        showToast('Failed to remove user: ' + error.message, 'error');
+    }
+}
+
+// Toast notification helper
+function showToast(message, type = 'info') {
+    // Remove existing toast
+    const existingToast = document.querySelector('.toast-notification');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Add dependency
+async function addDependency(taskId) {
+    const select = document.getElementById('add-dependency-select');
+    const dependsOnId = select?.value;
+    if (!dependsOnId) {
+        showToast('Please select a task first', 'warning');
+        return;
+    }
+    
+    try {
+        await apiCall(`/tasks/${taskId}/dependencies/${dependsOnId}`, { method: 'POST' });
+        showToast('Dependency added!', 'success');
+        showTaskDetails(taskId);
+        // Refresh graph if visible
+        if (document.getElementById('graph-section')?.classList.contains('active')) {
+            loadTaskGraph();
+        }
+    } catch (error) {
+        showToast('Failed to add dependency: ' + error.message, 'error');
+    }
+}
+
+// Remove dependency
+async function removeDependency(taskId, dependsOnId) {
+    if (!confirm('Remove this dependency?')) return;
+    
+    try {
+        await apiCall(`/tasks/${taskId}/dependencies/${dependsOnId}`, { method: 'DELETE' });
+        showToast('Dependency removed!', 'success');
+        showTaskDetails(taskId);
+        // Refresh graph if visible
+        if (document.getElementById('graph-section')?.classList.contains('active')) {
+            loadTaskGraph();
+        }
+    } catch (error) {
+        showToast('Failed to remove dependency: ' + error.message, 'error');
+    }
+}
+
+// Delete task
+async function deleteTask(taskId, taskTitle) {
+    if (!confirm(`Are you sure you want to delete "${taskTitle}"?\n\nThis action cannot be undone.`)) return;
+    
+    try {
+        await apiCall(`/tasks/${taskId}`, { method: 'DELETE' });
+        showToast('Task deleted!', 'success');
+        closeTaskDetails();
+        // Refresh the graph
+        if (document.getElementById('graph-section')?.classList.contains('active')) {
+            loadTaskGraph();
+        }
+    } catch (error) {
+        showToast('Failed to delete task: ' + error.message, 'error');
     }
 }
 
@@ -2961,6 +3320,7 @@ function toggleQuickAddExpand() {
         expanded.style.display = 'block';
         btn.textContent = '📝 Hide Fields';
         loadTasksForParentDropdown();
+        loadUsersForRelevantDropdown();
     } else {
         expanded.style.display = 'none';
         btn.textContent = '📝 Show All Fields';
@@ -2975,6 +3335,18 @@ async function loadTasksForParentDropdown() {
         sel.innerHTML = '<option value="">No parent</option>';
         tasks.forEach(t => {
             sel.innerHTML += `<option value="${t.id}">${t.title}</option>`;
+        });
+    } catch (e) { console.error(e); }
+}
+
+// Load users for relevant users dropdown
+async function loadUsersForRelevantDropdown() {
+    try {
+        const users = await apiCall('/users');
+        const sel = document.getElementById('quick-task-relevant-users');
+        sel.innerHTML = '';
+        users.forEach(u => {
+            sel.innerHTML += `<option value="${u.id}">${u.name}</option>`;
         });
     } catch (e) { console.error(e); }
 }
@@ -2996,6 +3368,10 @@ async function quickAddTask() {
     const deps = document.getElementById('quick-task-dependencies')?.value?.trim() || '';
     const resources = document.getElementById('quick-task-resources')?.value?.trim() || '';
     
+    // Get selected relevant users
+    const relevantUsersSelect = document.getElementById('quick-task-relevant-users');
+    const relevantUserIds = relevantUsersSelect ? Array.from(relevantUsersSelect.selectedOptions).map(o => o.value) : [];
+    
     try {
         const newTask = await apiCall('/tasks', {
             method: 'POST',
@@ -3016,6 +3392,13 @@ async function quickAddTask() {
             } catch(e) { console.log('attr save err:', e); }
         }
         
+        // Add relevant users
+        for (const userId of relevantUserIds) {
+            try {
+                await apiCall(`/tasks/${newTask.id}/relevant-users/${userId}`, { method: 'POST' });
+            } catch(e) { console.log('relevant user err:', e); }
+        }
+        
         // Show success feedback
         nameInput.value = '';
         nameInput.style.borderColor = '#10b981';
@@ -3027,6 +3410,9 @@ async function quickAddTask() {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
+        // Clear relevant users multi-select
+        const ruSel = document.getElementById('quick-task-relevant-users');
+        if (ruSel) Array.from(ruSel.options).forEach(o => o.selected = false);
         
         // Reset after 2 seconds
         setTimeout(() => {

@@ -1,5 +1,5 @@
 """
-User and alignment management endpoints
+User management endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -8,15 +8,13 @@ from datetime import time as time_type
 
 from app.database import get_db
 from app.auth import get_current_user
-from app.models import User, AlignmentEdge
+from app.models import User
 from app.schemas import (
     UserCreate, UserResponse, UserListResponse,
-    AlignmentCreate, AlignmentResponse,
     OrgChartNode, OrgChartResponse
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
-alignment_router = APIRouter(prefix="/alignments", tags=["alignments"])
 
 
 @router.post("", response_model=UserResponse)
@@ -35,6 +33,7 @@ async def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="Invalid notification_time format. Use HH:MM")
     
     # Validate manager_id if provided
+    manager = None
     if user_data.manager_id:
         manager = db.query(User).filter(User.id == user_data.manager_id).first()
         if not manager:
@@ -73,82 +72,3 @@ async def list_users(db: Session = Depends(get_db)):
     """
     users = db.query(User).all()
     return users
-
-
-@alignment_router.get("", response_model=List[AlignmentResponse])
-async def get_alignments(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Get alignment list for current user.
-    Returns list of users the current user aligns with.
-    """
-    alignments = db.query(AlignmentEdge).filter(
-        AlignmentEdge.source_user_id == current_user.id
-    ).all()
-    
-    result = []
-    for alignment in alignments:
-        target_user = db.query(User).filter(User.id == alignment.target_user_id).first()
-        if target_user:
-            result.append({
-                "target_user_id": target_user.id,
-                "target_user_name": target_user.name
-            })
-    
-    return result
-
-
-@alignment_router.post("", response_model=List[AlignmentResponse])
-async def update_alignment(
-    alignment_data: AlignmentCreate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Create or delete an alignment edge.
-    If align=true: create edge (idempotent)
-    If align=false: delete edge
-    Returns updated alignment list.
-    """
-    target_user = db.query(User).filter(User.id == alignment_data.target_user_id).first()
-    if not target_user:
-        raise HTTPException(status_code=404, detail="Target user not found")
-    
-    existing = db.query(AlignmentEdge).filter(
-        AlignmentEdge.source_user_id == current_user.id,
-        AlignmentEdge.target_user_id == alignment_data.target_user_id
-    ).first()
-    
-    if alignment_data.align:
-        # Create edge if doesn't exist
-        if not existing:
-            edge = AlignmentEdge(
-                source_user_id=current_user.id,
-                target_user_id=alignment_data.target_user_id
-            )
-            db.add(edge)
-            db.commit()
-    else:
-        # Delete edge if exists
-        if existing:
-            db.delete(existing)
-            db.commit()
-    
-    # Return updated list
-    alignments = db.query(AlignmentEdge).filter(
-        AlignmentEdge.source_user_id == current_user.id
-    ).all()
-    
-    result = []
-    for alignment in alignments:
-        target_user = db.query(User).filter(User.id == alignment.target_user_id).first()
-        if target_user:
-            result.append({
-                "target_user_id": target_user.id,
-                "target_user_name": target_user.name
-            })
-    
-    return result
-

@@ -8,8 +8,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from app.database import SessionLocal
 from app.models import (
-    User, Task, AttributeAnswer, AlignmentEdge, QuestionLog,
-    SimilarityScore, ChatThread, ChatMessage, TaskDependency
+    User, Task, AttributeAnswer, QuestionLog,
+    SimilarityScore, ChatThread, ChatMessage, TaskDependency, TaskRelevantUser
 )
 import logging
 
@@ -53,9 +53,9 @@ def clear_all_data():
         deleted = db.query(Task).delete()
         logger.info(f"    ✅ Deleted {deleted} tasks")
         
-        logger.info("  Deleting alignment edges...")
-        deleted = db.query(AlignmentEdge).delete()
-        logger.info(f"    ✅ Deleted {deleted} alignment edges")
+        logger.info("  Deleting relevant users...")
+        deleted = db.query(TaskRelevantUser).delete()
+        logger.info(f"    ✅ Deleted {deleted} relevant user associations")
         
         logger.info("  Deleting users...")
         deleted = db.query(User).delete()

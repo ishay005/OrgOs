@@ -64,6 +64,6 @@ def get_db():
 
 def init_db():
     """Initialize database tables"""
-    from app.models import User, AlignmentEdge, Task, AttributeDefinition, AttributeAnswer, QuestionLog
+    from app.models import User, Task, AttributeDefinition, AttributeAnswer, QuestionLog, TaskRelevantUser
     Base.metadata.create_all(bind=engine)
 

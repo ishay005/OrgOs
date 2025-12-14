@@ -47,26 +47,11 @@ class User(Base):
     # Relationships
     manager = relationship("User", remote_side=[id], foreign_keys=[manager_id], backref="employees")
     tasks_owned = relationship("Task", back_populates="owner", foreign_keys="Task.owner_user_id")
-    alignments_source = relationship("AlignmentEdge", foreign_keys="AlignmentEdge.source_user_id", back_populates="source_user")
-    alignments_target = relationship("AlignmentEdge", foreign_keys="AlignmentEdge.target_user_id", back_populates="target_user")
     answers_given = relationship("AttributeAnswer", foreign_keys="AttributeAnswer.answered_by_user_id", back_populates="answered_by_user")
     answers_about = relationship("AttributeAnswer", foreign_keys="AttributeAnswer.target_user_id", back_populates="target_user")
     questions_answered = relationship("QuestionLog", foreign_keys="QuestionLog.answered_by_user_id", back_populates="answered_by_user")
     questions_about = relationship("QuestionLog", foreign_keys="QuestionLog.target_user_id", back_populates="target_user")
     daily_sync_sessions = relationship("DailySyncSession", back_populates="user")
-
-
-class AlignmentEdge(Base):
-    __tablename__ = "alignment_edges"
-    
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    source_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    target_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    source_user = relationship("User", foreign_keys=[source_user_id], back_populates="alignments_source")
-    target_user = relationship("User", foreign_keys=[target_user_id], back_populates="alignments_target")
 
 
 class TaskDependency(Base):
@@ -77,6 +62,22 @@ class TaskDependency(Base):
     task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
     depends_on_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class TaskRelevantUser(Base):
+    """Junction table for users who need to be aligned on a task"""
+    __tablename__ = "task_relevant_users"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    added_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    task = relationship("Task", back_populates="relevant_user_associations")
+    user = relationship("User", foreign_keys=[user_id])
+    added_by = relationship("User", foreign_keys=[added_by_user_id])
 
 
 class Task(Base):
@@ -107,6 +108,14 @@ class Task(Base):
         secondaryjoin="Task.id==TaskDependency.depends_on_task_id",
         backref="dependent_tasks"
     )
+    
+    # Relevant users (who need to be aligned on this task)
+    relevant_user_associations = relationship("TaskRelevantUser", back_populates="task", cascade="all, delete-orphan")
+    
+    @property
+    def relevant_users(self):
+        """Get list of users who need to be aligned on this task"""
+        return [assoc.user for assoc in self.relevant_user_associations]
 
 
 class AttributeDefinition(Base):

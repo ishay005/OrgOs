@@ -20,8 +20,8 @@ import uuid
 
 from app.database import SessionLocal
 from app.models import (
-    User, Task, AlignmentEdge, AttributeDefinition,
-    AttributeAnswer, TaskDependency
+    User, Task, AttributeDefinition,
+    AttributeAnswer, TaskDependency, TaskRelevantUser
 )
 
 # ============================================================================

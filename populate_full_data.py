@@ -10,8 +10,8 @@ import sys
 import random
 from app.database import SessionLocal
 from app.models import (
-    User, Task, AlignmentEdge, AttributeDefinition,
-    AttributeAnswer, TaskDependency, EntityType
+    User, Task, AttributeDefinition,
+    AttributeAnswer, TaskDependency, EntityType, TaskRelevantUser
 )
 
 # Misalignment configuration
@@ -27,8 +27,8 @@ def clear_all_data(db):
     db.query(AttributeAnswer).delete()
     db.query(QuestionLog).delete()  # Delete question logs
     db.query(TaskDependency).delete()
+    db.query(TaskRelevantUser).delete()
     db.query(Task).delete()
-    db.query(AlignmentEdge).delete()
     db.query(User).delete()  # Delete users too for clean start
     # Don't delete attribute definitions
     db.commit()
@@ -77,33 +77,10 @@ def create_alignment_edges(db, users):
     """Create alignment edges (who aligns with whom)"""
     print("\n🔗 Creating alignment edges...")
     
-    # VP aligns with everyone
-    for key in ["dana", "amir", "yael", "omer", "noa", "eitan", "michal", "roi"]:
-        db.add(AlignmentEdge(source_user_id=users["vp"].id, target_user_id=users[key].id))
-    
-    # Team leads align with their teams and each other
-    for lead_key in ["dana", "amir"]:
-        for other_key in users.keys():
-            if other_key not in ["vp", lead_key]:
-                db.add(AlignmentEdge(source_user_id=users[lead_key].id, target_user_id=users[other_key].id))
-    
-    # ICs align with their manager and teammates
-    platform_team = ["yael", "omer", "noa"]
-    for member in platform_team:
-        db.add(AlignmentEdge(source_user_id=users[member].id, target_user_id=users["dana"].id))
-        for teammate in platform_team:
-            if teammate != member:
-                db.add(AlignmentEdge(source_user_id=users[member].id, target_user_id=users[teammate].id))
-    
-    product_team = ["eitan", "michal", "roi"]
-    for member in product_team:
-        db.add(AlignmentEdge(source_user_id=users[member].id, target_user_id=users["amir"].id))
-        for teammate in product_team:
-            if teammate != member:
-                db.add(AlignmentEdge(source_user_id=users[member].id, target_user_id=users[teammate].id))
-    
-    db.commit()
-    print("✅ Alignment edges created")
+    # Populate relevant users for tasks (instead of alignment edges)
+    from populate_relevant_users import populate_all_tasks
+    count = populate_all_tasks(db, clear_existing=True)
+    print(f"✅ Created {count} relevant user associations")
 
 
 def create_tasks_with_relationships(db, users):

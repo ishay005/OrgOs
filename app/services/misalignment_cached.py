@@ -11,8 +11,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
 from app.models import (
-    User, Task, AttributeDefinition, AttributeAnswer, AlignmentEdge, 
-    EntityType, SimilarityScore, TaskDependency
+    User, Task, AttributeDefinition, AttributeAnswer, 
+    EntityType, SimilarityScore, TaskDependency, TaskRelevantUser
 )
 from app.config import settings
 
@@ -123,121 +123,114 @@ async def compute_misalignments_for_user_cached(
     
     misalignments = []
     
-    # Find all users this user aligns with
-    alignments = db.query(AlignmentEdge).filter(
-        AlignmentEdge.source_user_id == user_id
+    # Find all tasks where this user is marked as relevant
+    relevant_entries = db.query(TaskRelevantUser).filter(
+        TaskRelevantUser.user_id == user_id
     ).all()
+    
+    # Get unique task owner pairs
+    task_owner_pairs = []
+    for entry in relevant_entries:
+        task = db.query(Task).filter(Task.id == entry.task_id, Task.is_active == True).first()
+        if task and task.owner_user_id != user_id:
+            other_user = db.query(User).filter(User.id == task.owner_user_id).first()
+            if other_user:
+                task_owner_pairs.append((task, other_user))
     
     logger.info(
         f"Computing misalignments (cached) for user {user.name} "
-        f"with {len(alignments)} alignments"
+        f"with {len(task_owner_pairs)} relevant tasks"
     )
     
-    for alignment in alignments:
-        # Get the aligned user
-        other_user = db.query(User).filter(
-            User.id == alignment.target_user_id
-        ).first()
-        
-        if not other_user:
+    processed_pairs = set()
+    for task, other_user in task_owner_pairs:
+        pair_key = (task.id, other_user.id)
+        if pair_key in processed_pairs:
             continue
+        processed_pairs.add(pair_key)
         
-        # Determine relationship type to filter relevant tasks
+        # We already have task and other_user from the loop
+        # Determine relationship type
         relationship = get_relationship_type(user, other_user)
         
-        # Get all active tasks owned by the other user
-        all_their_tasks = db.query(Task).filter(
-            Task.owner_user_id == other_user.id,
-            Task.is_active == True
+        # We're directly working with the relevant task
+        # Get all task attributes
+        task_attributes = db.query(AttributeDefinition).filter(
+            AttributeDefinition.entity_type == EntityType.TASK
         ).all()
         
-        # Filter tasks based on relationship type
-        if relationship in ['manager', 'employee']:
-            # Manager/Employee: Compare on ALL tasks
-            tasks = all_their_tasks
-        else:
-            # Teammate or Other: Only compare on connected tasks
-            connected_task_ids = get_connected_task_ids(db, user_id, other_user.id)
-            tasks = [t for t in all_their_tasks if t.id in connected_task_ids]
-        
-        for task in tasks:
-            # Get all task attributes
-            task_attributes = db.query(AttributeDefinition).filter(
-                AttributeDefinition.entity_type == EntityType.TASK
-            ).all()
+        for attribute in task_attributes:
+            # Get current user's answer about other user's task
+            my_answer = db.query(AttributeAnswer).filter(
+                AttributeAnswer.answered_by_user_id == user_id,
+                AttributeAnswer.target_user_id == other_user.id,
+                AttributeAnswer.task_id == task.id,
+                AttributeAnswer.attribute_id == attribute.id,
+                AttributeAnswer.refused == False
+            ).first()
             
-            for attribute in task_attributes:
-                # Get current user's answer about other user's task
-                my_answer = db.query(AttributeAnswer).filter(
-                    AttributeAnswer.answered_by_user_id == user_id,
-                    AttributeAnswer.target_user_id == other_user.id,
-                    AttributeAnswer.task_id == task.id,
-                    AttributeAnswer.attribute_id == attribute.id,
-                    AttributeAnswer.refused == False
-                ).first()
+            # Get other user's self-answer about their own task
+            their_answer = db.query(AttributeAnswer).filter(
+                AttributeAnswer.answered_by_user_id == other_user.id,
+                AttributeAnswer.target_user_id == other_user.id,
+                AttributeAnswer.task_id == task.id,
+                AttributeAnswer.attribute_id == attribute.id,
+                AttributeAnswer.refused == False
+            ).first()
+            
+            # Both answers must exist
+            if not my_answer or not their_answer:
+                continue
+            
+            if not my_answer.value or not their_answer.value:
+                continue
+            
+            # Look up PRE-CALCULATED similarity score from cache
+            similarity_score_record = db.query(SimilarityScore).filter(
+                or_(
+                    and_(
+                        SimilarityScore.answer_a_id == my_answer.id,
+                    SimilarityScore.answer_b_id == their_answer.id
+                ),
+                and_(
+                    SimilarityScore.answer_a_id == their_answer.id,
+                    SimilarityScore.answer_b_id == my_answer.id
+                )
+            )
+            ).first()
+            
+            if similarity_score_record:
+                similarity_score = similarity_score_record.similarity_score
                 
-                # Get other user's self-answer about their own task
-                their_answer = db.query(AttributeAnswer).filter(
-                    AttributeAnswer.answered_by_user_id == other_user.id,
-                    AttributeAnswer.target_user_id == other_user.id,
-                    AttributeAnswer.task_id == task.id,
-                    AttributeAnswer.attribute_id == attribute.id,
-                    AttributeAnswer.refused == False
-                ).first()
-                
-                # Both answers must exist
-                if not my_answer or not their_answer:
-                    continue
-                
-                if not my_answer.value or not their_answer.value:
-                    continue
-                
-                # Look up PRE-CALCULATED similarity score from cache
-                similarity_score_record = db.query(SimilarityScore).filter(
-                    or_(
-                        and_(
-                            SimilarityScore.answer_a_id == my_answer.id,
-                            SimilarityScore.answer_b_id == their_answer.id
-                        ),
-                        and_(
-                            SimilarityScore.answer_a_id == their_answer.id,
-                            SimilarityScore.answer_b_id == my_answer.id
-                        )
+                # Include if below threshold (or if include_all is True)
+                if include_all or similarity_score < threshold:
+                    misalignment = MisalignmentDTO(
+                        other_user_id=other_user.id,
+                        other_user_name=other_user.name,
+                        task_id=task.id,
+                        task_title=task.title,
+                        attribute_id=attribute.id,
+                        attribute_name=attribute.name,
+                        attribute_label=attribute.label,
+                        your_value=my_answer.value,
+                        their_value=their_answer.value,
+                        similarity_score=similarity_score
                     )
-                ).first()
-                
-                if similarity_score_record:
-                    similarity_score = similarity_score_record.similarity_score
                     
-                    # Include if below threshold (or if include_all is True)
-                    if include_all or similarity_score < threshold:
-                        misalignment = MisalignmentDTO(
-                            other_user_id=other_user.id,
-                            other_user_name=other_user.name,
-                            task_id=task.id,
-                            task_title=task.title,
-                            attribute_id=attribute.id,
-                            attribute_name=attribute.name,
-                            attribute_label=attribute.label,
-                            your_value=my_answer.value,
-                            their_value=their_answer.value,
-                            similarity_score=similarity_score
+                    misalignments.append(misalignment)
+                    
+                    if similarity_score < threshold:
+                        logger.debug(
+                            f"Misalignment found (cached): {user.name} vs {other_user.name} "
+                            f"on {task.title}/{attribute.label}: "
+                            f"score={similarity_score:.3f}"
                         )
-                        
-                        misalignments.append(misalignment)
-                        
-                        if similarity_score < threshold:
-                            logger.debug(
-                                f"Misalignment found (cached): {user.name} vs {other_user.name} "
-                                f"on {task.title}/{attribute.label}: "
-                                f"score={similarity_score:.3f}"
-                            )
-                else:
-                    logger.warning(
-                        f"No cached similarity score found for answers "
-                        f"{my_answer.id} and {their_answer.id}. "
-                        f"This should have been calculated when the answer was saved!"
-                    )
+            else:
+                logger.warning(
+                    f"No cached similarity score found for answers "
+                    f"{my_answer.id} and {their_answer.id}. "
+                    f"This should have been calculated when the answer was saved!"
+                )
     
     # REVERSE DIRECTION: Check how OTHERS perceive MY tasks
     # This shows if my manager or teammates understand my work

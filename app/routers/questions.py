@@ -11,7 +11,7 @@ from app.database import get_db
 from app.auth import get_current_user
 from app.models import (
     User, Task, AttributeDefinition, AttributeAnswer, QuestionLog, 
-    AlignmentEdge, EntityType
+    EntityType, TaskRelevantUser
 )
 from app.schemas import QuestionResponse, AnswerCreate, AnswerResponse
 from app.services.llm_questions import generate_question_from_context
@@ -32,18 +32,31 @@ async def get_pending_questions(
     """
     questions = []
     
-    # Get tasks the user should answer about (owned by them or aligned users)
-    task_owner_ids = [user.id]
-    alignments = db.query(AlignmentEdge).filter(
-        AlignmentEdge.source_user_id == user.id
-    ).all()
-    for alignment in alignments:
-        task_owner_ids.append(alignment.target_user_id)
-    
-    tasks = db.query(Task).filter(
-        Task.owner_user_id.in_(task_owner_ids),
+    # Get tasks the user should answer about (owned by them or where they are marked as relevant)
+    # Own tasks
+    own_tasks = db.query(Task).filter(
+        Task.owner_user_id == user.id,
         Task.is_active == True
     ).all()
+    
+    # Tasks where user is marked as relevant
+    relevant_entries = db.query(TaskRelevantUser).filter(
+        TaskRelevantUser.user_id == user.id
+    ).all()
+    relevant_task_ids = [r.task_id for r in relevant_entries]
+    
+    relevant_tasks = db.query(Task).filter(
+        Task.id.in_(relevant_task_ids),
+        Task.is_active == True
+    ).all() if relevant_task_ids else []
+    
+    # Combine and dedupe
+    task_ids_seen = set()
+    tasks = []
+    for t in list(own_tasks) + list(relevant_tasks):
+        if t.id not in task_ids_seen:
+            task_ids_seen.add(t.id)
+            tasks.append(t)
     
     # Get all task attributes
     task_attributes = db.query(AttributeDefinition).filter(

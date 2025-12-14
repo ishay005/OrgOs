@@ -18,8 +18,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from openai import AsyncOpenAI
 
 from app.models import (
-    User, Task, AttributeDefinition, AttributeAnswer, AlignmentEdge,
-    ChatMessage, EntityType
+    User, Task, AttributeDefinition, AttributeAnswer, 
+    ChatMessage, EntityType, TaskRelevantUser
 )
 from app.config import settings
 from app.services.questions import get_pending_questions_for_user, PendingQuestion
@@ -107,15 +107,20 @@ def _get_user_snapshot(db: Session, user_id: UUID, context_config: dict = None) 
         employees = db.query(User).filter(User.manager_id == user_id).all()
         snapshot["employees"] = [e.name for e in employees] if employees else []
     
-    # Aligned users list (optional)
+    # Aligned users list (optional) - now based on TaskRelevantUser
     if context_config.get('include_aligned_users', False):
-        alignments = db.query(AlignmentEdge).filter(
-            AlignmentEdge.source_user_id == user_id
+        # Get users from tasks where current user is relevant
+        relevant_entries = db.query(TaskRelevantUser).filter(
+            TaskRelevantUser.user_id == user_id
         ).all()
-        aligned_ids = [a.target_user_id for a in alignments]
-        if aligned_ids:
-            aligned_users = db.query(User).filter(User.id.in_(aligned_ids)).all()
-            snapshot["aligned_users"] = [u.name for u in aligned_users]
+        task_owner_ids = set()
+        for r in relevant_entries:
+            task = db.query(Task).filter(Task.id == r.task_id).first()
+            if task:
+                task_owner_ids.add(task.owner_user_id)
+        if task_owner_ids:
+            aligned_users = db.query(User).filter(User.id.in_(task_owner_ids)).all()
+            snapshot["aligned_users"] = [u.name for u in aligned_users if u.id != user_id]
     
     # All org users (optional)
     if context_config.get('include_all_users', False):
@@ -163,19 +168,19 @@ def _get_task_snapshot(db: Session, user_id: UUID, context_config: dict = None) 
             ).all()
             all_tasks.extend(employee_tasks)
     
-    # 4. Aligned Users' Tasks
+    # 4. Tasks where user is marked as relevant
     if context_config.get('include_aligned_tasks', False):
-        alignments = db.query(AlignmentEdge).filter(
-            AlignmentEdge.source_user_id == user_id
+        relevant_entries = db.query(TaskRelevantUser).filter(
+            TaskRelevantUser.user_id == user_id
         ).all()
-        aligned_user_ids = [a.target_user_id for a in alignments]
+        relevant_task_ids = [r.task_id for r in relevant_entries]
         
-        if aligned_user_ids:
-            aligned_tasks = db.query(Task).filter(
-                Task.owner_user_id.in_(aligned_user_ids),
+        if relevant_task_ids:
+            relevant_tasks = db.query(Task).filter(
+                Task.id.in_(relevant_task_ids),
                 Task.is_active == True
             ).all()
-            all_tasks.extend(aligned_tasks)
+            all_tasks.extend(relevant_tasks)
     
     # 5. All Org Tasks
     if context_config.get('include_all_org_tasks', False):
@@ -783,18 +788,18 @@ async def generate_robin_reply(
                                 Task.is_active == True
                             ).all()
                             
-                            # Get aligned users' tasks
-                            alignments = db.query(AlignmentEdge).filter(
-                                AlignmentEdge.source_user_id == user_id
+                            # Get tasks where user is marked as relevant
+                            relevant_entries = db.query(TaskRelevantUser).filter(
+                                TaskRelevantUser.user_id == user_id
                             ).all()
-                            aligned_user_ids = [a.target_user_id for a in alignments]
+                            relevant_task_ids = [r.task_id for r in relevant_entries]
                             
-                            aligned_tasks = db.query(Task).filter(
-                                Task.owner_user_id.in_(aligned_user_ids),
+                            relevant_tasks = db.query(Task).filter(
+                                Task.id.in_(relevant_task_ids),
                                 Task.is_active == True
-                            ).all() if aligned_user_ids else []
+                            ).all() if relevant_task_ids else []
                             
-                            all_accessible_tasks = list(my_tasks) + list(aligned_tasks)
+                            all_accessible_tasks = list(my_tasks) + list(relevant_tasks)
                             
                             # Search by exact title match (case-insensitive)
                             for task in all_accessible_tasks:
@@ -892,20 +897,30 @@ def _get_pending_sync(db: Session, user_id: UUID) -> List[PendingQuestion]:
     if not user:
         return []
     
-    # Get aligned users
-    alignments = db.query(AlignmentEdge).filter(
-        AlignmentEdge.source_user_id == user_id
-    ).all()
-    aligned_user_ids = [a.target_user_id for a in alignments]
-    
-    # All users to consider
-    all_target_user_ids = [user_id] + aligned_user_ids
-    
-    # Get all tasks
-    tasks = db.query(Task).filter(
-        Task.owner_user_id.in_(all_target_user_ids),
+    # Get tasks owned by user
+    owned_tasks = db.query(Task).filter(
+        Task.owner_user_id == user_id,
         Task.is_active == True
     ).all()
+    
+    # Also get tasks where this user is in the relevant_users list
+    relevant_tasks_ids = db.query(TaskRelevantUser.task_id).filter(
+        TaskRelevantUser.user_id == user_id
+    ).all()
+    relevant_task_ids = [t[0] for t in relevant_tasks_ids]
+    
+    relevant_tasks = db.query(Task).filter(
+        Task.id.in_(relevant_task_ids),
+        Task.is_active == True
+    ).all() if relevant_task_ids else []
+    
+    # Combine and deduplicate
+    task_ids_seen = set()
+    tasks = []
+    for t in owned_tasks + relevant_tasks:
+        if t.id not in task_ids_seen:
+            task_ids_seen.add(t.id)
+            tasks.append(t)
     
     # Get all task attributes
     attributes = db.query(AttributeDefinition).filter(

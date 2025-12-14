@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.database import SessionLocal, init_db
-from app.models import User, Task, AttributeDefinition, AttributeAnswer, AlignmentEdge, EntityType
+from app.models import User, Task, AttributeDefinition, AttributeAnswer, EntityType, TaskRelevantUser
 from sqlalchemy import text
 import random
 from datetime import datetime
@@ -85,12 +85,9 @@ def create_debug_data():
         print(f"   ✅ Bob: {bob.id}")
         print(f"   ✅ Alice: {alice.id}")
         
-        # Create alignments
-        print("\n2️⃣  Creating alignments...")
-        db.add(AlignmentEdge(source_user_id=bob.id, target_user_id=alice.id))
-        db.add(AlignmentEdge(source_user_id=alice.id, target_user_id=bob.id))
-        db.commit()
-        print("   ✅ Bob ↔ Alice aligned")
+        # Note: Alignments are now handled via TaskRelevantUser
+        # They will be created after tasks via populate_relevant_users
+        print("\n2️⃣  Skipping legacy alignments (using TaskRelevantUser instead)...")
         
         # Create Bob's tasks with relationships
         print("\n3️⃣  Creating Bob's tasks...")

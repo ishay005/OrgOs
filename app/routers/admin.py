@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import delete, text
 from app.database import get_db
 from app.models import (
-    User, Task, AttributeAnswer, AlignmentEdge, QuestionLog,
+    User, Task, AttributeAnswer, QuestionLog,
     SimilarityScore, ChatThread, ChatMessage, TaskDependency,
-    AttributeDefinition, EntityType, DailySyncSession, PromptTemplate
+    AttributeDefinition, EntityType, DailySyncSession, PromptTemplate,
+    TaskRelevantUser
 )
 import logging
 
@@ -35,9 +36,16 @@ async def clear_all_data(db: Session = Depends(get_db)):
         deleted_counts["chat_messages"] = db.query(ChatMessage).delete()
         deleted_counts["chat_threads"] = db.query(ChatThread).delete()
         deleted_counts["task_dependencies"] = db.query(TaskDependency).delete()
+        deleted_counts["task_relevant_users"] = db.query(TaskRelevantUser).delete()
         deleted_counts["tasks"] = db.query(Task).delete()
-        deleted_counts["alignment_edges"] = db.query(AlignmentEdge).delete()
         deleted_counts["users"] = db.query(User).delete()
+        
+        # Also try to delete alignment_edges table if it exists (legacy)
+        try:
+            db.execute(text("DELETE FROM alignment_edges"))
+            deleted_counts["alignment_edges_legacy"] = "cleared"
+        except:
+            pass
         
         db.commit()
         
@@ -61,6 +69,7 @@ async def update_schema(db: Session = Depends(get_db)):
     """
     Update database schema:
     - Add team column to users
+    - Drop alignment_edges table (deprecated)
     """
     results = {"actions": []}
     
@@ -71,6 +80,13 @@ async def update_schema(db: Session = Depends(get_db)):
             results["actions"].append("Added 'team' column to users table")
         except Exception as e:
             results["actions"].append(f"Team column: {str(e)}")
+        
+        # Drop deprecated alignment_edges table
+        try:
+            db.execute(text("DROP TABLE IF EXISTS alignment_edges CASCADE"))
+            results["actions"].append("Dropped deprecated 'alignment_edges' table")
+        except Exception as e:
+            results["actions"].append(f"Drop alignment_edges: {str(e)}")
         
         db.commit()
         
@@ -83,82 +99,40 @@ async def update_schema(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Schema update failed: {str(e)}")
 
 
-@router.api_route("/recalculate-alignments", methods=["GET", "POST"])
-async def recalculate_alignments(db: Session = Depends(get_db)):
+@router.api_route("/recalculate-relevant-users", methods=["GET", "POST"])
+async def recalculate_relevant_users(db: Session = Depends(get_db)):
     """
-    Recalculate ALL alignment edges and similarity scores.
+    Recalculate ALL relevant users for all tasks.
     
-    Alignment rules:
-    1. Manager ↔ Employee (bidirectional)
-    2. Teammates (same manager)
-    3. Task dependency owners (if task A depends on task B, owner of A aligns with owner of B)
+    Relevant users rules:
+    1. Manager of task owner
+    2. Employees of task owner
+    3. Owners of dependent tasks
+    
+    Also recalculates similarity scores.
     """
-    from app.models import Task, TaskDependency
-    
     results = {"actions": []}
     
     try:
-        # Step 1: Clear existing alignment edges
-        deleted = db.query(AlignmentEdge).delete()
-        results["actions"].append(f"Deleted {deleted} old alignment edges")
-        
-        # Get all users
-        all_users = db.query(User).all()
-        
-        # Track created edges to avoid duplicates
-        created_edges = set()
-        edges_created = 0
-        
-        def add_edge(source_id, target_id):
-            nonlocal edges_created
-            key = (str(source_id), str(target_id))
-            if key not in created_edges and source_id != target_id:
-                db.add(AlignmentEdge(source_user_id=source_id, target_user_id=target_id))
-                created_edges.add(key)
-                edges_created += 1
-        
-        # 1. Manager-Employee relationships (bidirectional)
-        for user in all_users:
-            if user.manager_id:
-                add_edge(user.id, user.manager_id)
-                add_edge(user.manager_id, user.id)
-        
-        # 2. Employees (direct reports)
-        for user in all_users:
-            employees = [u for u in all_users if u.manager_id == user.id]
-            for emp in employees:
-                add_edge(user.id, emp.id)
-                add_edge(emp.id, user.id)
-        
-        # 3. Teammates (same manager)
-        for user in all_users:
-            if user.manager_id:
-                teammates = [u for u in all_users if u.manager_id == user.manager_id and u.id != user.id]
-                for teammate in teammates:
-                    add_edge(user.id, teammate.id)
-        
-        # 4. Task dependency connections
-        all_dependencies = db.query(TaskDependency).all()
-        for dep in all_dependencies:
-            task = db.query(Task).filter(Task.id == dep.task_id).first()
-            depends_on = db.query(Task).filter(Task.id == dep.depends_on_task_id).first()
-            
-            if task and depends_on and task.owner_user_id and depends_on.owner_user_id:
-                if task.owner_user_id != depends_on.owner_user_id:
-                    add_edge(task.owner_user_id, depends_on.owner_user_id)
-                    add_edge(depends_on.owner_user_id, task.owner_user_id)
-        
-        db.commit()
-        results["actions"].append(f"Created {edges_created} alignment edges")
+        # Step 1: Clear existing relevant users and recalculate
+        try:
+            from populate_relevant_users import populate_all_tasks
+            count = populate_all_tasks(db, clear_existing=True)
+            results["actions"].append(f"Created {count} relevant user associations")
+        except Exception as e:
+            results["actions"].append(f"Relevant users error: {str(e)}")
         
         # Step 2: Recalculate similarity scores
-        from app.services.similarity_cache import recalculate_all_similarity_scores
-        scores_count = recalculate_all_similarity_scores(db)
-        results["actions"].append(f"Calculated {scores_count} similarity scores")
+        try:
+            from app.services.similarity_cache import recalculate_all_similarity_scores
+            scores_count = recalculate_all_similarity_scores(db)
+            results["actions"].append(f"Calculated {scores_count} similarity scores")
+        except Exception as e:
+            results["actions"].append(f"Similarity scores error: {str(e)}")
         
         return {
             "success": True,
-            "message": "Alignments and similarity scores recalculated!",
+            "message": "Relevant users and similarity scores recalculated!",
             "results": results
         }
         

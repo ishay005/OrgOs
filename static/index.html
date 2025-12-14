@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OrgOs - Perception Alignment</title>
-    <link rel="stylesheet" href="/static/styles.css?v=2024121102">
+    <link rel="stylesheet" href="/static/styles.css?v=2024121113">
 </head>
 <body>
     <!-- Registration/Login Page -->
@@ -59,7 +59,6 @@
                 <button onclick="showSection('import-export')" class="nav-btn" id="import-export-nav">💾 Import/Export</button>
                 <button onclick="showSection('graph')" class="nav-btn" id="graph-nav">🔗 Task Graph</button>
                 <button onclick="showSection('orgchart')" class="nav-btn" id="orgchart-nav">👥 Org Chart</button>
-                <button onclick="showSection('alignments')" class="nav-btn" id="alignments-nav">Team</button>
                 <button onclick="showSection('misalignments')" class="nav-btn" id="misalignments-nav">
                     Misalignments <span id="misalignment-badge" class="badge">0</span>
                 </button>
@@ -185,6 +184,13 @@
                                 <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Resources</label>
                                 <input type="text" id="quick-task-resources" placeholder="Links, documents..."
                                        style="width: 100%; padding: 8px 12px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.9rem;">
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">👥 Relevant Users (who need to align on this task)</label>
+                                <select id="quick-task-relevant-users" multiple 
+                                        style="width: 100%; padding: 8px 12px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.9rem; min-height: 80px; background: white;">
+                                </select>
+                                <span style="font-size: 0.75rem; color: #888;">Hold Ctrl/Cmd to select multiple users</span>
                             </div>
                         </div>
                     </div>
@@ -432,15 +438,6 @@
                 </div>
             </div>
             
-            <!-- Alignments Section -->
-            <div id="alignments-section" class="section">
-                <div class="section-header">
-                    <h3>👥 Team Alignments</h3>
-                    <p class="subtitle">Select people to compare perceptions with</p>
-                </div>
-                <div id="alignments-list"></div>
-            </div>
-            
             <!-- Task Graph Section -->
             <div id="graph-section" class="section">
                 <div class="section-header">
@@ -630,7 +627,7 @@
         </div>
     </div>
 
-    <script src="/static/app.js?v=2024121107"></script>
+    <script src="/static/app.js?v=2024121113"></script>
 </body>
 </html>
 

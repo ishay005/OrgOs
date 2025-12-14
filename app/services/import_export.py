@@ -18,7 +18,7 @@ import tempfile
 import os
 
 from app.models import (
-    User, Task, TaskDependency, PromptTemplate, AttributeAnswer, AlignmentEdge,
+    User, Task, TaskDependency, TaskRelevantUser, PromptTemplate, AttributeAnswer,
     DailySyncSession, ChatThread, ChatMessage, QuestionLog, SimilarityScore,
     MessageDebugData, AttributeDefinition, EntityType, AttributeType
 )
@@ -141,6 +141,17 @@ def export_all_data_to_excel(db: Session) -> BytesIO:
             task_deps[task_title] = []
         task_deps[task_title].append(dep_title)
     
+    # Get all relevant users per task
+    relevant_users = db.query(TaskRelevantUser).all()
+    task_relevant = {}
+    for r in relevant_users:
+        task_title = task_id_to_title.get(r.task_id, '')
+        user_name = user_id_to_name.get(r.user_id, '')
+        if task_title and user_name:
+            if task_title not in task_relevant:
+                task_relevant[task_title] = []
+            task_relevant[task_title].append(user_name)
+    
     # Export Users (using names)
     users_data = [{
         'name': u.name,
@@ -162,6 +173,7 @@ def export_all_data_to_excel(db: Session) -> BytesIO:
             'owner': user_id_to_name.get(owner_id, ''),
             'parent': task_id_to_title.get(t.parent_id, '') if t.parent_id else '',
             'dependencies': ', '.join(task_deps.get(t.title, [])),
+            'relevant_users': ', '.join(task_relevant.get(t.title, [])),
             'is_active': t.is_active
         }
         # Add all attribute values (owner's view)
@@ -264,8 +276,8 @@ def export_template_to_excel(db: Session) -> BytesIO:
     users_example.to_excel(writer, sheet_name='Users', index=False)
     
     # Tasks template (COMBINED - with dependencies and all actual attributes)
-    task_row_1 = {'title': 'Build feature X', 'description': 'Implement the new feature', 'owner': 'Jane Doe', 'parent': '', 'dependencies': '', 'is_active': True}
-    task_row_2 = {'title': 'Write tests for X', 'description': '', 'owner': 'Jane Doe', 'parent': 'Build feature X', 'dependencies': 'Build feature X', 'is_active': True}
+    task_row_1 = {'title': 'Build feature X', 'description': 'Implement the new feature', 'owner': 'Jane Doe', 'parent': '', 'dependencies': '', 'relevant_users': 'John Smith', 'is_active': True}
+    task_row_2 = {'title': 'Write tests for X', 'description': '', 'owner': 'Jane Doe', 'parent': 'Build feature X', 'dependencies': 'Build feature X', 'relevant_users': 'John Smith, Jane Doe', 'is_active': True}
     
     # Add all task attributes as columns
     for attr in task_attributes:
@@ -366,7 +378,7 @@ def export_template_to_excel(db: Session) -> BytesIO:
         'Sheet': ['Users', 'Tasks', 'Prompts', 'Attributes', 'Perception'],
         'Description': [
             'User accounts. manager = name of manager (or empty for top-level)',
-            'Tasks with ALL attributes. dependencies = comma-separated task titles. Attributes as columns.',
+            'Tasks with ALL attributes. dependencies + relevant_users = comma-separated names.',
             'AI prompts. mode = prompt mode name (see examples), has_pending = true/false',
             'Attribute definitions. Define what attributes tasks/users have.',
             'Perception answers. One row per user+task, all attributes as columns.'
@@ -380,7 +392,7 @@ def export_template_to_excel(db: Session) -> BytesIO:
         ],
         'Notes': [
             'First create users, then managers. Managers must exist before referencing.',
-            'Tasks include: title, description, owner, parent, dependencies (comma-sep), is_active, plus ALL attribute columns',
+            'Tasks include: title, description, owner, parent, dependencies, relevant_users (comma-sep user names), is_active, plus attribute columns',
             'Modes: morning_brief, user_question, collect_data, daily_opening_brief, daily_questions, daily_summary',
             'entity_type: task or user. type: string, enum, int, float, bool, date. allowed_values: JSON array for enum.',
             'answered_by = who gave opinion, target_user = task owner, task = task title. Each attribute is a column.'
@@ -585,8 +597,8 @@ def import_data_from_excel(db: Session, file: BytesIO, replace_mode: bool = Fals
             db.query(ChatMessage).delete()
             db.query(ChatThread).delete()
             db.query(QuestionLog).delete()
-            db.query(AlignmentEdge).delete()
             db.query(TaskDependency).delete()
+            db.query(TaskRelevantUser).delete()  # Delete relevant user associations
             db.query(AttributeAnswer).delete()
             db.query(Task).delete()
             db.query(User).delete()
@@ -755,6 +767,26 @@ def import_data_from_excel(db: Session, file: BytesIO, replace_mode: bool = Fals
                         stats['dependencies_imported'] += 1
                     else:
                         logger.warning(f"  ⚠️  Dependency '{dep_title}' not found for task '{title}'")
+            
+            # Set relevant users (comma-separated in 'relevant_users' column)
+            relevant_str = str(row.get('relevant_users', '')) if pd.notna(row.get('relevant_users')) else ''
+            if relevant_str.strip():
+                relevant_names = [r.strip() for r in relevant_str.split(',') if r.strip()]
+                for relevant_name in relevant_names:
+                    relevant_user = name_to_user.get(relevant_name)
+                    if relevant_user:
+                        new_relevant = TaskRelevantUser(
+                            id=uuid4(),
+                            task_id=task.id,
+                            user_id=relevant_user.id,
+                            added_by_user_id=owner.id if owner else None
+                        )
+                        db.add(new_relevant)
+                        if 'relevant_users_imported' not in stats:
+                            stats['relevant_users_imported'] = 0
+                        stats['relevant_users_imported'] += 1
+                    else:
+                        logger.warning(f"  ⚠️  Relevant user '{relevant_name}' not found for task '{title}'")
             
             # Create owner's attribute answers from task columns
             if owner:
@@ -959,63 +991,17 @@ def import_data_from_excel(db: Session, file: BytesIO, replace_mode: bool = Fals
             logger.info(f"  ✅ Imported {stats['perception_imported']} perception answers ({stats['perception_skipped']} rows skipped)")
         
         # =====================================================================
-        # Create Alignment Edges (based on org structure + task dependencies)
+        # Populate Relevant Users for Tasks
         # =====================================================================
-        logger.info("🔗 Creating alignment edges...")
-        stats['alignment_edges_created'] = 0
-        
-        # Track created edges to avoid duplicates
-        created_edges = set()
-        
-        def add_edge(source_id, target_id):
-            """Add an alignment edge if it doesn't exist"""
-            key = (str(source_id), str(target_id))
-            if key not in created_edges and source_id != target_id:
-                db.add(AlignmentEdge(source_user_id=source_id, target_user_id=target_id))
-                created_edges.add(key)
-                return 1
-            return 0
-        
-        # Get all users
-        all_users = list(name_to_user.values())
-        all_tasks = list(title_to_task.values())
-        
-        for user in all_users:
-            # 1. Manager alignment (bidirectional)
-            if user.manager_id:
-                manager = db.query(User).filter(User.id == user.manager_id).first()
-                if manager:
-                    stats['alignment_edges_created'] += add_edge(user.id, manager.id)
-                    stats['alignment_edges_created'] += add_edge(manager.id, user.id)
-            
-            # 2. Employees alignment (direct reports)
-            employees = [u for u in all_users if u.manager_id == user.id]
-            for employee in employees:
-                stats['alignment_edges_created'] += add_edge(user.id, employee.id)
-                stats['alignment_edges_created'] += add_edge(employee.id, user.id)
-            
-            # 3. Teammates alignment (same manager)
-            if user.manager_id:
-                teammates = [u for u in all_users if u.manager_id == user.manager_id and u.id != user.id]
-                for teammate in teammates:
-                    stats['alignment_edges_created'] += add_edge(user.id, teammate.id)
-        
-        # 4. Task dependency connections
-        # Get all task dependencies
-        all_dependencies = db.query(TaskDependency).all()
-        
-        for dep in all_dependencies:
-            task = db.query(Task).filter(Task.id == dep.task_id).first()
-            depends_on_task = db.query(Task).filter(Task.id == dep.depends_on_task_id).first()
-            
-            if task and depends_on_task and task.owner_user_id and depends_on_task.owner_user_id:
-                if task.owner_user_id != depends_on_task.owner_user_id:
-                    # Create bidirectional alignment between task owners
-                    stats['alignment_edges_created'] += add_edge(task.owner_user_id, depends_on_task.owner_user_id)
-                    stats['alignment_edges_created'] += add_edge(depends_on_task.owner_user_id, task.owner_user_id)
-        
-        db.commit()
-        logger.info(f"  ✅ Created {stats['alignment_edges_created']} alignment edges")
+        logger.info("👥 Populating relevant users for tasks...")
+        try:
+            from populate_relevant_users import populate_all_tasks
+            relevant_count = populate_all_tasks(db, clear_existing=False)
+            stats['relevant_users_created'] = relevant_count
+            logger.info(f"  ✅ Created {relevant_count} relevant user associations")
+        except Exception as e:
+            logger.warning(f"  ⚠️  Could not populate relevant users: {e}")
+            stats['relevant_users_created'] = 0
         
         # =====================================================================
         # Recalculate Similarity Scores

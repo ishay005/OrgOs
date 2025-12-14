@@ -64,7 +64,6 @@ app = FastAPI(
 
 # Include routers
 app.include_router(users.router)
-app.include_router(users.alignment_router)
 app.include_router(users_orgchart.router)
 app.include_router(tasks.router)
 app.include_router(tasks.attributes_router)
