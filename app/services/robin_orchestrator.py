@@ -915,13 +915,19 @@ def _get_pending_sync(db: Session, user_id: UUID) -> List[PendingQuestion]:
     # Check each (task, attribute) pair
     for task in tasks:
         for attr in attributes:
-            answer = db.query(AttributeAnswer).filter(
+            # First check if there's any answer (including refused ones)
+            any_answer = db.query(AttributeAnswer).filter(
                 AttributeAnswer.answered_by_user_id == user_id,
                 AttributeAnswer.target_user_id == task.owner_user_id,
                 AttributeAnswer.task_id == task.id,
-                AttributeAnswer.attribute_id == attr.id,
-                AttributeAnswer.refused == False
+                AttributeAnswer.attribute_id == attr.id
             ).order_by(AttributeAnswer.updated_at.desc()).first()
+            
+            # If refused, skip this question entirely
+            if any_answer and any_answer.refused:
+                continue
+            
+            answer = any_answer  # Use the answer we found (or None)
             
             reason = None
             if answer is None:

@@ -119,29 +119,73 @@
                     <button onclick="loadPendingQuestions()" class="primary-btn">🔄 Refresh</button>
                 </div>
                 
-                <!-- Quick Add Task Form -->
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 2px dashed #6366f1;">
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <div style="font-size: 1.1rem; font-weight: 600; color: #4f46e5; white-space: nowrap;">➕ Quick Add Task</div>
-                        <div style="flex: 1; display: flex; gap: 12px; align-items: center;">
-                            <input type="text" 
-                                   id="quick-task-name" 
-                                   placeholder="Enter task name..." 
-                                   style="flex: 2; padding: 10px 14px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.95rem; transition: border-color 0.2s;"
-                                   onfocus="this.style.borderColor='#6366f1'"
-                                   onblur="this.style.borderColor='#e0e7ff'">
-                            <select id="quick-task-owner" 
-                                    style="flex: 1; padding: 10px 14px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.95rem; background: white; cursor: pointer; transition: border-color 0.2s;"
-                                    onfocus="this.style.borderColor='#6366f1'"
-                                    onblur="this.style.borderColor='#e0e7ff'">
-                                <option value="">Select owner...</option>
-                            </select>
-                            <button onclick="quickAddTask()" 
-                                    style="padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.95rem; white-space: nowrap; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"
-                                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
-                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.3)'">
-                                ➕ Add Task
-                            </button>
+                <!-- Quick Add Task Form (Expandable) -->
+                <div id="quick-add-task-container" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 2px dashed #6366f1;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <div style="font-size: 1.1rem; font-weight: 600; color: #4f46e5;">➕ Quick Add Task</div>
+                        <button onclick="toggleQuickAddExpand()" id="quick-add-expand-btn" 
+                                style="padding: 6px 12px; background: #e0e7ff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; color: #4f46e5;">
+                            📝 Show All Fields
+                        </button>
+                    </div>
+                    
+                    <!-- Basic fields (always visible) -->
+                    <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
+                        <input type="text" id="quick-task-name" placeholder="Task name *" 
+                               style="flex: 2; padding: 10px 14px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.95rem;">
+                        <select id="quick-task-owner" style="flex: 1; padding: 10px 14px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.95rem; background: white;">
+                            <option value="">Select owner *</option>
+                        </select>
+                        <button onclick="quickAddTask()" 
+                                style="padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                            ➕ Add Task
+                        </button>
+                    </div>
+                    
+                    <!-- Expanded fields (hidden by default) -->
+                    <div id="quick-add-expanded" style="display: none;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                            <div>
+                                <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Description</label>
+                                <textarea id="quick-task-description" placeholder="Task description..." rows="2"
+                                          style="width: 100%; padding: 8px 12px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.9rem; resize: vertical;"></textarea>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Parent Task</label>
+                                <select id="quick-task-parent" style="width: 100%; padding: 8px 12px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.9rem; background: white;">
+                                    <option value="">No parent</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Priority</label>
+                                <select id="quick-task-priority" style="width: 100%; padding: 8px 12px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.9rem; background: white;">
+                                    <option value="">Select priority...</option>
+                                    <option value="Critical">Critical</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Status</label>
+                                <select id="quick-task-status" style="width: 100%; padding: 8px 12px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.9rem; background: white;">
+                                    <option value="">Select status...</option>
+                                    <option value="Not started">Not started</option>
+                                    <option value="In progress">In progress</option>
+                                    <option value="Blocked">Blocked</option>
+                                    <option value="Done">Done</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Dependencies (comma-separated task names)</label>
+                                <input type="text" id="quick-task-dependencies" placeholder="Task A, Task B..."
+                                       style="width: 100%; padding: 8px 12px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.9rem;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px;">Resources</label>
+                                <input type="text" id="quick-task-resources" placeholder="Links, documents..."
+                                       style="width: 100%; padding: 8px 12px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 0.9rem;">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -586,7 +630,7 @@
         </div>
     </div>
 
-    <script src="/static/app.js?v=2024121103"></script>
+    <script src="/static/app.js?v=2024121106"></script>
 </body>
 </html>
 

@@ -2804,11 +2804,14 @@ async function loadPendingQuestions() {
                     <td style="padding: 12px; color: #0066cc; font-weight: 500;">${p.attribute_label}</td>
                     <td style="padding: 12px;">${inputHtml}</td>
                     <td style="padding: 12px; color: #666;">${p.target_user_name}</td>
-                    <td style="padding: 12px;">
-                        <button onclick="savePendingAnswer('${p.id}', '${p.task_id}', '${p.target_user_id}', '${p.attribute_name}')" 
-                                class="primary-btn" style="padding: 6px 12px; font-size: 0.85rem;">
-                            💾 Save
-                        </button>
+                    <td style="padding: 8px; min-width: 90px;">
+                        <div style="display: flex; gap: 4px;">
+                            <button onclick="savePendingAnswer('${p.id}', '${p.task_id}', '${p.target_user_id}', '${p.attribute_name}')" 
+                                    class="primary-btn" style="padding: 4px 8px; font-size: 0.8rem;">💾</button>
+                            <button onclick="ignorePendingQuestion('${p.id}', '${p.task_id}', '${p.target_user_id}', '${p.attribute_name}')" 
+                                    style="padding: 4px 8px; font-size: 0.8rem; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; cursor: pointer; color: #721c24;"
+                                    title="Ignore">🚫</button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -2892,6 +2895,40 @@ async function savePendingAnswer(pendingId, taskId, targetUserId, attributeName)
     }
 }
 
+async function ignorePendingQuestion(pendingId, taskId, targetUserId, attributeName) {
+    try {
+        await apiCall('/pending-questions/ignore', {
+            method: 'POST',
+            body: JSON.stringify({
+                task_id: taskId === 'null' ? null : taskId,
+                target_user_id: targetUserId,
+                attribute_name: attributeName
+            })
+        });
+        
+        // Fade out the row
+        const row = document.getElementById(`row-${pendingId}`);
+        if (row) {
+            row.style.transition = 'all 0.4s ease-out';
+            row.style.backgroundColor = '#f8d7da';
+            
+            setTimeout(() => {
+                row.style.opacity = '0';
+                row.style.height = '0';
+                row.style.padding = '0';
+                row.style.overflow = 'hidden';
+            }, 200);
+            
+            setTimeout(() => {
+                row.remove();
+            }, 600);
+        }
+    } catch (error) {
+        console.error('Error ignoring question:', error);
+        alert('Failed to ignore question: ' + error.message);
+    }
+}
+
 async function populateTaskOwnerDropdown() {
     try {
         // apiCall already returns parsed JSON
@@ -2916,48 +2953,86 @@ async function populateTaskOwnerDropdown() {
     }
 }
 
+// Toggle quick add expanded form
+function toggleQuickAddExpand() {
+    const expanded = document.getElementById('quick-add-expanded');
+    const btn = document.getElementById('quick-add-expand-btn');
+    if (expanded.style.display === 'none') {
+        expanded.style.display = 'block';
+        btn.textContent = '📝 Hide Fields';
+        loadTasksForParentDropdown();
+    } else {
+        expanded.style.display = 'none';
+        btn.textContent = '📝 Show All Fields';
+    }
+}
+
+// Load tasks for parent dropdown
+async function loadTasksForParentDropdown() {
+    try {
+        const tasks = await apiCall('/tasks');
+        const sel = document.getElementById('quick-task-parent');
+        sel.innerHTML = '<option value="">No parent</option>';
+        tasks.forEach(t => {
+            sel.innerHTML += `<option value="${t.id}">${t.title}</option>`;
+        });
+    } catch (e) { console.error(e); }
+}
+
 async function quickAddTask() {
     const nameInput = document.getElementById('quick-task-name');
     const ownerSelect = document.getElementById('quick-task-owner');
-    
     const taskName = nameInput.value.trim();
     const ownerId = ownerSelect.value;
     
-    if (!taskName) {
-        alert('Please enter a task name');
-        return;
-    }
+    if (!taskName) { alert('Please enter a task name'); return; }
+    if (!ownerId) { alert('Please select a task owner'); return; }
     
-    if (!ownerId) {
-        alert('Please select a task owner');
-        return;
-    }
+    // Optional fields
+    const desc = document.getElementById('quick-task-description')?.value?.trim() || '';
+    const parentId = document.getElementById('quick-task-parent')?.value || null;
+    const priority = document.getElementById('quick-task-priority')?.value || null;
+    const status = document.getElementById('quick-task-status')?.value || null;
+    const deps = document.getElementById('quick-task-dependencies')?.value?.trim() || '';
+    const resources = document.getElementById('quick-task-resources')?.value?.trim() || '';
     
     try {
-        // Create the task (apiCall already returns parsed JSON)
         const newTask = await apiCall('/tasks', {
             method: 'POST',
-            body: JSON.stringify({
-                title: taskName,
-                description: '',
-                owner_user_id: ownerId
-            })
+            body: JSON.stringify({ title: taskName, description: desc, owner_user_id: ownerId, parent_id: parentId })
         });
+        
+        // Save optional attributes
+        const attrs = [];
+        if (priority) attrs.push({a:'priority',v:priority});
+        if (status) attrs.push({a:'status',v:status});
+        if (deps) attrs.push({a:'dependency',v:deps});
+        if (resources) attrs.push({a:'resources',v:resources});
+        for (const at of attrs) {
+            try {
+                await apiCall('/pending-questions/answer', { method: 'POST',
+                    body: JSON.stringify({ task_id: newTask.id, attribute_name: at.a, answer_value: at.v, target_user_id: ownerId })
+                });
+            } catch(e) { console.log('attr save err:', e); }
+        }
         
         // Show success feedback
         nameInput.value = '';
         nameInput.style.borderColor = '#10b981';
         nameInput.style.background = '#d1fae5';
-        nameInput.placeholder = `✅ Task "${taskName}" created successfully!`;
+        nameInput.placeholder = `✅ Task "${taskName}" created!`;
+        
+        // Clear all extra fields
+        ['quick-task-description','quick-task-parent','quick-task-priority','quick-task-status','quick-task-dependencies','quick-task-resources'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
         
         // Reset after 2 seconds
         setTimeout(() => {
             nameInput.style.borderColor = '#e0e7ff';
             nameInput.style.background = 'white';
-            nameInput.placeholder = 'Enter task name...';
-            
-            // Refresh pending questions (new task may generate pending questions)
-            loadPendingQuestions();
+            nameInput.placeholder = 'Task name *';
         }, 2000);
         
         console.log('✅ Task created:', newTask);

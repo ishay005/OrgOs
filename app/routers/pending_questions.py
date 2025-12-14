@@ -187,3 +187,75 @@ async def submit_direct_answer(
         message=message
     )
 
+
+class IgnoreQuestionRequest(BaseModel):
+    """Request body for ignoring a question"""
+    task_id: Optional[str] = None
+    target_user_id: str
+    attribute_name: str
+
+
+@router.post("/ignore", response_model=DirectAnswerResponse)
+async def ignore_question(
+    request: IgnoreQuestionRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Ignore a pending question. Creates a refused=True answer so it won't be asked again.
+    """
+    # Find the attribute definition
+    attr_def = db.query(AttributeDefinition).filter(
+        AttributeDefinition.name == request.attribute_name
+    ).first()
+    
+    if not attr_def:
+        raise HTTPException(status_code=404, detail=f"Attribute '{request.attribute_name}' not found")
+    
+    # Parse task_id if provided
+    task_id = None
+    if request.task_id and request.task_id != 'null':
+        try:
+            task_id = UUID(request.task_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid task_id format")
+    
+    # Parse target_user_id
+    try:
+        target_user_id = UUID(request.target_user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid target_user_id format")
+    
+    # Check if an answer already exists
+    existing_answer = db.query(AttributeAnswer).filter(
+        AttributeAnswer.answered_by_user_id == current_user.id,
+        AttributeAnswer.target_user_id == target_user_id,
+        AttributeAnswer.task_id == task_id,
+        AttributeAnswer.attribute_id == attr_def.id
+    ).first()
+    
+    if existing_answer:
+        existing_answer.refused = True
+        existing_answer.value = "IGNORED"
+        message = "Question ignored"
+    else:
+        new_answer = AttributeAnswer(
+            answered_by_user_id=current_user.id,
+            target_user_id=target_user_id,
+            task_id=task_id,
+            attribute_id=attr_def.id,
+            value="IGNORED",
+            refused=True
+        )
+        db.add(new_answer)
+        existing_answer = new_answer
+        message = "Question ignored"
+    
+    db.commit()
+    db.refresh(existing_answer)
+    
+    return DirectAnswerResponse(
+        id=str(existing_answer.id),
+        message=message
+    )
+
