@@ -192,3 +192,78 @@ async def recalculate_all_scores(db: Session) -> int:
     logger.info(f"Full recalculation complete: {total_scores} total scores calculated")
     return total_scores
 
+
+def recalculate_all_similarity_scores(db: Session) -> int:
+    """
+    SYNCHRONOUS version to recalculate similarity scores.
+    Uses simple string matching instead of OpenAI for speed.
+    
+    Called after data import to populate similarity scores.
+    
+    Returns:
+        Total number of scores calculated
+    """
+    logger.info("📊 Recalculating all similarity scores (sync mode)...")
+    
+    # Clear existing scores
+    db.query(SimilarityScore).delete()
+    db.commit()
+    
+    # Get all answers grouped by (task_id, attribute_id)
+    all_answers = db.query(AttributeAnswer).filter(
+        AttributeAnswer.refused == False,
+        AttributeAnswer.value != None
+    ).all()
+    
+    # Group answers by (task_id, attribute_id)
+    answer_groups = {}
+    for answer in all_answers:
+        key = (str(answer.task_id) if answer.task_id else 'none', str(answer.attribute_id))
+        if key not in answer_groups:
+            answer_groups[key] = []
+        answer_groups[key].append(answer)
+    
+    total_scores = 0
+    
+    for key, answers in answer_groups.items():
+        if len(answers) < 2:
+            continue
+        
+        # Compare all pairs
+        for i, answer_a in enumerate(answers):
+            for answer_b in answers[i+1:]:
+                # Simple similarity calculation (exact match = 1.0, else try to compute)
+                if answer_a.value == answer_b.value:
+                    similarity = 1.0
+                else:
+                    # For strings, use simple comparison
+                    val_a = str(answer_a.value).strip().lower()
+                    val_b = str(answer_b.value).strip().lower()
+                    
+                    if val_a == val_b:
+                        similarity = 1.0
+                    elif val_a in val_b or val_b in val_a:
+                        similarity = 0.7
+                    else:
+                        # Check if both are dependency attributes (exact match for tasks)
+                        # For enum values, same = 1.0, different = 0.0
+                        similarity = 0.0
+                
+                # Store with consistent ordering
+                if str(answer_a.id) < str(answer_b.id):
+                    a_id, b_id = answer_a.id, answer_b.id
+                else:
+                    a_id, b_id = answer_b.id, answer_a.id
+                
+                new_score = SimilarityScore(
+                    answer_a_id=a_id,
+                    answer_b_id=b_id,
+                    similarity_score=similarity
+                )
+                db.add(new_score)
+                total_scores += 1
+    
+    db.commit()
+    logger.info(f"✅ Created {total_scores} similarity scores")
+    return total_scores
+

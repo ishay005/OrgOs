@@ -83,6 +83,92 @@ async def update_schema(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Schema update failed: {str(e)}")
 
 
+@router.api_route("/recalculate-alignments", methods=["GET", "POST"])
+async def recalculate_alignments(db: Session = Depends(get_db)):
+    """
+    Recalculate ALL alignment edges and similarity scores.
+    
+    Alignment rules:
+    1. Manager ↔ Employee (bidirectional)
+    2. Teammates (same manager)
+    3. Task dependency owners (if task A depends on task B, owner of A aligns with owner of B)
+    """
+    from app.models import Task, TaskDependency
+    
+    results = {"actions": []}
+    
+    try:
+        # Step 1: Clear existing alignment edges
+        deleted = db.query(AlignmentEdge).delete()
+        results["actions"].append(f"Deleted {deleted} old alignment edges")
+        
+        # Get all users
+        all_users = db.query(User).all()
+        
+        # Track created edges to avoid duplicates
+        created_edges = set()
+        edges_created = 0
+        
+        def add_edge(source_id, target_id):
+            nonlocal edges_created
+            key = (str(source_id), str(target_id))
+            if key not in created_edges and source_id != target_id:
+                db.add(AlignmentEdge(source_user_id=source_id, target_user_id=target_id))
+                created_edges.add(key)
+                edges_created += 1
+        
+        # 1. Manager-Employee relationships (bidirectional)
+        for user in all_users:
+            if user.manager_id:
+                add_edge(user.id, user.manager_id)
+                add_edge(user.manager_id, user.id)
+        
+        # 2. Employees (direct reports)
+        for user in all_users:
+            employees = [u for u in all_users if u.manager_id == user.id]
+            for emp in employees:
+                add_edge(user.id, emp.id)
+                add_edge(emp.id, user.id)
+        
+        # 3. Teammates (same manager)
+        for user in all_users:
+            if user.manager_id:
+                teammates = [u for u in all_users if u.manager_id == user.manager_id and u.id != user.id]
+                for teammate in teammates:
+                    add_edge(user.id, teammate.id)
+        
+        # 4. Task dependency connections
+        all_dependencies = db.query(TaskDependency).all()
+        for dep in all_dependencies:
+            task = db.query(Task).filter(Task.id == dep.task_id).first()
+            depends_on = db.query(Task).filter(Task.id == dep.depends_on_task_id).first()
+            
+            if task and depends_on and task.owner_user_id and depends_on.owner_user_id:
+                if task.owner_user_id != depends_on.owner_user_id:
+                    add_edge(task.owner_user_id, depends_on.owner_user_id)
+                    add_edge(depends_on.owner_user_id, task.owner_user_id)
+        
+        db.commit()
+        results["actions"].append(f"Created {edges_created} alignment edges")
+        
+        # Step 2: Recalculate similarity scores
+        from app.services.similarity_cache import recalculate_all_similarity_scores
+        scores_count = recalculate_all_similarity_scores(db)
+        results["actions"].append(f"Calculated {scores_count} similarity scores")
+        
+        return {
+            "success": True,
+            "message": "Alignments and similarity scores recalculated!",
+            "results": results
+        }
+        
+    except Exception as e:
+        db.rollback()
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Recalculation failed: {str(e)}")
+
+
 @router.api_route("/fix-daily-sync-enum", methods=["GET", "POST"])
 async def fix_daily_sync_enum(db: Session = Depends(get_db)):
     """

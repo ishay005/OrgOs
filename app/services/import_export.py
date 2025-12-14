@@ -958,8 +958,77 @@ def import_data_from_excel(db: Session, file: BytesIO, replace_mode: bool = Fals
             db.commit()
             logger.info(f"  ✅ Imported {stats['perception_imported']} perception answers ({stats['perception_skipped']} rows skipped)")
         
-        # Note: Similarity scores will be calculated on-demand
-        logger.info("  ℹ️  Similarity scores will be calculated automatically when viewed")
+        # =====================================================================
+        # Create Alignment Edges (based on org structure + task dependencies)
+        # =====================================================================
+        logger.info("🔗 Creating alignment edges...")
+        stats['alignment_edges_created'] = 0
+        
+        # Track created edges to avoid duplicates
+        created_edges = set()
+        
+        def add_edge(source_id, target_id):
+            """Add an alignment edge if it doesn't exist"""
+            key = (str(source_id), str(target_id))
+            if key not in created_edges and source_id != target_id:
+                db.add(AlignmentEdge(source_user_id=source_id, target_user_id=target_id))
+                created_edges.add(key)
+                return 1
+            return 0
+        
+        # Get all users
+        all_users = list(name_to_user.values())
+        all_tasks = list(title_to_task.values())
+        
+        for user in all_users:
+            # 1. Manager alignment (bidirectional)
+            if user.manager_id:
+                manager = db.query(User).filter(User.id == user.manager_id).first()
+                if manager:
+                    stats['alignment_edges_created'] += add_edge(user.id, manager.id)
+                    stats['alignment_edges_created'] += add_edge(manager.id, user.id)
+            
+            # 2. Employees alignment (direct reports)
+            employees = [u for u in all_users if u.manager_id == user.id]
+            for employee in employees:
+                stats['alignment_edges_created'] += add_edge(user.id, employee.id)
+                stats['alignment_edges_created'] += add_edge(employee.id, user.id)
+            
+            # 3. Teammates alignment (same manager)
+            if user.manager_id:
+                teammates = [u for u in all_users if u.manager_id == user.manager_id and u.id != user.id]
+                for teammate in teammates:
+                    stats['alignment_edges_created'] += add_edge(user.id, teammate.id)
+        
+        # 4. Task dependency connections
+        # Get all task dependencies
+        all_dependencies = db.query(TaskDependency).all()
+        
+        for dep in all_dependencies:
+            task = db.query(Task).filter(Task.id == dep.task_id).first()
+            depends_on_task = db.query(Task).filter(Task.id == dep.depends_on_task_id).first()
+            
+            if task and depends_on_task and task.owner_user_id and depends_on_task.owner_user_id:
+                if task.owner_user_id != depends_on_task.owner_user_id:
+                    # Create bidirectional alignment between task owners
+                    stats['alignment_edges_created'] += add_edge(task.owner_user_id, depends_on_task.owner_user_id)
+                    stats['alignment_edges_created'] += add_edge(depends_on_task.owner_user_id, task.owner_user_id)
+        
+        db.commit()
+        logger.info(f"  ✅ Created {stats['alignment_edges_created']} alignment edges")
+        
+        # =====================================================================
+        # Recalculate Similarity Scores
+        # =====================================================================
+        logger.info("📊 Recalculating similarity scores...")
+        try:
+            from app.services.similarity_cache import recalculate_all_similarity_scores
+            scores_created = recalculate_all_similarity_scores(db)
+            stats['similarity_scores_calculated'] = scores_created
+            logger.info(f"  ✅ Calculated {scores_created} similarity scores")
+        except Exception as e:
+            logger.warning(f"  ⚠️  Similarity calculation skipped: {e}")
+            stats['similarity_scores_calculated'] = 0
         
         logger.info(f"✅ Import complete! Stats: {stats}")
         return {

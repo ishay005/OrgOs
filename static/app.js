@@ -2867,19 +2867,24 @@ async function savePendingAnswer(pendingId, taskId, targetUserId, attributeName)
             })
         });
         
-        // Success! Remove the row and show success message
+        // Success! Just fade out the row - no refresh
         const row = document.getElementById(`row-${pendingId}`);
-        row.style.backgroundColor = '#d4edda';
-        row.innerHTML = `
-            <td colspan="7" style="padding: 12px; text-align: center; color: #155724; font-weight: 500;">
-                ✅ Answer saved successfully! Refreshing list...
-            </td>
-        `;
-        
-        // Reload after a short delay
-        setTimeout(() => {
-            loadPendingQuestions();
-        }, 1500);
+        if (row) {
+            row.style.transition = 'all 0.4s ease-out';
+            row.style.backgroundColor = '#d4edda';
+            
+            setTimeout(() => {
+                row.style.opacity = '0';
+                row.style.height = '0';
+                row.style.padding = '0';
+                row.style.overflow = 'hidden';
+            }, 200);
+            
+            // Remove from DOM after animation
+            setTimeout(() => {
+                row.remove();
+            }, 600);
+        }
         
     } catch (error) {
         console.error('Error saving answer:', error);

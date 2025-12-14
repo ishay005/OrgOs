@@ -12,11 +12,70 @@ from sqlalchemy import and_, or_
 
 from app.models import (
     User, Task, AttributeDefinition, AttributeAnswer, AlignmentEdge, 
-    EntityType, SimilarityScore
+    EntityType, SimilarityScore, TaskDependency
 )
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+def get_relationship_type(user: User, other_user: User) -> str:
+    """
+    Determine the relationship type between two users.
+    Returns: 'manager', 'employee', 'teammate', 'other'
+    """
+    if user.manager_id == other_user.id:
+        return 'manager'  # other_user is my manager
+    elif other_user.manager_id == user.id:
+        return 'employee'  # other_user is my employee
+    elif user.manager_id and user.manager_id == other_user.manager_id:
+        return 'teammate'  # same manager
+    else:
+        return 'other'  # connected via task dependencies only
+
+
+def get_connected_task_ids(db: Session, user_id: UUID, other_user_id: UUID) -> set:
+    """
+    Get task IDs where these users have a connection (dependency, parent, child).
+    
+    Returns set of task IDs owned by other_user that are connected to user's tasks.
+    """
+    connected_tasks = set()
+    
+    # Get all tasks owned by both users
+    my_tasks = db.query(Task).filter(Task.owner_user_id == user_id, Task.is_active == True).all()
+    their_tasks = db.query(Task).filter(Task.owner_user_id == other_user_id, Task.is_active == True).all()
+    
+    my_task_ids = {t.id for t in my_tasks}
+    their_task_ids = {t.id for t in their_tasks}
+    
+    # 1. Check direct dependencies (my task depends on their task, or vice versa)
+    for dep in db.query(TaskDependency).all():
+        # My task depends on their task
+        if dep.task_id in my_task_ids and dep.depends_on_task_id in their_task_ids:
+            connected_tasks.add(dep.depends_on_task_id)
+        # Their task depends on my task
+        if dep.task_id in their_task_ids and dep.depends_on_task_id in my_task_ids:
+            connected_tasks.add(dep.task_id)
+    
+    # 2. Check mutual parent (my task and their task have the same parent)
+    for my_task in my_tasks:
+        if my_task.parent_id:
+            for their_task in their_tasks:
+                if their_task.parent_id == my_task.parent_id:
+                    connected_tasks.add(their_task.id)
+    
+    # 3. Check parent-child relationship (my task is parent/child of their task)
+    for my_task in my_tasks:
+        for their_task in their_tasks:
+            # Their task is a child of my task
+            if their_task.parent_id == my_task.id:
+                connected_tasks.add(their_task.id)
+            # My task is a child of their task
+            if my_task.parent_id == their_task.id:
+                connected_tasks.add(their_task.id)
+    
+    return connected_tasks
 
 
 class MisalignmentDTO(BaseModel):
@@ -83,11 +142,23 @@ async def compute_misalignments_for_user_cached(
         if not other_user:
             continue
         
+        # Determine relationship type to filter relevant tasks
+        relationship = get_relationship_type(user, other_user)
+        
         # Get all active tasks owned by the other user
-        tasks = db.query(Task).filter(
+        all_their_tasks = db.query(Task).filter(
             Task.owner_user_id == other_user.id,
             Task.is_active == True
         ).all()
+        
+        # Filter tasks based on relationship type
+        if relationship in ['manager', 'employee']:
+            # Manager/Employee: Compare on ALL tasks
+            tasks = all_their_tasks
+        else:
+            # Teammate or Other: Only compare on connected tasks
+            connected_task_ids = get_connected_task_ids(db, user_id, other_user.id)
+            tasks = [t for t in all_their_tasks if t.id in connected_task_ids]
         
         for task in tasks:
             # Get all task attributes
