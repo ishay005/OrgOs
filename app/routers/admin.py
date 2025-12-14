@@ -81,6 +81,13 @@ async def update_schema(db: Session = Depends(get_db)):
         except Exception as e:
             results["actions"].append(f"Team column: {str(e)}")
         
+        # Add role column to users table if not exists
+        try:
+            db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR"))
+            results["actions"].append("Added 'role' column to users table")
+        except Exception as e:
+            results["actions"].append(f"Role column: {str(e)}")
+        
         # Drop deprecated alignment_edges table
         try:
             db.execute(text("DROP TABLE IF EXISTS alignment_edges CASCADE"))

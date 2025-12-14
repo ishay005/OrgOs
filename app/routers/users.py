@@ -72,3 +72,89 @@ async def list_users(db: Session = Depends(get_db)):
     """
     users = db.query(User).all()
     return users
+
+
+from pydantic import BaseModel
+from typing import Optional
+from uuid import UUID
+
+class UserUpdate(BaseModel):
+    """Request model for updating a user"""
+    name: Optional[str] = None
+    email: Optional[str] = None
+    team: Optional[str] = None
+    role: Optional[str] = None
+    manager_id: Optional[UUID] = None
+
+
+@router.patch("/{user_id}")
+async def update_user(
+    user_id: UUID,
+    update_data: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update a user's information.
+    
+    Permissions:
+    - Users can update their own info (name, email, team, role)
+    - Managers can update their employees' info
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Permission check
+    can_edit = False
+    
+    # Users can edit themselves
+    if current_user.id == user_id:
+        can_edit = True
+    
+    # Check if current user is a manager of this user
+    if not can_edit:
+        check_manager_id = user.manager_id
+        while check_manager_id:
+            if check_manager_id == current_user.id:
+                can_edit = True
+                break
+            manager = db.query(User).filter(User.id == check_manager_id).first()
+            check_manager_id = manager.manager_id if manager else None
+    
+    if not can_edit:
+        raise HTTPException(status_code=403, detail="You don't have permission to edit this user")
+    
+    # Update fields
+    if update_data.name is not None:
+        user.name = update_data.name
+    
+    if update_data.email is not None:
+        user.email = update_data.email
+    
+    if update_data.team is not None:
+        user.team = update_data.team
+    
+    if update_data.role is not None:
+        user.role = update_data.role
+    
+    if update_data.manager_id is not None:
+        # Only managers can change manager_id
+        if current_user.id != user_id:
+            new_manager = db.query(User).filter(User.id == update_data.manager_id).first()
+            if not new_manager:
+                raise HTTPException(status_code=404, detail="New manager not found")
+            user.manager_id = update_data.manager_id
+    
+    db.commit()
+    db.refresh(user)
+    
+    return {
+        "id": str(user.id),
+        "name": user.name,
+        "email": user.email,
+        "team": user.team,
+        "role": user.role,
+        "manager_id": str(user.manager_id) if user.manager_id else None,
+        "message": "User updated successfully"
+    }

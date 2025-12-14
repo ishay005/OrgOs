@@ -160,12 +160,18 @@ async def create_task(
 from pydantic import BaseModel
 from typing import Optional
 
+from pydantic import Field
+from typing import Union, Literal
+
+# Sentinel for "clear this field" vs "not provided"
+UNSET = object()
+
 class TaskUpdate(BaseModel):
     """Request model for updating a task"""
     title: Optional[str] = None
     description: Optional[str] = None
     owner_user_id: Optional[UUID] = None
-    parent_id: Optional[UUID] = None
+    parent_id: Optional[Union[UUID, Literal[""]]] = None  # "" means clear, None means not set, UUID means set
     is_active: Optional[bool] = None
 
 
@@ -238,17 +244,20 @@ async def update_task(
             logging.getLogger(__name__).warning(f"Could not update relevant users: {e}")
     
     # Update parent (with validation)
+    # parent_id can be: None (not provided), "" (clear/set to null), or UUID (set to new parent)
     if update_data.parent_id is not None:
-        if update_data.parent_id == task_id:
-            raise HTTPException(status_code=400, detail="Task cannot be its own parent")
-        parent = db.query(Task).filter(Task.id == update_data.parent_id).first()
-        if not parent:
-            raise HTTPException(status_code=404, detail="Parent task not found")
-        task.parent_id = update_data.parent_id
-        
-        # Update child/parent relationships
-        if parent.parent_id is None:
-            parent.parent_id = None  # Parent already set via child
+        if update_data.parent_id == "" or update_data.parent_id == "null":
+            # Clear parent
+            task.parent_id = None
+        else:
+            # Set new parent
+            new_parent_id = update_data.parent_id if isinstance(update_data.parent_id, UUID) else UUID(str(update_data.parent_id))
+            if new_parent_id == task_id:
+                raise HTTPException(status_code=400, detail="Task cannot be its own parent")
+            parent = db.query(Task).filter(Task.id == new_parent_id).first()
+            if not parent:
+                raise HTTPException(status_code=404, detail="Parent task not found")
+            task.parent_id = new_parent_id
     
     db.commit()
     db.refresh(task)
@@ -670,12 +679,37 @@ async def get_task_answers(
                 "answers": user_answers
             }
     
+    # Get parent info
+    parent_info = None
+    if task.parent_id:
+        parent_task = db.query(Task).filter(Task.id == task.parent_id).first()
+        if parent_task:
+            parent_owner = db.query(User).filter(User.id == parent_task.owner_user_id).first()
+            parent_info = {
+                "id": str(parent_task.id),
+                "title": parent_task.title,
+                "owner_name": parent_owner.name if parent_owner else "Unknown"
+            }
+    
+    # Get children info
+    children_info = []
+    for child in task.children:
+        if child.is_active:
+            child_owner = db.query(User).filter(User.id == child.owner_user_id).first()
+            children_info.append({
+                "id": str(child.id),
+                "title": child.title,
+                "owner_name": child_owner.name if child_owner else "Unknown"
+            })
+    
     return {
         "task_id": str(task.id),
         "task_title": task.title,
         "task_description": task.description,
         "owner_name": owner.name if owner else "Unknown",
         "owner_id": str(task.owner_user_id),
+        "parent": parent_info,
+        "children": children_info,
         "answers_by_attribute": answers_by_attribute
     }
 

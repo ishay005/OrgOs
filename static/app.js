@@ -643,10 +643,10 @@ function renderOrgChart(users) {
     });
     
     // Layout parameters
-    const NODE_WIDTH = 180;
-    const NODE_HEIGHT = 80;
+    const NODE_WIDTH = 200;
+    const NODE_HEIGHT = 100;
     const HORIZONTAL_GAP = 50;
-    const VERTICAL_GAP = 100;
+    const VERTICAL_GAP = 120;
     
     // Calculate positions
     function calculateLayout(node, level, xOffset) {
@@ -742,7 +742,7 @@ function renderOrgChart(users) {
         const name = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         name.setAttribute('class', 'org-node-name');
         name.setAttribute('x', NODE_WIDTH / 2);
-        name.setAttribute('y', 25);
+        name.setAttribute('y', 22);
         name.setAttribute('text-anchor', 'middle');
         name.setAttribute('fill', '#000000'); // Always black for readability
         name.textContent = node.name;
@@ -752,13 +752,41 @@ function renderOrgChart(users) {
         }
         group.appendChild(name);
         
-        // Info line 1 - show alignment % if enabled
+        // Role line (if available)
+        if (node.role) {
+            const roleLine = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            roleLine.setAttribute('class', 'org-node-role');
+            roleLine.setAttribute('x', NODE_WIDTH / 2);
+            roleLine.setAttribute('y', 38);
+            roleLine.setAttribute('text-anchor', 'middle');
+            roleLine.setAttribute('fill', '#555555');
+            roleLine.setAttribute('font-size', '11');
+            roleLine.setAttribute('font-style', 'italic');
+            roleLine.textContent = node.role;
+            group.appendChild(roleLine);
+        }
+        
+        // Team line (if available)
+        if (node.team) {
+            const teamLine = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            teamLine.setAttribute('class', 'org-node-team');
+            teamLine.setAttribute('x', NODE_WIDTH / 2);
+            teamLine.setAttribute('y', node.role ? 52 : 38);
+            teamLine.setAttribute('text-anchor', 'middle');
+            teamLine.setAttribute('fill', '#6366f1');
+            teamLine.setAttribute('font-size', '10');
+            teamLine.textContent = `📁 ${node.team}`;
+            group.appendChild(teamLine);
+        }
+        
+        // Info line 1 - show alignment % if enabled, or task count
         const info1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         info1.setAttribute('class', 'org-node-info');
         info1.setAttribute('x', NODE_WIDTH / 2);
-        info1.setAttribute('y', 45);
+        info1.setAttribute('y', node.role && node.team ? 68 : (node.role || node.team ? 55 : 45));
         info1.setAttribute('text-anchor', 'middle');
-        info1.setAttribute('fill', '#000000'); // Always black for readability
+        info1.setAttribute('fill', '#000000');
+        info1.setAttribute('font-size', '10');
         if (showAlignment && userAlignmentStats[node.id] !== undefined) {
             info1.textContent = `Alignment: ${Math.round(userAlignmentStats[node.id])}%`;
         } else {
@@ -766,16 +794,17 @@ function renderOrgChart(users) {
         }
         group.appendChild(info1);
         
-        // Info line 2
+        // Info line 2 - reports count
         const info2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         info2.setAttribute('class', 'org-node-info');
         info2.setAttribute('x', NODE_WIDTH / 2);
-        info2.setAttribute('y', 62);
+        info2.setAttribute('y', node.role && node.team ? 82 : (node.role || node.team ? 70 : 60));
         info2.setAttribute('text-anchor', 'middle');
-        info2.setAttribute('fill', '#000000'); // Always black for readability
+        info2.setAttribute('fill', '#888888');
+        info2.setAttribute('font-size', '10');
         info2.textContent = node.employee_count > 0 
             ? `${node.employee_count} report${node.employee_count !== 1 ? 's' : ''}`
-            : 'Individual Contributor';
+            : 'IC';
         group.appendChild(info2);
         
         // Add click handler to show user misalignments
@@ -1357,6 +1386,21 @@ async function loadTaskGraph() {
             </div>
         `).join('');
         
+        // Populate team filter from actual user teams
+        try {
+            const orgData = await apiCall('/users/org-chart', { skipAuth: true });
+            const teams = [...new Set(orgData.users.map(u => u.team).filter(t => t))];
+            const teamSelect = document.getElementById('filter-team');
+            if (teamSelect) {
+                teamSelect.innerHTML = '<option value="">All Teams</option>' + 
+                    teams.map(team => `<option value="${team}">${team}</option>`).join('');
+            }
+            // Store users data for team filtering
+            window.orgChartUsers = orgData.users;
+        } catch (e) {
+            console.log('Could not load teams for filter:', e);
+        }
+        
         // Create attribute filters
         createAttributeFilters(attributes, tasks);
         
@@ -1505,6 +1549,12 @@ async function showTaskDetails(taskId) {
         html += '<h4>📋 Task Information</h4>';
         
         if (permissions.can_edit_task) {
+            // Get available tasks for parent selection (exclude self and children)
+            const childIds = (data.children || []).map(c => c.id);
+            const availableParents = allTasks.filter(t => 
+                t.id !== taskId && !childIds.includes(t.id)
+            );
+            
             // Editable fields
             html += `
                 <div class="task-info-row">
@@ -1521,8 +1571,57 @@ async function showTaskDetails(taskId) {
                         ${allUsers.map(u => `<option value="${u.id}" ${u.id === data.owner_id ? 'selected' : ''}>${u.name}</option>`).join('')}
                     </select>
                 </div>
+                <div class="task-info-row">
+                    <span class="task-info-label">Parent Task:</span>
+                    <select id="edit-task-parent" class="edit-input" style="flex:1;">
+                        <option value="">None (Top Level)</option>
+                        ${availableParents.map(t => 
+                            `<option value="${t.id}" ${data.parent?.id === t.id ? 'selected' : ''}>${t.title} (${t.owner_name})</option>`
+                        ).join('')}
+                    </select>
+                </div>
                 <button onclick="saveTaskInfo('${taskId}')" class="save-btn" style="margin-top:10px;">💾 Save Task Info</button>
             `;
+            
+            // Show children section with add/remove capabilities
+            html += `<div class="task-info-row" style="margin-top:10px;">
+                <span class="task-info-label">Children:</span>
+                <div style="flex:1;">`;
+            
+            if (data.children && data.children.length > 0) {
+                html += `<div class="children-list">
+                    ${data.children.map(c => `
+                        <div class="child-item">
+                            <span class="child-title">${c.title}</span>
+                            <span class="child-owner">(${c.owner_name})</span>
+                            <button onclick="removeChildTask('${taskId}', '${c.id}')" class="remove-btn" title="Remove child">×</button>
+                        </div>
+                    `).join('')}
+                </div>`;
+            } else {
+                html += `<div class="no-answers" style="margin-bottom:8px;">No children</div>`;
+            }
+            
+            // Add child dropdown - show tasks that don't have a parent and aren't this task or an ancestor
+            // (reusing childIds from above)
+            const availableChildren = allTasks.filter(t => 
+                t.id !== taskId && 
+                !childIds.includes(t.id) &&
+                t.id !== data.parent?.id  // Don't allow parent to be a child
+            );
+            
+            html += `
+                <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+                    <select id="add-child-select" class="edit-input" style="flex:1;">
+                        <option value="">Select task to add as child...</option>
+                        ${availableChildren.map(t => 
+                            `<option value="${t.id}">${t.title} (${t.owner_name})</option>`
+                        ).join('')}
+                    </select>
+                    <button onclick="addChildTask('${taskId}')" class="add-btn">➕ Add Child</button>
+                </div>
+            </div>
+            </div>`;
         } else {
             // Read-only display
             html += `
@@ -1534,6 +1633,18 @@ async function showTaskDetails(taskId) {
                     <div class="task-info-row">
                         <span class="task-info-label">Description:</span>
                         <span class="task-info-value">${data.task_description}</span>
+                    </div>
+                ` : ''}
+                ${data.parent ? `
+                    <div class="task-info-row">
+                        <span class="task-info-label">Parent:</span>
+                        <span class="task-info-value">${data.parent.title} (${data.parent.owner_name})</span>
+                    </div>
+                ` : ''}
+                ${data.children && data.children.length > 0 ? `
+                    <div class="task-info-row">
+                        <span class="task-info-label">Children:</span>
+                        <span class="task-info-value">${data.children.map(c => c.title).join(', ')}</span>
                     </div>
                 ` : ''}
             `;
@@ -1743,20 +1854,30 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Save task info (title, description, owner)
+// Save task info (title, description, owner, parent)
 async function saveTaskInfo(taskId) {
     const title = document.getElementById('edit-task-title')?.value;
     const description = document.getElementById('edit-task-description')?.value;
     const ownerId = document.getElementById('edit-task-owner')?.value;
+    const parentSelect = document.getElementById('edit-task-parent');
+    
+    // Build update object
+    const updateData = {
+        title: title,
+        description: description,
+        owner_user_id: ownerId
+    };
+    
+    // Only include parent_id if the select exists (permission to edit)
+    if (parentSelect) {
+        // Empty string means "clear parent", otherwise send the UUID
+        updateData.parent_id = parentSelect.value || "";
+    }
     
     try {
         await apiCall(`/tasks/${taskId}`, {
             method: 'PATCH',
-            body: JSON.stringify({
-                title: title,
-                description: description,
-                owner_user_id: ownerId
-            })
+            body: JSON.stringify(updateData)
         });
         
         showToast('Task info saved successfully!', 'success');
@@ -1919,6 +2040,53 @@ async function deleteTask(taskId, taskTitle) {
     }
 }
 
+// Remove child task (sets child's parent to null)
+async function removeChildTask(parentTaskId, childTaskId) {
+    if (!confirm('Remove this task from children? (The child task will become a top-level task)')) return;
+    
+    try {
+        // Update the child task to have no parent
+        await apiCall(`/tasks/${childTaskId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ parent_id: "" })
+        });
+        showToast('Child removed!', 'success');
+        showTaskDetails(parentTaskId);
+        // Refresh graph if visible
+        if (document.getElementById('graph-section')?.classList.contains('active')) {
+            loadTaskGraph();
+        }
+    } catch (error) {
+        showToast('Failed to remove child: ' + error.message, 'error');
+    }
+}
+
+// Add child task (sets selected task's parent to current task)
+async function addChildTask(parentTaskId) {
+    const select = document.getElementById('add-child-select');
+    const childTaskId = select?.value;
+    if (!childTaskId) {
+        showToast('Please select a task first', 'warning');
+        return;
+    }
+    
+    try {
+        // Update the selected task to have current task as parent
+        await apiCall(`/tasks/${childTaskId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ parent_id: parentTaskId })
+        });
+        showToast('Child added!', 'success');
+        showTaskDetails(parentTaskId);
+        // Refresh graph if visible
+        if (document.getElementById('graph-section')?.classList.contains('active')) {
+            loadTaskGraph();
+        }
+    } catch (error) {
+        showToast('Failed to add child: ' + error.message, 'error');
+    }
+}
+
 function closeTaskDetails() {
     document.getElementById('task-details-modal').classList.add('hidden');
 }
@@ -1938,15 +2106,11 @@ function createAttributeFilters(attributes, tasks) {
         label.textContent = attr.label + ':';
         filterDiv.appendChild(label);
         
-        // Collect all unique values for this attribute from tasks
-        const values = new Set();
-        tasks.forEach(task => {
-            if (task.attributes && task.attributes[attr.name]) {
-                values.add(task.attributes[attr.name].value);
-            }
-        });
+        // Use allowed_values from attribute definition (system schema)
+        // This ensures filter options always match what's defined in the system
+        const values = attr.allowed_values || [];
         
-        if (values.size === 0) return; // Skip if no values
+        if (values.length === 0) return; // Skip if no allowed values defined
         
         // Create multi-select dropdown
         const dropdown = document.createElement('div');
@@ -1966,7 +2130,7 @@ function createAttributeFilters(attributes, tasks) {
         dropdownContent.className = 'filter-dropdown-content';
         dropdownContent.id = `filter-content-${attr.name}`;
         
-        Array.from(values).sort().forEach(val => {
+        values.forEach(val => {
             const option = document.createElement('div');
             option.className = 'filter-option';
             option.onclick = (e) => e.stopPropagation();
@@ -2064,38 +2228,23 @@ async function applyFilters() {
         graphFilters.owner = null;
     }
     
-    // Team filter
+    // Team filter - filter by actual team name from user data
     const teamFilter = document.getElementById('filter-team');
     const selectedTeam = teamFilter ? teamFilter.value : '';
     
     if (selectedTeam) {
-        try {
-            const response = await fetch('/users/org-chart');
-            if (response.ok) {
-                const data = await response.json();
-                let teamLeadName = '';
-                
-                if (selectedTeam === 'platform') {
-                    teamLeadName = 'Dana Cohen';
-                } else if (selectedTeam === 'product') {
-                    teamLeadName = 'Amir Levi';
-                }
-                
-                // Find team lead
-                const teamLead = data.users.find(u => u.name === teamLeadName);
-                
-                if (teamLead) {
-                    // Get team members (employees of this lead + the lead)
-                    const teamMemberNames = data.users
-                        .filter(u => u.manager_id === teamLead.id || u.id === teamLead.id)
-                        .map(u => u.name);
-                    
-                    console.log(`${selectedTeam} team members:`, teamMemberNames);
-                    graphFilters.owner = teamMemberNames;
-                }
+        // Use cached org chart data or fetch if needed
+        const users = window.orgChartUsers || [];
+        if (users.length > 0) {
+            // Get all users who belong to this team
+            const teamMemberNames = users
+                .filter(u => u.team === selectedTeam)
+                .map(u => u.name);
+            
+            console.log(`Team '${selectedTeam}' members:`, teamMemberNames);
+            if (teamMemberNames.length > 0) {
+                graphFilters.owner = teamMemberNames;
             }
-        } catch (error) {
-            console.error('Error loading team filter:', error);
         }
     }
     

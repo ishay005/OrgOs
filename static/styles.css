@@ -2592,6 +2592,37 @@ input:checked + .slider:before {
     margin-left: auto;
 }
 
+/* Children list */
+.children-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.child-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: #f0fff4;
+    border-radius: 6px;
+    border-left: 3px solid var(--success);
+}
+
+.child-title {
+    font-weight: 500;
+    color: var(--text);
+}
+
+.child-owner {
+    color: var(--text-light);
+    font-size: 0.85rem;
+}
+
+.child-item .remove-btn {
+    margin-left: auto;
+}
+
 /* Delete section styling */
 .delete-section {
     background: #fff5f5;

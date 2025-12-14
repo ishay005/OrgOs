@@ -167,6 +167,8 @@ class OrgChartNode(BaseModel):
     id: UUID
     name: str
     email: Optional[str] = None
+    team: Optional[str] = None
+    role: Optional[str] = None
     manager_id: Optional[UUID] = None
     employee_count: int
     task_count: int

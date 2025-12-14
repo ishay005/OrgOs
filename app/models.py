@@ -38,6 +38,7 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, nullable=True)
     team = Column(String, nullable=True)  # Team name for grouping
+    role = Column(String, nullable=True)  # User's role/title (e.g., "Developer", "Team Lead", "VP")
     timezone = Column(String, default="UTC")
     notification_time = Column(Time, default=time(10, 0))
     manager_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)  # Team hierarchy
