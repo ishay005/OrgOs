@@ -3011,7 +3011,7 @@ async function quickAddTask() {
         for (const at of attrs) {
             try {
                 await apiCall('/pending-questions/answer', { method: 'POST',
-                    body: JSON.stringify({ task_id: newTask.id, attribute_name: at.a, answer_value: at.v, target_user_id: ownerId })
+                    body: JSON.stringify({ task_id: newTask.id, attribute_name: at.a, value: at.v, target_user_id: ownerId })
                 });
             } catch(e) { console.log('attr save err:', e); }
         }
