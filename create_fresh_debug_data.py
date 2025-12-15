@@ -44,7 +44,7 @@ def clear_data(db):
     db.execute(text("DELETE FROM attribute_answers"))
     db.execute(text("DELETE FROM question_logs"))
     db.execute(text("DELETE FROM task_dependencies"))
-    db.execute(text("DELETE FROM alignment_edges"))
+    # alignment_edges table was deprecated and dropped
     db.execute(text("DELETE FROM tasks"))
     db.execute(text("DELETE FROM users"))
     db.commit()

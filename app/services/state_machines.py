@@ -964,9 +964,10 @@ def resolve_pending_decision(
 
 def get_pending_decisions_for_user(db: Session, user_id: UUID) -> List[PendingDecision]:
     """Get all unresolved pending decisions for a user."""
+    from sqlalchemy import or_
     return db.query(PendingDecision).filter(
         PendingDecision.user_id == user_id,
-        PendingDecision.is_resolved == False
+        or_(PendingDecision.is_resolved == False, PendingDecision.is_resolved == None)
     ).order_by(PendingDecision.created_at.desc()).all()
 
 

@@ -269,7 +269,7 @@ async def update_schema(db: Session = Depends(get_db)):
                     # Escape single quotes in title
                     safe_title = title.replace("'", "''") if title else "Untitled"
                     db.execute(text(f"""
-                        INSERT INTO pending_decisions (id, user_id, entity_type, entity_id, decision_type, description, created_at)
+                        INSERT INTO pending_decisions (id, user_id, entity_type, entity_id, decision_type, description, is_resolved, created_at)
                         VALUES (
                             gen_random_uuid(),
                             '{owner_id}',
@@ -277,6 +277,7 @@ async def update_schema(db: Session = Depends(get_db)):
                             '{task_id}',
                             'TASK_ACCEPTANCE',
                             'Ishay created task "{safe_title}" for you. Accept, reject, or propose merge.',
+                            FALSE,
                             CURRENT_TIMESTAMP
                         )
                     """))
@@ -292,6 +293,13 @@ async def update_schema(db: Session = Depends(get_db)):
                 db.execute(text("UPDATE tasks SET state = 'ACTIVE' WHERE state IS NULL"))
             except Exception as e:
                 results["errors"].append(f"fallback migration: {str(e)}")
+        
+        # ============ FIX NULL is_resolved VALUES ============
+        try:
+            fixed = db.execute(text("UPDATE pending_decisions SET is_resolved = FALSE WHERE is_resolved IS NULL"))
+            results["actions"].append(f"Fixed {fixed.rowcount} pending decisions with NULL is_resolved")
+        except Exception as e:
+            results["errors"].append(f"fix is_resolved: {str(e)}")
         
         db.commit()
         
