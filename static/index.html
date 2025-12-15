@@ -55,6 +55,7 @@
             <div class="dashboard-nav">
                 <button onclick="showSection('robin')" class="nav-btn active" id="robin-nav">🤖 Chat with Robin</button>
                 <button onclick="showSection('pending')" class="nav-btn" id="pending-nav">📋 Pending Questions</button>
+                <button onclick="showSection('decisions')" class="nav-btn" id="decisions-nav">✅ Pending Decisions <span id="decisions-badge" class="badge">0</span></button>
                 <button onclick="showSection('prompts')" class="nav-btn" id="prompts-nav">⚙️ Prompt Editor</button>
                 <button onclick="showSection('import-export')" class="nav-btn" id="import-export-nav">💾 Import/Export</button>
                 <button onclick="showSection('graph')" class="nav-btn" id="graph-nav">🔗 Task Graph</button>
@@ -199,6 +200,19 @@
                 
                 <div id="pending-questions-container">
                     <p style="text-align: center; color: #666; padding: 40px;">Loading pending questions...</p>
+                </div>
+            </div>
+            
+            <!-- Pending Decisions Section -->
+            <div id="decisions-section" class="section">
+                <div class="section-header">
+                    <h3>✅ Pending Decisions</h3>
+                    <p class="subtitle">Task proposals, merge requests, and dependency approvals awaiting your decision</p>
+                    <button onclick="loadPendingDecisions()" class="primary-btn">🔄 Refresh</button>
+                </div>
+                
+                <div id="decisions-container">
+                    <p style="text-align: center; color: #666; padding: 40px;">Loading pending decisions...</p>
                 </div>
             </div>
             
@@ -393,6 +407,18 @@
                             <option value="">All Teams</option>
                             <!-- Teams will be populated dynamically from user data -->
                         </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>State:</label>
+                        <div class="filter-dropdown" id="filter-dropdown-state">
+                            <button class="filter-button" id="filter-btn-state" onclick="toggleFilterDropdown('state'); event.stopPropagation();">
+                                <span>All</span><span>▼</span>
+                            </button>
+                            <div class="filter-dropdown-content" id="filter-content-state">
+                                <!-- Will be populated dynamically from task states -->
+                            </div>
+                        </div>
                     </div>
                     
                     <div id="attribute-filters" class="attribute-filters">

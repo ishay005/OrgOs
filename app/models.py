@@ -31,6 +31,69 @@ class MessageSender(str, enum.Enum):
     SYSTEM = "system"
 
 
+# =============================================================================
+# Task State Machine Enums
+# =============================================================================
+
+class TaskState(str, enum.Enum):
+    """
+    Task lifecycle states.
+    
+    DRAFT: Task exists but owner has not acknowledged yet (created by someone else).
+    ACTIVE: Owner has acknowledged/accepted the task. It's in the live OrgMap.
+    DONE: Task completed.
+    ARCHIVED: Old/irrelevant; kept only for history or after merge.
+    """
+    DRAFT = "DRAFT"
+    ACTIVE = "ACTIVE"
+    DONE = "DONE"
+    ARCHIVED = "ARCHIVED"
+
+
+class DependencyStatus(str, enum.Enum):
+    """
+    Dependency edge states.
+    
+    PROPOSED: Downstream requested dependency; upstream has not accepted.
+    CONFIRMED: Upstream accepted; this is an active dependency in OrgMap.
+    REJECTED: Upstream explicitly rejected, with reason.
+    REMOVED: Previously existing dependency was removed (for history).
+    """
+    PROPOSED = "PROPOSED"
+    CONFIRMED = "CONFIRMED"
+    REJECTED = "REJECTED"
+    REMOVED = "REMOVED"
+
+
+class MergeProposalStatus(str, enum.Enum):
+    """Status of a task merge proposal."""
+    PROPOSED = "PROPOSED"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+
+
+class AlternativeDepStatus(str, enum.Enum):
+    """Status of an alternative dependency proposal."""
+    PROPOSED = "PROPOSED"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+
+
+class AttributeConsensusState(str, enum.Enum):
+    """
+    Consensus states for attribute values.
+    
+    NO_DATA: No answers exist for this attribute.
+    SINGLE_SOURCE: Only one user has provided an answer.
+    ALIGNED: Multiple answers exist and they are consistent.
+    MISALIGNED: Multiple answers exist but they conflict.
+    """
+    NO_DATA = "NO_DATA"
+    SINGLE_SOURCE = "SINGLE_SOURCE"
+    ALIGNED = "ALIGNED"
+    MISALIGNED = "MISALIGNED"
+
+
 class User(Base):
     __tablename__ = "users"
     
@@ -88,20 +151,32 @@ class Task(Base):
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     owner_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)  # Who created this task in the system
     parent_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=True)
+    
+    # Task state machine
+    state = Column(
+        SQLEnum(TaskState, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=TaskState.ACTIVE
+    )
+    state_changed_at = Column(DateTime, nullable=True)
+    state_reason = Column(Text, nullable=True)  # Reason for state change (e.g., rejection reason)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = Column(Boolean, default=True)
     
     # Relationships
     owner = relationship("User", back_populates="tasks_owned", foreign_keys=[owner_user_id])
+    creator = relationship("User", foreign_keys=[created_by_user_id])
     answers = relationship("AttributeAnswer", back_populates="task")
     questions = relationship("QuestionLog", back_populates="task")
     
     # Parent-child relationships
     parent = relationship("Task", remote_side=[id], foreign_keys=[parent_id], backref="children")
     
-    # Dependencies (many-to-many)
+    # Dependencies (many-to-many) - legacy relationship, use TaskDependencyV2 for state machine
     dependencies = relationship(
         "Task",
         secondary="task_dependencies",
@@ -113,10 +188,22 @@ class Task(Base):
     # Relevant users (who need to be aligned on this task)
     relevant_user_associations = relationship("TaskRelevantUser", back_populates="task", cascade="all, delete-orphan")
     
+    # Aliases (for merged tasks)
+    aliases = relationship("TaskAlias", back_populates="canonical_task", foreign_keys="TaskAlias.canonical_task_id")
+    
     @property
     def relevant_users(self):
         """Get list of users who need to be aligned on this task"""
         return [assoc.user for assoc in self.relevant_user_associations]
+    
+    @property
+    def is_draft(self):
+        return self.state == TaskState.DRAFT
+    
+    @property
+    def is_canonical(self):
+        """True if this task is not merged into another (i.e., it's a first-class node)"""
+        return self.state != TaskState.ARCHIVED or not hasattr(self, '_merged_into')
 
 
 class AttributeDefinition(Base):
@@ -368,4 +455,265 @@ class MessageDebugData(Base):
     
     def __repr__(self):
         return f"<MessageDebugData message_id={self.message_id}>"
+
+
+# =============================================================================
+# Task Merge & Alias Models
+# =============================================================================
+
+class TaskAlias(Base):
+    """
+    Tracks aliases for merged tasks.
+    When task X is merged into task Y, we create a TaskAlias record.
+    The canonical task (Y) shows its aliases in OrgMap views.
+    """
+    __tablename__ = "task_aliases"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    canonical_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
+    alias_title = Column(String, nullable=False)
+    alias_created_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    merged_from_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=True)  # Original task before merge
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    canonical_task = relationship("Task", foreign_keys=[canonical_task_id], back_populates="aliases")
+    alias_creator = relationship("User", foreign_keys=[alias_created_by_user_id])
+    merged_from_task = relationship("Task", foreign_keys=[merged_from_task_id])
+    
+    __table_args__ = (
+        Index('idx_task_alias_canonical', 'canonical_task_id'),
+    )
+    
+    def __repr__(self):
+        return f"<TaskAlias '{self.alias_title}' -> Task {self.canonical_task_id}>"
+
+
+class TaskMergeProposal(Base):
+    """
+    Proposal to merge one task into another.
+    Requires double-consent: owner proposes, creator of source task must accept.
+    """
+    __tablename__ = "task_merge_proposals"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    # The task that would be merged/aliased (source)
+    from_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
+    # The canonical target (destination)
+    to_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
+    
+    # Who proposed the merge (usually owner of from_task or to_task)
+    proposed_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    proposal_reason = Column(Text, nullable=False)  # REQUIRED: why they think they are the same
+    
+    # Status
+    status = Column(
+        SQLEnum(MergeProposalStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=MergeProposalStatus.PROPOSED
+    )
+    
+    # Rejection info
+    rejected_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    rejected_reason = Column(Text, nullable=True)  # REQUIRED when status = REJECTED
+    
+    # Acceptance info
+    accepted_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    accepted_at = Column(DateTime, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    from_task = relationship("Task", foreign_keys=[from_task_id])
+    to_task = relationship("Task", foreign_keys=[to_task_id])
+    proposed_by = relationship("User", foreign_keys=[proposed_by_user_id])
+    rejected_by = relationship("User", foreign_keys=[rejected_by_user_id])
+    accepted_by = relationship("User", foreign_keys=[accepted_by_user_id])
+    
+    __table_args__ = (
+        Index('idx_merge_proposal_from_task', 'from_task_id'),
+        Index('idx_merge_proposal_status', 'status'),
+    )
+    
+    def __repr__(self):
+        return f"<TaskMergeProposal {self.from_task_id} -> {self.to_task_id} ({self.status})>"
+
+
+# =============================================================================
+# Dependency State Machine Models
+# =============================================================================
+
+class TaskDependencyV2(Base):
+    """
+    Enhanced task dependency with state machine.
+    downstream_task depends on upstream_task.
+    """
+    __tablename__ = "task_dependencies_v2"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    # The task that has the dependency (depends on upstream)
+    downstream_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
+    # The task being depended on
+    upstream_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)
+    
+    # State machine
+    status = Column(
+        SQLEnum(DependencyStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=DependencyStatus.PROPOSED
+    )
+    
+    # Who proposed this dependency
+    created_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    
+    # Acceptance info
+    accepted_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    accepted_at = Column(DateTime, nullable=True)
+    
+    # Rejection info
+    rejected_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    rejected_at = Column(DateTime, nullable=True)
+    rejected_reason = Column(Text, nullable=True)  # REQUIRED when status = REJECTED
+    
+    # Removal info
+    removed_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    removed_at = Column(DateTime, nullable=True)
+    removed_reason = Column(Text, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    downstream_task = relationship("Task", foreign_keys=[downstream_task_id])
+    upstream_task = relationship("Task", foreign_keys=[upstream_task_id])
+    created_by = relationship("User", foreign_keys=[created_by_user_id])
+    accepted_by = relationship("User", foreign_keys=[accepted_by_user_id])
+    rejected_by = relationship("User", foreign_keys=[rejected_by_user_id])
+    removed_by = relationship("User", foreign_keys=[removed_by_user_id])
+    
+    __table_args__ = (
+        Index('idx_dep_v2_downstream', 'downstream_task_id'),
+        Index('idx_dep_v2_upstream', 'upstream_task_id'),
+        Index('idx_dep_v2_status', 'status'),
+    )
+    
+    def __repr__(self):
+        return f"<TaskDependencyV2 {self.downstream_task_id} -> {self.upstream_task_id} ({self.status})>"
+
+
+class AlternativeDependencyProposal(Base):
+    """
+    Proposal to replace one dependency with another.
+    When upstream owner rejects A->B, they can suggest A->C instead.
+    Requires downstream owner to accept.
+    """
+    __tablename__ = "alternative_dependency_proposals"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    # The original dependency being replaced
+    original_dependency_id = Column(UUID(as_uuid=True), ForeignKey("task_dependencies_v2.id"), nullable=False)
+    
+    # Task relationships
+    downstream_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)  # A
+    original_upstream_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)  # B
+    suggested_upstream_task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"), nullable=False)  # C
+    
+    # Who proposed the alternative
+    proposed_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    proposal_reason = Column(Text, nullable=False)  # REQUIRED
+    
+    # Status
+    status = Column(
+        SQLEnum(AlternativeDepStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=AlternativeDepStatus.PROPOSED
+    )
+    
+    # Rejection info
+    rejected_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    rejected_reason = Column(Text, nullable=True)  # REQUIRED when REJECTED
+    
+    # Acceptance info
+    accepted_by_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    accepted_at = Column(DateTime, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    original_dependency = relationship("TaskDependencyV2", foreign_keys=[original_dependency_id])
+    downstream_task = relationship("Task", foreign_keys=[downstream_task_id])
+    original_upstream_task = relationship("Task", foreign_keys=[original_upstream_task_id])
+    suggested_upstream_task = relationship("Task", foreign_keys=[suggested_upstream_task_id])
+    proposed_by = relationship("User", foreign_keys=[proposed_by_user_id])
+    rejected_by = relationship("User", foreign_keys=[rejected_by_user_id])
+    accepted_by = relationship("User", foreign_keys=[accepted_by_user_id])
+    
+    __table_args__ = (
+        Index('idx_alt_dep_status', 'status'),
+        Index('idx_alt_dep_downstream', 'downstream_task_id'),
+    )
+    
+    def __repr__(self):
+        return f"<AlternativeDependencyProposal {self.downstream_task_id}: {self.original_upstream_task_id} -> {self.suggested_upstream_task_id} ({self.status})>"
+
+
+# =============================================================================
+# Pending Decision Model (for task decisions, merge consent, dependency consent)
+# =============================================================================
+
+class PendingDecisionType(str, enum.Enum):
+    """Types of decisions awaiting user action."""
+    TASK_ACCEPTANCE = "TASK_ACCEPTANCE"  # Owner needs to accept/reject a suggested task
+    MERGE_CONSENT = "MERGE_CONSENT"  # Creator needs to accept/reject a merge proposal
+    DEPENDENCY_ACCEPTANCE = "DEPENDENCY_ACCEPTANCE"  # Upstream owner needs to accept/reject dependency
+    ALTERNATIVE_DEP_ACCEPTANCE = "ALTERNATIVE_DEP_ACCEPTANCE"  # Downstream owner needs to accept/reject alternative
+
+
+class PendingDecision(Base):
+    """
+    Tracks decisions that require user action.
+    This drives the question system for double-consent flows.
+    """
+    __tablename__ = "pending_decisions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    # Who needs to make the decision
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    
+    # What type of decision
+    decision_type = Column(
+        SQLEnum(PendingDecisionType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
+    )
+    
+    # Reference to the entity requiring decision (polymorphic reference)
+    entity_type = Column(String, nullable=False)  # "task", "merge_proposal", "dependency", "alt_dependency"
+    entity_id = Column(UUID(as_uuid=True), nullable=False)
+    
+    # Human-readable description
+    description = Column(Text, nullable=False)
+    
+    # Is this decision still pending?
+    is_resolved = Column(Boolean, default=False)
+    resolved_at = Column(DateTime, nullable=True)
+    resolution = Column(String, nullable=True)  # "accepted", "rejected", "merged"
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User")
+    
+    __table_args__ = (
+        Index('idx_pending_decision_user', 'user_id', 'is_resolved'),
+        Index('idx_pending_decision_entity', 'entity_type', 'entity_id'),
+    )
+    
+    def __repr__(self):
+        return f"<PendingDecision {self.decision_type} for user {self.user_id} resolved={self.is_resolved}>"
 

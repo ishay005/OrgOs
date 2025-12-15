@@ -13,12 +13,16 @@ from sqlalchemy import and_, or_, func
 
 from app.models import (
     User, Task, AttributeDefinition, AttributeAnswer, 
-    TaskRelevantUser, EntityType, DailySyncSession, SimilarityScore
+    TaskRelevantUser, EntityType, DailySyncSession, SimilarityScore,
+    TaskState, TaskAlias, TaskMergeProposal, MergeProposalStatus,
+    TaskDependencyV2, DependencyStatus, AlternativeDependencyProposal, AlternativeDepStatus,
+    PendingDecision, PendingDecisionType
 )
 from app.services.robin_types import (
     UserContext, TaskContext, DailyTaskContext, 
     PendingQuestion, InsightQuestion, ObservationPayload
 )
+from app.services import state_machines
 
 logger = logging.getLogger(__name__)
 
@@ -327,6 +331,337 @@ CORTEX_TOOLS = [
                     }
                 },
                 "required": ["task_id", "target_user_id", "attribute_name", "value"]
+            }
+        }
+    },
+    
+    # -------------------------------------------------------------------------
+    # NEW: Task State Machine Tools
+    # -------------------------------------------------------------------------
+    {
+        "type": "function",
+        "function": {
+            "name": "get_pending_decisions",
+            "description": "Get pending decisions for the current user (task acceptance, merge consent, dependency acceptance, etc.)",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "accept_task",
+            "description": "Accept a DRAFT task that was suggested to the user. Transitions task to ACTIVE state.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_id": {
+                        "type": "string",
+                        "description": "The ID of the task to accept"
+                    }
+                },
+                "required": ["task_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "reject_task",
+            "description": "Reject a DRAFT task that was suggested to the user. Requires a reason.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_id": {
+                        "type": "string",
+                        "description": "The ID of the task to reject"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason for rejection (required)"
+                    }
+                },
+                "required": ["task_id", "reason"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "propose_task_merge",
+            "description": "Propose merging a DRAFT task into an existing task. Creates a merge proposal requiring second consent.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "from_task_id": {
+                        "type": "string",
+                        "description": "The ID of the task to merge (source)"
+                    },
+                    "to_task_id": {
+                        "type": "string",
+                        "description": "The ID of the target task (destination)"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason why these tasks should be merged (required)"
+                    }
+                },
+                "required": ["from_task_id", "to_task_id", "reason"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "accept_merge_proposal",
+            "description": "Accept a merge proposal (second consent from original task creator).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "proposal_id": {
+                        "type": "string",
+                        "description": "The ID of the merge proposal to accept"
+                    }
+                },
+                "required": ["proposal_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "reject_merge_proposal",
+            "description": "Reject a merge proposal. Requires a reason.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "proposal_id": {
+                        "type": "string",
+                        "description": "The ID of the merge proposal to reject"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason for rejection (required)"
+                    }
+                },
+                "required": ["proposal_id", "reason"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "complete_task",
+            "description": "Mark an ACTIVE task as DONE.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_id": {
+                        "type": "string",
+                        "description": "The ID of the task to complete"
+                    }
+                },
+                "required": ["task_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_task_for_user",
+            "description": "Create a new task for a user. If creator != owner, task starts as DRAFT.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Title of the task"
+                    },
+                    "owner_user_id": {
+                        "type": "string",
+                        "description": "ID of the user who will own the task"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Optional description"
+                    },
+                    "parent_task_id": {
+                        "type": "string",
+                        "description": "Optional parent task ID"
+                    }
+                },
+                "required": ["title", "owner_user_id"]
+            }
+        }
+    },
+    
+    # -------------------------------------------------------------------------
+    # NEW: Dependency State Machine Tools
+    # -------------------------------------------------------------------------
+    {
+        "type": "function",
+        "function": {
+            "name": "propose_dependency",
+            "description": "Propose that one task depends on another. Creates PROPOSED status if different owners.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "downstream_task_id": {
+                        "type": "string",
+                        "description": "The ID of the task that has the dependency"
+                    },
+                    "upstream_task_id": {
+                        "type": "string",
+                        "description": "The ID of the task being depended on"
+                    }
+                },
+                "required": ["downstream_task_id", "upstream_task_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "accept_dependency",
+            "description": "Accept a PROPOSED dependency (upstream task owner).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dependency_id": {
+                        "type": "string",
+                        "description": "The ID of the dependency to accept"
+                    }
+                },
+                "required": ["dependency_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "reject_dependency",
+            "description": "Reject a PROPOSED dependency (upstream task owner). Requires a reason.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "dependency_id": {
+                        "type": "string",
+                        "description": "The ID of the dependency to reject"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason for rejection (required)"
+                    }
+                },
+                "required": ["dependency_id", "reason"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "propose_alternative_dependency",
+            "description": "When rejecting a dependency, propose an alternative upstream task instead.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "original_dependency_id": {
+                        "type": "string",
+                        "description": "The ID of the original dependency being rejected"
+                    },
+                    "suggested_upstream_task_id": {
+                        "type": "string",
+                        "description": "The ID of the alternative upstream task"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason for suggesting this alternative (required)"
+                    }
+                },
+                "required": ["original_dependency_id", "suggested_upstream_task_id", "reason"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "accept_alternative_dependency",
+            "description": "Accept an alternative dependency proposal (downstream task owner).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "proposal_id": {
+                        "type": "string",
+                        "description": "The ID of the alternative dependency proposal to accept"
+                    }
+                },
+                "required": ["proposal_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "reject_alternative_dependency",
+            "description": "Reject an alternative dependency proposal. Requires a reason.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "proposal_id": {
+                        "type": "string",
+                        "description": "The ID of the alternative dependency proposal to reject"
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Reason for rejection (required)"
+                    }
+                },
+                "required": ["proposal_id", "reason"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_task_dependencies",
+            "description": "Get confirmed and proposed dependencies for a task.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_id": {
+                        "type": "string",
+                        "description": "The ID of the task"
+                    }
+                },
+                "required": ["task_id"]
+            }
+        }
+    },
+    
+    # -------------------------------------------------------------------------
+    # NEW: Attribute Consensus Tool
+    # -------------------------------------------------------------------------
+    {
+        "type": "function",
+        "function": {
+            "name": "get_attribute_consensus",
+            "description": "Get the consensus state for an attribute on a task (NO_DATA, SINGLE_SOURCE, ALIGNED, MISALIGNED).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_id": {
+                        "type": "string",
+                        "description": "The ID of the task"
+                    },
+                    "attribute_name": {
+                        "type": "string",
+                        "description": "Name of the attribute (e.g., 'status', 'priority')"
+                    }
+                },
+                "required": ["task_id", "attribute_name"]
             }
         }
     }
@@ -1080,7 +1415,7 @@ def get_tasks_for_user(
 
 def get_task_detail(db: Session, task_id: UUID) -> dict:
     """
-    Return detailed info for a task: hierarchy, dependencies, key attributes.
+    Return detailed info for a task: hierarchy, dependencies, key attributes, state, aliases.
     
     Output:
     {
@@ -1088,8 +1423,11 @@ def get_task_detail(db: Session, task_id: UUID) -> dict:
         "id": str,
         "title": str,
         "description": str | None,
+        "state": str,  # DRAFT, ACTIVE, DONE, ARCHIVED
         "owner_id": str | None,
         "owner_name": str | None,
+        "creator_id": str | None,
+        "creator_name": str | None,
         "status": str | None,
         "priority": str | None,
         "main_goal": str | None,
@@ -1097,8 +1435,11 @@ def get_task_detail(db: Session, task_id: UUID) -> dict:
         "parent_title": str | None,
         "children": [ { "id": str, "title": str } ],
         "dependencies": [ { "id": str, "title": str } ],
+        "confirmed_dependencies": [ { "id": str, "title": str } ],
+        "proposed_dependencies": [ { "id": str, "title": str, "status": str } ],
         "is_blocked": bool,
-        "relevant_users": [ { "id": str, "name": str } ]
+        "relevant_users": [ { "id": str, "name": str } ],
+        "aliases": [ { "title": str, "creator_name": str } ]
       }
     }
     """
@@ -1109,6 +1450,18 @@ def get_task_detail(db: Session, task_id: UUID) -> dict:
     # Get owner
     owner = db.query(User).filter(User.id == task.owner_user_id).first()
     owner_name = owner.name if owner else None
+    
+    # Get creator
+    creator_name = None
+    creator_id = None
+    if task.created_by_user_id:
+        creator = db.query(User).filter(User.id == task.created_by_user_id).first()
+        if creator:
+            creator_name = creator.name
+            creator_id = str(creator.id)
+    
+    # Get task state
+    task_state = task.state.value if hasattr(task, 'state') and task.state else "ACTIVE"
     
     # Get attributes
     status = _get_task_attribute_value(db, task, "status")
@@ -1129,12 +1482,45 @@ def get_task_detail(db: Session, task_id: UUID) -> dict:
         for c in children if c.is_active
     ]
     
-    # Get dependencies
+    # Get dependencies (legacy)
     dependencies = task.dependencies if hasattr(task, 'dependencies') else []
     dependencies_list = [
         {"id": str(d.id), "title": d.title}
         for d in dependencies if d.is_active
     ]
+    
+    # Get V2 dependencies (state machine)
+    confirmed_deps = []
+    proposed_deps = []
+    try:
+        from app.models import TaskDependencyV2, DependencyStatus
+        
+        # Outgoing confirmed dependencies
+        outgoing = db.query(TaskDependencyV2).filter(
+            TaskDependencyV2.downstream_task_id == task_id,
+            TaskDependencyV2.status == DependencyStatus.CONFIRMED
+        ).all()
+        for dep in outgoing:
+            upstream = db.query(Task).filter(Task.id == dep.upstream_task_id).first()
+            if upstream:
+                confirmed_deps.append({"id": str(upstream.id), "title": upstream.title})
+        
+        # Outgoing proposed dependencies
+        proposed = db.query(TaskDependencyV2).filter(
+            TaskDependencyV2.downstream_task_id == task_id,
+            TaskDependencyV2.status == DependencyStatus.PROPOSED
+        ).all()
+        for dep in proposed:
+            upstream = db.query(Task).filter(Task.id == dep.upstream_task_id).first()
+            if upstream:
+                proposed_deps.append({
+                    "id": str(upstream.id),
+                    "title": upstream.title,
+                    "status": "PROPOSED",
+                    "dependency_id": str(dep.id)
+                })
+    except Exception as e:
+        logger.warning(f"Could not fetch V2 dependencies: {e}")
     
     # Get relevant users
     relevant_entries = db.query(TaskRelevantUser).filter(
@@ -1146,13 +1532,30 @@ def get_task_detail(db: Session, task_id: UUID) -> dict:
         if u:
             relevant_users.append({"id": str(u.id), "name": u.name})
     
+    # Get aliases (for merged tasks)
+    aliases = []
+    try:
+        from app.models import TaskAlias
+        alias_entries = db.query(TaskAlias).filter(TaskAlias.canonical_task_id == task_id).all()
+        for alias in alias_entries:
+            alias_creator = db.query(User).filter(User.id == alias.alias_created_by_user_id).first()
+            aliases.append({
+                "title": alias.alias_title,
+                "creator_name": alias_creator.name if alias_creator else "Unknown"
+            })
+    except Exception as e:
+        logger.warning(f"Could not fetch aliases: {e}")
+    
     return {
         "task": {
             "id": str(task.id),
             "title": task.title,
             "description": task.description,
+            "state": task_state,
             "owner_id": str(task.owner_user_id) if task.owner_user_id else None,
             "owner_name": owner_name,
+            "creator_id": creator_id,
+            "creator_name": creator_name,
             "status": status,
             "priority": priority,
             "main_goal": main_goal,
@@ -1160,8 +1563,11 @@ def get_task_detail(db: Session, task_id: UUID) -> dict:
             "parent_title": parent_title,
             "children": children_list,
             "dependencies": dependencies_list,
+            "confirmed_dependencies": confirmed_deps,
+            "proposed_dependencies": proposed_deps,
             "is_blocked": status == "Blocked",
-            "relevant_users": relevant_users
+            "relevant_users": relevant_users,
+            "aliases": aliases
         }
     }
 
@@ -1558,6 +1964,247 @@ def execute_tool(
             refused=refused,
             notes=notes
         )
+    
+    # -------------------------------------------------------------------------
+    # NEW: Task State Machine Tools
+    # -------------------------------------------------------------------------
+    elif tool_name == "get_pending_decisions":
+        decisions = state_machines.get_pending_decisions_for_user(db, user_id)
+        return {
+            "decisions": [
+                {
+                    "id": str(d.id),
+                    "type": d.decision_type.value,
+                    "entity_type": d.entity_type,
+                    "entity_id": str(d.entity_id),
+                    "description": d.description,
+                    "created_at": d.created_at.isoformat() if d.created_at else None
+                }
+                for d in decisions
+            ]
+        }
+    
+    elif tool_name == "accept_task":
+        task = db.query(Task).filter(Task.id == UUID(tool_args["task_id"])).first()
+        if not task:
+            return {"error": "Task not found"}
+        actor = db.query(User).filter(User.id == user_id).first()
+        try:
+            result = state_machines.accept_task(db, task, actor)
+            return {"status": "ok", "task_id": str(result.id), "new_state": result.state.value}
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "reject_task":
+        task = db.query(Task).filter(Task.id == UUID(tool_args["task_id"])).first()
+        if not task:
+            return {"error": "Task not found"}
+        actor = db.query(User).filter(User.id == user_id).first()
+        try:
+            result = state_machines.reject_task(db, task, actor, tool_args["reason"])
+            return {"status": "ok", "task_id": str(result.id), "new_state": result.state.value}
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "propose_task_merge":
+        from_task = db.query(Task).filter(Task.id == UUID(tool_args["from_task_id"])).first()
+        to_task = db.query(Task).filter(Task.id == UUID(tool_args["to_task_id"])).first()
+        if not from_task or not to_task:
+            return {"error": "Task not found"}
+        proposer = db.query(User).filter(User.id == user_id).first()
+        try:
+            result = state_machines.propose_task_merge(db, from_task, to_task, proposer, tool_args["reason"])
+            return {"status": "ok", "proposal_id": str(result.id)}
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "accept_merge_proposal":
+        proposal = db.query(TaskMergeProposal).filter(TaskMergeProposal.id == UUID(tool_args["proposal_id"])).first()
+        if not proposal:
+            return {"error": "Merge proposal not found"}
+        actor = db.query(User).filter(User.id == user_id).first()
+        try:
+            result = state_machines.accept_merge_proposal(db, proposal, actor)
+            return {"status": "ok", "proposal_id": str(result.id), "merged": True}
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "reject_merge_proposal":
+        proposal = db.query(TaskMergeProposal).filter(TaskMergeProposal.id == UUID(tool_args["proposal_id"])).first()
+        if not proposal:
+            return {"error": "Merge proposal not found"}
+        actor = db.query(User).filter(User.id == user_id).first()
+        try:
+            result = state_machines.reject_merge_proposal(db, proposal, actor, tool_args["reason"])
+            return {"status": "ok", "proposal_id": str(result.id)}
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "complete_task":
+        task = db.query(Task).filter(Task.id == UUID(tool_args["task_id"])).first()
+        if not task:
+            return {"error": "Task not found"}
+        actor = db.query(User).filter(User.id == user_id).first()
+        try:
+            result = state_machines.complete_task(db, task, actor)
+            return {"status": "ok", "task_id": str(result.id), "new_state": result.state.value}
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "create_task_for_user":
+        owner = db.query(User).filter(User.id == UUID(tool_args["owner_user_id"])).first()
+        if not owner:
+            return {"error": "Owner user not found"}
+        creator = db.query(User).filter(User.id == user_id).first()
+        parent_id = UUID(tool_args["parent_task_id"]) if tool_args.get("parent_task_id") else None
+        try:
+            result = state_machines.create_task_with_state(
+                db=db,
+                title=tool_args["title"],
+                owner=owner,
+                creator=creator,
+                description=tool_args.get("description"),
+                parent_id=parent_id
+            )
+            return {
+                "status": "ok",
+                "task_id": str(result.id),
+                "title": result.title,
+                "state": result.state.value
+            }
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    # -------------------------------------------------------------------------
+    # NEW: Dependency State Machine Tools
+    # -------------------------------------------------------------------------
+    elif tool_name == "propose_dependency":
+        downstream = db.query(Task).filter(Task.id == UUID(tool_args["downstream_task_id"])).first()
+        upstream = db.query(Task).filter(Task.id == UUID(tool_args["upstream_task_id"])).first()
+        if not downstream or not upstream:
+            return {"error": "Task not found"}
+        requester = db.query(User).filter(User.id == user_id).first()
+        try:
+            result = state_machines.propose_dependency(db, requester, downstream, upstream)
+            return {
+                "status": "ok",
+                "dependency_id": str(result.id),
+                "dep_status": result.status.value
+            }
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "accept_dependency":
+        dep = db.query(TaskDependencyV2).filter(TaskDependencyV2.id == UUID(tool_args["dependency_id"])).first()
+        if not dep:
+            return {"error": "Dependency not found"}
+        actor = db.query(User).filter(User.id == user_id).first()
+        try:
+            result = state_machines.accept_dependency(db, dep, actor)
+            return {"status": "ok", "dependency_id": str(result.id), "dep_status": result.status.value}
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "reject_dependency":
+        dep = db.query(TaskDependencyV2).filter(TaskDependencyV2.id == UUID(tool_args["dependency_id"])).first()
+        if not dep:
+            return {"error": "Dependency not found"}
+        actor = db.query(User).filter(User.id == user_id).first()
+        try:
+            result = state_machines.reject_dependency(db, dep, actor, tool_args["reason"])
+            return {"status": "ok", "dependency_id": str(result.id), "dep_status": result.status.value}
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "propose_alternative_dependency":
+        dep = db.query(TaskDependencyV2).filter(TaskDependencyV2.id == UUID(tool_args["original_dependency_id"])).first()
+        if not dep:
+            return {"error": "Dependency not found"}
+        suggested = db.query(Task).filter(Task.id == UUID(tool_args["suggested_upstream_task_id"])).first()
+        if not suggested:
+            return {"error": "Suggested upstream task not found"}
+        proposer = db.query(User).filter(User.id == user_id).first()
+        try:
+            result = state_machines.propose_alternative_dependency(db, dep, suggested, proposer, tool_args["reason"])
+            return {"status": "ok", "proposal_id": str(result.id)}
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "accept_alternative_dependency":
+        proposal = db.query(AlternativeDependencyProposal).filter(
+            AlternativeDependencyProposal.id == UUID(tool_args["proposal_id"])
+        ).first()
+        if not proposal:
+            return {"error": "Alternative dependency proposal not found"}
+        actor = db.query(User).filter(User.id == user_id).first()
+        try:
+            proposal_result, dep_result = state_machines.accept_alternative_dependency(db, proposal, actor)
+            return {
+                "status": "ok",
+                "proposal_id": str(proposal_result.id),
+                "new_dependency_id": str(dep_result.id)
+            }
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "reject_alternative_dependency":
+        proposal = db.query(AlternativeDependencyProposal).filter(
+            AlternativeDependencyProposal.id == UUID(tool_args["proposal_id"])
+        ).first()
+        if not proposal:
+            return {"error": "Alternative dependency proposal not found"}
+        actor = db.query(User).filter(User.id == user_id).first()
+        try:
+            result = state_machines.reject_alternative_dependency(db, proposal, actor, tool_args["reason"])
+            return {"status": "ok", "proposal_id": str(result.id)}
+        except ValueError as e:
+            return {"error": str(e)}
+    
+    elif tool_name == "get_task_dependencies":
+        task_id = UUID(tool_args["task_id"])
+        outgoing, incoming = state_machines.get_confirmed_dependencies_for_task(db, task_id)
+        proposed = state_machines.get_proposed_dependencies_for_task(db, task_id)
+        
+        def dep_to_dict(dep):
+            downstream = db.query(Task).filter(Task.id == dep.downstream_task_id).first()
+            upstream = db.query(Task).filter(Task.id == dep.upstream_task_id).first()
+            return {
+                "id": str(dep.id),
+                "downstream_task_id": str(dep.downstream_task_id),
+                "downstream_title": downstream.title if downstream else None,
+                "upstream_task_id": str(dep.upstream_task_id),
+                "upstream_title": upstream.title if upstream else None,
+                "status": dep.status.value
+            }
+        
+        return {
+            "task_id": str(task_id),
+            "outgoing_confirmed": [dep_to_dict(d) for d in outgoing],
+            "incoming_confirmed": [dep_to_dict(d) for d in incoming],
+            "proposed": [dep_to_dict(d) for d in proposed]
+        }
+    
+    # -------------------------------------------------------------------------
+    # NEW: Attribute Consensus Tool
+    # -------------------------------------------------------------------------
+    elif tool_name == "get_attribute_consensus":
+        task_id = UUID(tool_args["task_id"])
+        attribute_name = tool_args["attribute_name"]
+        result = state_machines.compute_attribute_consensus(db, "task", task_id, attribute_name)
+        return {
+            "state": result.state.value,
+            "is_stale": result.is_stale,
+            "similarity_score": result.similarity_score,
+            "answers": [
+                {
+                    "user_id": a.user_id,
+                    "user_name": a.user_name,
+                    "value": a.value,
+                    "updated_at": a.updated_at.isoformat() if a.updated_at else None
+                }
+                for a in result.answers
+            ]
+        }
     
     else:
         logger.warning(f"Unknown tool: {tool_name}")

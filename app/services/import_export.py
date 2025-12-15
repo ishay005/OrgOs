@@ -20,7 +20,9 @@ import os
 from app.models import (
     User, Task, TaskDependency, TaskRelevantUser, PromptTemplate, AttributeAnswer,
     DailySyncSession, ChatThread, ChatMessage, QuestionLog, SimilarityScore,
-    MessageDebugData, AttributeDefinition, EntityType, AttributeType
+    MessageDebugData, AttributeDefinition, EntityType, AttributeType,
+    TaskState, TaskAlias, TaskMergeProposal, TaskDependencyV2, DependencyStatus,
+    AlternativeDependencyProposal, PendingDecision
 )
 
 # Try to import numbers-parser for Apple Numbers support
@@ -164,13 +166,19 @@ def export_all_data_to_excel(db: Session) -> BytesIO:
     logger.info(f"  ✅ Exported {len(users_data)} users")
     
     # Export Tasks (COMBINED - with all attributes and dependencies)
+    # Also include state machine fields
     tasks_data = []
     for t in tasks:
         owner_id = t.owner_user_id
+        creator_name = user_id_to_name.get(t.created_by_user_id, '') if hasattr(t, 'created_by_user_id') and t.created_by_user_id else ''
+        task_state = t.state.value if hasattr(t, 'state') and t.state else 'ACTIVE'
+        
         task_row = {
             'title': t.title,
             'description': t.description or '',
             'owner': user_id_to_name.get(owner_id, ''),
+            'created_by': creator_name,
+            'state': task_state,
             'parent': task_id_to_title.get(t.parent_id, '') if t.parent_id else '',
             'dependencies': ', '.join(task_deps.get(t.title, [])),
             'relevant_users': ', '.join(task_relevant.get(t.title, [])),
@@ -237,6 +245,131 @@ def export_all_data_to_excel(db: Session) -> BytesIO:
     
     pd.DataFrame(perception_data).to_excel(writer, sheet_name='Perception', index=False)
     logger.info(f"  ✅ Exported {len(perception_data)} perception rows (all attributes)")
+    
+    # ============ NEW STATE MACHINE TABLES ============
+    
+    # Export Task Aliases
+    try:
+        from app.models import TaskAlias
+        aliases = db.query(TaskAlias).all()
+        alias_data = []
+        for alias in aliases:
+            canonical_task = db.query(Task).filter(Task.id == alias.canonical_task_id).first()
+            creator = db.query(User).filter(User.id == alias.alias_created_by_user_id).first()
+            alias_data.append({
+                'Canonical Task': canonical_task.title if canonical_task else '',
+                'Alias Title': alias.alias_title,
+                'Alias Created By': creator.name if creator else '',
+                'Created At': alias.created_at.isoformat() if alias.created_at else ''
+            })
+        pd.DataFrame(alias_data).to_excel(writer, sheet_name='Task Aliases', index=False)
+        logger.info(f"  ✅ Exported {len(alias_data)} task aliases")
+    except Exception as e:
+        logger.warning(f"  ⚠️ Could not export Task Aliases: {e}")
+    
+    # Export Task Merge Proposals
+    try:
+        from app.models import TaskMergeProposal
+        merge_proposals = db.query(TaskMergeProposal).all()
+        merge_data = []
+        for mp in merge_proposals:
+            from_task = db.query(Task).filter(Task.id == mp.from_task_id).first()
+            to_task = db.query(Task).filter(Task.id == mp.to_task_id).first()
+            proposed_by = db.query(User).filter(User.id == mp.proposed_by_user_id).first()
+            rejected_by = db.query(User).filter(User.id == mp.rejected_by_user_id).first() if mp.rejected_by_user_id else None
+            merge_data.append({
+                'From Task': from_task.title if from_task else '',
+                'To Task': to_task.title if to_task else '',
+                'Proposed By': proposed_by.name if proposed_by else '',
+                'Proposal Reason': mp.proposal_reason or '',
+                'Status': mp.status.value if mp.status else '',
+                'Rejected By': rejected_by.name if rejected_by else '',
+                'Rejected Reason': mp.rejected_reason or '',
+                'Created At': mp.created_at.isoformat() if mp.created_at else ''
+            })
+        pd.DataFrame(merge_data).to_excel(writer, sheet_name='Merge Proposals', index=False)
+        logger.info(f"  ✅ Exported {len(merge_data)} merge proposals")
+    except Exception as e:
+        logger.warning(f"  ⚠️ Could not export Merge Proposals: {e}")
+    
+    # Export Task Dependencies V2
+    try:
+        from app.models import TaskDependencyV2
+        dependencies = db.query(TaskDependencyV2).all()
+        dep_data = []
+        for dep in dependencies:
+            downstream = db.query(Task).filter(Task.id == dep.downstream_task_id).first()
+            upstream = db.query(Task).filter(Task.id == dep.upstream_task_id).first()
+            created_by = db.query(User).filter(User.id == dep.created_by_user_id).first() if dep.created_by_user_id else None
+            accepted_by = db.query(User).filter(User.id == dep.accepted_by_user_id).first() if dep.accepted_by_user_id else None
+            rejected_by = db.query(User).filter(User.id == dep.rejected_by_user_id).first() if dep.rejected_by_user_id else None
+            removed_by = db.query(User).filter(User.id == dep.removed_by_user_id).first() if dep.removed_by_user_id else None
+            dep_data.append({
+                'Downstream Task': downstream.title if downstream else '',
+                'Upstream Task': upstream.title if upstream else '',
+                'Status': dep.status.value if dep.status else '',
+                'Created By': created_by.name if created_by else '',
+                'Accepted By': accepted_by.name if accepted_by else '',
+                'Accepted At': dep.accepted_at.isoformat() if dep.accepted_at else '',
+                'Rejected By': rejected_by.name if rejected_by else '',
+                'Rejected At': dep.rejected_at.isoformat() if dep.rejected_at else '',
+                'Rejected Reason': dep.rejected_reason or '',
+                'Removed By': removed_by.name if removed_by else '',
+                'Removed At': dep.removed_at.isoformat() if dep.removed_at else ''
+            })
+        pd.DataFrame(dep_data).to_excel(writer, sheet_name='Dependencies V2', index=False)
+        logger.info(f"  ✅ Exported {len(dep_data)} dependencies (v2)")
+    except Exception as e:
+        logger.warning(f"  ⚠️ Could not export Dependencies V2: {e}")
+    
+    # Export Alternative Dependency Proposals
+    try:
+        from app.models import AlternativeDependencyProposal, TaskDependencyV2
+        alt_proposals = db.query(AlternativeDependencyProposal).all()
+        alt_data = []
+        for ap in alt_proposals:
+            original_dep = db.query(TaskDependencyV2).filter(TaskDependencyV2.id == ap.original_dependency_id).first() if ap.original_dependency_id else None
+            downstream = db.query(Task).filter(Task.id == ap.downstream_task_id).first()
+            orig_upstream = db.query(Task).filter(Task.id == ap.original_upstream_task_id).first()
+            suggested_upstream = db.query(Task).filter(Task.id == ap.suggested_upstream_task_id).first()
+            proposed_by = db.query(User).filter(User.id == ap.proposed_by_user_id).first()
+            rejected_by = db.query(User).filter(User.id == ap.rejected_by_user_id).first() if ap.rejected_by_user_id else None
+            alt_data.append({
+                'Downstream Task': downstream.title if downstream else '',
+                'Original Upstream Task': orig_upstream.title if orig_upstream else '',
+                'Suggested Upstream Task': suggested_upstream.title if suggested_upstream else '',
+                'Proposed By': proposed_by.name if proposed_by else '',
+                'Proposal Reason': ap.proposal_reason or '',
+                'Status': ap.status.value if ap.status else '',
+                'Rejected By': rejected_by.name if rejected_by else '',
+                'Rejected Reason': ap.rejected_reason or ''
+            })
+        pd.DataFrame(alt_data).to_excel(writer, sheet_name='Alt Dep Proposals', index=False)
+        logger.info(f"  ✅ Exported {len(alt_data)} alternative dependency proposals")
+    except Exception as e:
+        logger.warning(f"  ⚠️ Could not export Alternative Dependency Proposals: {e}")
+    
+    # Export Pending Decisions
+    try:
+        from app.models import PendingDecision
+        decisions = db.query(PendingDecision).all()
+        decision_data = []
+        for d in decisions:
+            user = db.query(User).filter(User.id == d.user_id).first()
+            task = db.query(Task).filter(Task.id == d.task_id).first() if d.task_id else None
+            decision_data.append({
+                'User': user.name if user else '',
+                'Decision Type': d.decision_type.value if d.decision_type else '',
+                'Task': task.title if task else '',
+                'Related Entity ID': str(d.related_entity_id) if d.related_entity_id else '',
+                'Description': d.description or '',
+                'Created At': d.created_at.isoformat() if d.created_at else '',
+                'Resolved At': d.resolved_at.isoformat() if d.resolved_at else ''
+            })
+        pd.DataFrame(decision_data).to_excel(writer, sheet_name='Pending Decisions', index=False)
+        logger.info(f"  ✅ Exported {len(decision_data)} pending decisions")
+    except Exception as e:
+        logger.warning(f"  ⚠️ Could not export Pending Decisions: {e}")
     
     writer.close()
     output.seek(0)
@@ -375,27 +508,45 @@ def export_template_to_excel(db: Session) -> BytesIO:
     
     # Add instructions sheet
     instructions = pd.DataFrame({
-        'Sheet': ['Users', 'Tasks', 'Prompts', 'Attributes', 'Perception'],
+        'Sheet': [
+            'Users', 'Tasks', 'Prompts', 'Attributes', 'Perception',
+            'Task Aliases', 'Merge Proposals', 'Dependencies V2', 'Alt Dep Proposals', 'Pending Decisions'
+        ],
         'Description': [
             'User accounts. manager = name of manager (or empty for top-level)',
             'Tasks with ALL attributes. dependencies + relevant_users = comma-separated names.',
             'AI prompts. mode = prompt mode name (see examples), has_pending = true/false',
             'Attribute definitions. Define what attributes tasks/users have.',
-            'Perception answers. One row per user+task, all attributes as columns.'
+            'Perception answers. One row per user+task, all attributes as columns.',
+            'Aliases for merged tasks. Maps merged task titles to canonical tasks.',
+            'Task merge proposals. When users suggest merging duplicate tasks.',
+            'Task dependencies with state. Status: PROPOSED, CONFIRMED, REJECTED, REMOVED.',
+            'Alternative dependency proposals. Suggesting different upstream tasks.',
+            'Pending user decisions. Tasks/merges/deps waiting for user action.'
         ],
         'Required Fields': [
             'name, team (others optional)',
             'title, owner (others optional, attributes are optional)',
             'mode, has_pending, prompt_text',
             'name, label, entity_type, type',
-            'answered_by, target_user, task (attribute columns are optional)'
+            'answered_by, target_user, task (attribute columns are optional)',
+            'Canonical Task, Alias Title, Alias Created By',
+            'From Task, To Task, Proposed By, Status',
+            'Downstream Task, Upstream Task, Status, Created By',
+            'Downstream Task, Original Upstream, Suggested Upstream, Proposed By, Status',
+            'User, Decision Type, Task'
         ],
         'Notes': [
             'First create users, then managers. Managers must exist before referencing.',
             'Tasks include: title, description, owner, parent, dependencies, relevant_users (comma-sep user names), is_active, plus attribute columns',
             'Modes: morning_brief, user_question, collect_data, daily_opening_brief, daily_questions, daily_summary',
             'entity_type: task or user. type: string, enum, int, float, bool, date. allowed_values: JSON array for enum.',
-            'answered_by = who gave opinion, target_user = task owner, task = task title. Each attribute is a column.'
+            'answered_by = who gave opinion, target_user = task owner, task = task title. Each attribute is a column.',
+            'When tasks are merged, original title becomes alias pointing to canonical.',
+            'Status: PROPOSED (waiting), ACCEPTED (merged), REJECTED (denied).',
+            'Downstream depends on Upstream. Status tracks dep lifecycle.',
+            'Propose alternative upstream when current dep is wrong.',
+            'Decision Types: TASK_ACCEPTANCE, MERGE_CONSENT, DEPENDENCY_ACCEPTANCE, ALTERNATIVE_DEP_ACCEPTANCE.'
         ]
     })
     instructions.to_excel(writer, sheet_name='_Instructions', index=False)
@@ -434,6 +585,67 @@ def export_template_to_excel(db: Session) -> BytesIO:
         ]
     })
     context_config_help.to_excel(writer, sheet_name='_Context_Config', index=False)
+    
+    # ============ NEW STATE MACHINE TEMPLATE SHEETS ============
+    
+    # Task Aliases template
+    task_aliases_example = pd.DataFrame([
+        {'Canonical Task': 'Build feature X', 'Alias Title': 'Feature X Development', 'Alias Created By': 'Jane Doe'},
+    ])
+    task_aliases_example.to_excel(writer, sheet_name='Task Aliases', index=False)
+    
+    # Merge Proposals template
+    merge_proposals_example = pd.DataFrame([
+        {
+            'From Task': 'Duplicate task name', 
+            'To Task': 'Build feature X', 
+            'Proposed By': 'John Smith', 
+            'Proposal Reason': 'These tasks are duplicates', 
+            'Status': 'PROPOSED'
+        },
+    ])
+    merge_proposals_example.to_excel(writer, sheet_name='Merge Proposals', index=False)
+    
+    # Dependencies V2 template
+    dependencies_v2_example = pd.DataFrame([
+        {
+            'Downstream Task': 'Write tests for X', 
+            'Upstream Task': 'Build feature X', 
+            'Status': 'CONFIRMED', 
+            'Created By': 'Jane Doe'
+        },
+        {
+            'Downstream Task': 'Deploy feature X', 
+            'Upstream Task': 'Write tests for X', 
+            'Status': 'PROPOSED', 
+            'Created By': 'John Smith'
+        },
+    ])
+    dependencies_v2_example.to_excel(writer, sheet_name='Dependencies V2', index=False)
+    
+    # Alternative Dependency Proposals template
+    alt_dep_proposals_example = pd.DataFrame([
+        {
+            'Downstream Task': 'Deploy feature X',
+            'Original Upstream Task': 'Write tests for X',
+            'Suggested Upstream Task': 'Build feature X',
+            'Proposed By': 'Jane Doe',
+            'Proposal Reason': 'Tests can be done in parallel',
+            'Status': 'PROPOSED'
+        },
+    ])
+    alt_dep_proposals_example.to_excel(writer, sheet_name='Alt Dep Proposals', index=False)
+    
+    # Pending Decisions template
+    pending_decisions_example = pd.DataFrame([
+        {
+            'User': 'Jane Doe',
+            'Decision Type': 'TASK_ACCEPTANCE',
+            'Task': 'Build feature X',
+            'Description': 'Accept this task assigned to you?'
+        },
+    ])
+    pending_decisions_example.to_excel(writer, sheet_name='Pending Decisions', index=False)
     
     writer.close()
     output.seek(0)
@@ -600,6 +812,18 @@ def import_data_from_excel(db: Session, file: BytesIO, replace_mode: bool = Fals
             db.query(TaskDependency).delete()
             db.query(TaskRelevantUser).delete()  # Delete relevant user associations
             db.query(AttributeAnswer).delete()
+            
+            # Delete new state machine tables
+            try:
+                from app.models import PendingDecision, AlternativeDependencyProposal, TaskDependencyV2, TaskMergeProposal, TaskAlias
+                db.query(PendingDecision).delete()
+                db.query(AlternativeDependencyProposal).delete()
+                db.query(TaskDependencyV2).delete()
+                db.query(TaskMergeProposal).delete()
+                db.query(TaskAlias).delete()
+            except Exception as e:
+                logger.warning(f"  ⚠️  Could not delete state machine tables: {e}")
+            
             db.query(Task).delete()
             db.query(User).delete()
             db.commit()
@@ -989,6 +1213,259 @@ def import_data_from_excel(db: Session, file: BytesIO, replace_mode: bool = Fals
             
             db.commit()
             logger.info(f"  ✅ Imported {stats['perception_imported']} perception answers ({stats['perception_skipped']} rows skipped)")
+        
+        # =====================================================================
+        # Import Dependencies V2 (State Machine Dependencies)
+        # =====================================================================
+        if 'Dependencies V2' in sheet_names:
+            logger.info("🔗 Importing dependencies v2...")
+            try:
+                from app.models import TaskDependencyV2, DependencyStatus
+                deps_df = sheets['Dependencies V2']
+                stats['dependencies_v2_imported'] = 0
+                
+                for _, row in deps_df.iterrows():
+                    downstream_title = str(row.get('Downstream Task', '')).strip() if pd.notna(row.get('Downstream Task')) else ''
+                    upstream_title = str(row.get('Upstream Task', '')).strip() if pd.notna(row.get('Upstream Task')) else ''
+                    status_str = str(row.get('Status', 'CONFIRMED')).strip().upper() if pd.notna(row.get('Status')) else 'CONFIRMED'
+                    created_by_name = str(row.get('Created By', '')).strip() if pd.notna(row.get('Created By')) else ''
+                    
+                    if not downstream_title or not upstream_title:
+                        continue
+                    
+                    downstream = title_to_task.get(downstream_title)
+                    upstream = title_to_task.get(upstream_title)
+                    created_by = name_to_user.get(created_by_name) if created_by_name else None
+                    
+                    if not downstream or not upstream:
+                        logger.warning(f"  ⚠️  Tasks not found for dependency {downstream_title} -> {upstream_title}")
+                        continue
+                    
+                    # Map status string to enum
+                    status_map = {
+                        'PROPOSED': DependencyStatus.PROPOSED,
+                        'CONFIRMED': DependencyStatus.CONFIRMED,
+                        'REJECTED': DependencyStatus.REJECTED,
+                        'REMOVED': DependencyStatus.REMOVED
+                    }
+                    status = status_map.get(status_str, DependencyStatus.CONFIRMED)
+                    
+                    # Check if dep already exists
+                    existing = db.query(TaskDependencyV2).filter(
+                        TaskDependencyV2.downstream_task_id == downstream.id,
+                        TaskDependencyV2.upstream_task_id == upstream.id
+                    ).first()
+                    
+                    if not existing:
+                        new_dep = TaskDependencyV2(
+                            id=uuid4(),
+                            downstream_task_id=downstream.id,
+                            upstream_task_id=upstream.id,
+                            status=status,
+                            created_by_user_id=created_by.id if created_by else None
+                        )
+                        db.add(new_dep)
+                        stats['dependencies_v2_imported'] += 1
+                
+                db.commit()
+                logger.info(f"  ✅ Imported {stats['dependencies_v2_imported']} dependencies v2")
+            except Exception as e:
+                logger.warning(f"  ⚠️  Could not import Dependencies V2: {e}")
+        
+        # =====================================================================
+        # Import Task Aliases
+        # =====================================================================
+        if 'Task Aliases' in sheet_names:
+            logger.info("📎 Importing task aliases...")
+            try:
+                from app.models import TaskAlias
+                aliases_df = sheets['Task Aliases']
+                stats['aliases_imported'] = 0
+                
+                for _, row in aliases_df.iterrows():
+                    canonical_title = str(row.get('Canonical Task', '')).strip() if pd.notna(row.get('Canonical Task')) else ''
+                    alias_title = str(row.get('Alias Title', '')).strip() if pd.notna(row.get('Alias Title')) else ''
+                    created_by_name = str(row.get('Alias Created By', '')).strip() if pd.notna(row.get('Alias Created By')) else ''
+                    
+                    if not canonical_title or not alias_title:
+                        continue
+                    
+                    canonical_task = title_to_task.get(canonical_title)
+                    created_by = name_to_user.get(created_by_name) if created_by_name else None
+                    
+                    if not canonical_task:
+                        logger.warning(f"  ⚠️  Canonical task '{canonical_title}' not found for alias '{alias_title}'")
+                        continue
+                    
+                    new_alias = TaskAlias(
+                        id=uuid4(),
+                        canonical_task_id=canonical_task.id,
+                        alias_title=alias_title,
+                        alias_created_by_user_id=created_by.id if created_by else None
+                    )
+                    db.add(new_alias)
+                    stats['aliases_imported'] += 1
+                
+                db.commit()
+                logger.info(f"  ✅ Imported {stats['aliases_imported']} task aliases")
+            except Exception as e:
+                logger.warning(f"  ⚠️  Could not import Task Aliases: {e}")
+        
+        # =====================================================================
+        # Import Merge Proposals
+        # =====================================================================
+        if 'Merge Proposals' in sheet_names:
+            logger.info("🔀 Importing merge proposals...")
+            try:
+                from app.models import TaskMergeProposal, MergeProposalStatus
+                merges_df = sheets['Merge Proposals']
+                stats['merge_proposals_imported'] = 0
+                
+                for _, row in merges_df.iterrows():
+                    from_title = str(row.get('From Task', '')).strip() if pd.notna(row.get('From Task')) else ''
+                    to_title = str(row.get('To Task', '')).strip() if pd.notna(row.get('To Task')) else ''
+                    proposed_by_name = str(row.get('Proposed By', '')).strip() if pd.notna(row.get('Proposed By')) else ''
+                    status_str = str(row.get('Status', 'PROPOSED')).strip().upper() if pd.notna(row.get('Status')) else 'PROPOSED'
+                    
+                    if not from_title or not to_title:
+                        continue
+                    
+                    from_task = title_to_task.get(from_title)
+                    to_task = title_to_task.get(to_title)
+                    proposed_by = name_to_user.get(proposed_by_name) if proposed_by_name else None
+                    
+                    if not from_task or not to_task:
+                        logger.warning(f"  ⚠️  Tasks not found for merge {from_title} -> {to_title}")
+                        continue
+                    
+                    status_map = {
+                        'PROPOSED': MergeProposalStatus.PROPOSED,
+                        'ACCEPTED': MergeProposalStatus.ACCEPTED,
+                        'REJECTED': MergeProposalStatus.REJECTED
+                    }
+                    status = status_map.get(status_str, MergeProposalStatus.PROPOSED)
+                    
+                    new_merge = TaskMergeProposal(
+                        id=uuid4(),
+                        from_task_id=from_task.id,
+                        to_task_id=to_task.id,
+                        proposed_by_user_id=proposed_by.id if proposed_by else None,
+                        proposal_reason=str(row.get('Proposal Reason', '')) if pd.notna(row.get('Proposal Reason')) else None,
+                        status=status
+                    )
+                    db.add(new_merge)
+                    stats['merge_proposals_imported'] += 1
+                
+                db.commit()
+                logger.info(f"  ✅ Imported {stats['merge_proposals_imported']} merge proposals")
+            except Exception as e:
+                logger.warning(f"  ⚠️  Could not import Merge Proposals: {e}")
+        
+        # =====================================================================
+        # Import Alternative Dependency Proposals
+        # =====================================================================
+        if 'Alt Dep Proposals' in sheet_names:
+            logger.info("↔️ Importing alternative dependency proposals...")
+            try:
+                from app.models import AlternativeDependencyProposal, AlternativeDepStatus
+                alt_df = sheets['Alt Dep Proposals']
+                stats['alt_dep_proposals_imported'] = 0
+                
+                for _, row in alt_df.iterrows():
+                    downstream_title = str(row.get('Downstream Task', '')).strip() if pd.notna(row.get('Downstream Task')) else ''
+                    orig_upstream_title = str(row.get('Original Upstream Task', '')).strip() if pd.notna(row.get('Original Upstream Task')) else ''
+                    suggested_upstream_title = str(row.get('Suggested Upstream Task', '')).strip() if pd.notna(row.get('Suggested Upstream Task')) else ''
+                    proposed_by_name = str(row.get('Proposed By', '')).strip() if pd.notna(row.get('Proposed By')) else ''
+                    status_str = str(row.get('Status', 'PROPOSED')).strip().upper() if pd.notna(row.get('Status')) else 'PROPOSED'
+                    
+                    if not downstream_title or not suggested_upstream_title:
+                        continue
+                    
+                    downstream = title_to_task.get(downstream_title)
+                    orig_upstream = title_to_task.get(orig_upstream_title) if orig_upstream_title else None
+                    suggested_upstream = title_to_task.get(suggested_upstream_title)
+                    proposed_by = name_to_user.get(proposed_by_name) if proposed_by_name else None
+                    
+                    if not downstream or not suggested_upstream:
+                        logger.warning(f"  ⚠️  Tasks not found for alt dep proposal")
+                        continue
+                    
+                    status_map = {
+                        'PROPOSED': AlternativeDepStatus.PROPOSED,
+                        'ACCEPTED': AlternativeDepStatus.ACCEPTED,
+                        'REJECTED': AlternativeDepStatus.REJECTED
+                    }
+                    status = status_map.get(status_str, AlternativeDepStatus.PROPOSED)
+                    
+                    new_alt = AlternativeDependencyProposal(
+                        id=uuid4(),
+                        downstream_task_id=downstream.id,
+                        original_upstream_task_id=orig_upstream.id if orig_upstream else None,
+                        suggested_upstream_task_id=suggested_upstream.id,
+                        proposed_by_user_id=proposed_by.id if proposed_by else None,
+                        proposal_reason=str(row.get('Proposal Reason', '')) if pd.notna(row.get('Proposal Reason')) else None,
+                        status=status
+                    )
+                    db.add(new_alt)
+                    stats['alt_dep_proposals_imported'] += 1
+                
+                db.commit()
+                logger.info(f"  ✅ Imported {stats['alt_dep_proposals_imported']} alternative dependency proposals")
+            except Exception as e:
+                logger.warning(f"  ⚠️  Could not import Alt Dep Proposals: {e}")
+        
+        # =====================================================================
+        # Import Pending Decisions
+        # =====================================================================
+        if 'Pending Decisions' in sheet_names:
+            logger.info("🔔 Importing pending decisions...")
+            try:
+                from app.models import PendingDecision, PendingDecisionType
+                decisions_df = sheets['Pending Decisions']
+                stats['pending_decisions_imported'] = 0
+                
+                for _, row in decisions_df.iterrows():
+                    user_name = str(row.get('User', '')).strip() if pd.notna(row.get('User')) else ''
+                    decision_type_str = str(row.get('Decision Type', '')).strip().upper() if pd.notna(row.get('Decision Type')) else ''
+                    task_title = str(row.get('Task', '')).strip() if pd.notna(row.get('Task')) else ''
+                    description = str(row.get('Description', '')) if pd.notna(row.get('Description')) else ''
+                    
+                    if not user_name or not decision_type_str:
+                        continue
+                    
+                    user = name_to_user.get(user_name)
+                    task = title_to_task.get(task_title) if task_title else None
+                    
+                    if not user:
+                        logger.warning(f"  ⚠️  User '{user_name}' not found for pending decision")
+                        continue
+                    
+                    type_map = {
+                        'TASK_ACCEPTANCE': PendingDecisionType.TASK_ACCEPTANCE,
+                        'MERGE_CONSENT': PendingDecisionType.MERGE_CONSENT,
+                        'DEPENDENCY_ACCEPTANCE': PendingDecisionType.DEPENDENCY_ACCEPTANCE,
+                        'ALTERNATIVE_DEP_ACCEPTANCE': PendingDecisionType.ALTERNATIVE_DEP_ACCEPTANCE
+                    }
+                    decision_type = type_map.get(decision_type_str)
+                    if not decision_type:
+                        logger.warning(f"  ⚠️  Unknown decision type '{decision_type_str}'")
+                        continue
+                    
+                    new_decision = PendingDecision(
+                        id=uuid4(),
+                        user_id=user.id,
+                        decision_type=decision_type,
+                        entity_type="task" if task else "unknown",
+                        entity_id=task.id if task else uuid4(),
+                        description=description
+                    )
+                    db.add(new_decision)
+                    stats['pending_decisions_imported'] += 1
+                
+                db.commit()
+                logger.info(f"  ✅ Imported {stats['pending_decisions_imported']} pending decisions")
+            except Exception as e:
+                logger.warning(f"  ⚠️  Could not import Pending Decisions: {e}")
         
         # =====================================================================
         # Populate Relevant Users for Tasks

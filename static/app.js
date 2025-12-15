@@ -158,6 +158,8 @@ function showSection(sectionName) {
         loadOrgChart();
     } else if (sectionName === 'mcp-tools') {
         loadMcpTools();
+    } else if (sectionName === 'decisions') {
+        loadPendingDecisions();
     }
 }
 
@@ -192,6 +194,28 @@ async function loadOntology() {
         // Also add structural fields
         const taskStructuralFields = [
             {
+                name: "owner",
+                label: "Task Owner",
+                type: "user_reference",
+                description: "The user who owns and is responsible for this task",
+                entity_type: "task"
+            },
+            {
+                name: "created_by",
+                label: "Task Creator",
+                type: "user_reference",
+                description: "The user who created/suggested this task",
+                entity_type: "task"
+            },
+            {
+                name: "state",
+                label: "Task State",
+                type: "enum",
+                description: "Lifecycle state of the task (DRAFT, ACTIVE, DONE, ARCHIVED)",
+                allowed_values: ["DRAFT", "ACTIVE", "DONE", "ARCHIVED"],
+                entity_type: "task"
+            },
+            {
                 name: "parent",
                 label: "Parent Task",
                 type: "reference",
@@ -209,7 +233,14 @@ async function loadOntology() {
                 name: "dependencies",
                 label: "Dependencies",
                 type: "reference_list",
-                description: "Tasks that this task depends on",
+                description: "Tasks that this task depends on (with status: PROPOSED, CONFIRMED, REJECTED, REMOVED)",
+                entity_type: "task"
+            },
+            {
+                name: "aliases",
+                label: "Task Aliases",
+                type: "reference_list",
+                description: "Previous task titles that were merged into this task",
                 entity_type: "task"
             }
         ];
@@ -1327,6 +1358,20 @@ async function loadTaskGraph() {
             </div>
         `).join('');
         
+        // Populate state filter (multi-select) - pull from actual task data
+        const stateFilterContent = document.getElementById('filter-content-state');
+        const states = [...new Set(tasks.map(t => t.state).filter(s => s))].sort();
+        
+        if (stateFilterContent) {
+            stateFilterContent.innerHTML = states.map(state => `
+                <div class="filter-option" onclick="event.stopPropagation()">
+                    <input type="checkbox" id="filter-state-${state}" 
+                           value="${state}" data-attr-name="state" onchange="updateStateFilter()">
+                    <label for="filter-state-${state}" style="cursor: pointer">${getStateLabel(state)}</label>
+                </div>
+            `).join('');
+        }
+        
         // Populate team filter from actual user teams
         try {
             const orgData = await apiCall('/users/org-chart', { skipAuth: true });
@@ -1454,15 +1499,16 @@ async function showTaskDetails(taskId) {
     modal.classList.remove('hidden');
     
     try {
-        // Fetch all data in parallel
-        const [data, relevantUsers, permissions, allUsers, taskAttributes, dependencies, allTasks] = await Promise.all([
+        // Fetch all data in parallel (including new full-details endpoint)
+        const [data, relevantUsers, permissions, allUsers, taskAttributes, dependencies, allTasks, fullDetails] = await Promise.all([
             apiCall(`/tasks/${taskId}/answers`, { skipAuth: true }),
             apiCall(`/tasks/${taskId}/relevant-users`).catch(() => []),
             apiCall(`/tasks/${taskId}/permissions`).catch(() => ({})),
             apiCall('/users').catch(() => []),
             apiCall('/task-attributes').catch(() => []),
             apiCall(`/tasks/${taskId}/dependencies`).catch(() => []),
-            apiCall('/tasks?include_self=true&include_aligned=true').catch(() => [])
+            apiCall('/tasks?include_self=true&include_aligned=true').catch(() => []),
+            apiCall(`/tasks/${taskId}/full-details`).catch(() => ({}))
         ]);
         
         // Store task data for save operations
@@ -1479,11 +1525,108 @@ async function showTaskDetails(taskId) {
             answers: data.answers_by_attribute
         };
         
-        // Update title
-        title.textContent = data.task_title;
+        // Update title with state badge
+        const taskState = fullDetails.state || 'ACTIVE';
+        const stateBadgeClass = {
+            'DRAFT': 'state-draft',
+            'ACTIVE': 'state-active',
+            'DONE': 'state-done',
+            'ARCHIVED': 'state-archived'
+        }[taskState] || 'state-active';
+        
+        title.innerHTML = `${escapeHtml(data.task_title)} <span class="task-state-badge ${stateBadgeClass}">${taskState}</span>`;
         
         // Build content
         let html = '';
+        
+        // === Task State & Meta Section (NEW) ===
+        html += '<div class="task-state-section" style="background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #3b82f6;">';
+        html += `<div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;">`;
+        html += `<div><strong>State:</strong> <span class="task-state-badge ${stateBadgeClass}">${taskState}</span></div>`;
+        html += `<div><strong>Owner:</strong> ${escapeHtml(fullDetails.owner?.name || data.owner_name)}</div>`;
+        if (fullDetails.creator && fullDetails.creator.name && fullDetails.creator.id !== fullDetails.owner?.id) {
+            html += `<div><strong>Created by:</strong> ${escapeHtml(fullDetails.creator.name)}</div>`;
+        }
+        html += `</div>`;
+        
+        // Show state reason if exists
+        if (fullDetails.state_reason) {
+            html += `<div style="margin-top: 8px; color: #666;"><strong>Reason:</strong> ${escapeHtml(fullDetails.state_reason)}</div>`;
+        }
+        html += '</div>';
+        
+        // === Aliases Section (if any) ===
+        if (fullDetails.aliases && fullDetails.aliases.length > 0) {
+            html += '<div class="task-aliases-section" style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #f59e0b;">';
+            html += '<h4 style="margin: 0 0 8px 0;">🔀 Merged Task Aliases</h4>';
+            html += '<ul style="margin: 0; padding-left: 20px;">';
+            for (const alias of fullDetails.aliases) {
+                html += `<li>"${escapeHtml(alias.title)}" (created by ${escapeHtml(alias.creator_name)})</li>`;
+            }
+            html += '</ul></div>';
+        }
+        
+        // === Dependencies V2 Section (with status) ===
+        if (fullDetails.dependencies_v2 && fullDetails.dependencies_v2.length > 0) {
+            html += '<div class="task-deps-v2-section" style="background: #f0fdf4; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #22c55e;">';
+            html += '<h4 style="margin: 0 0 8px 0;">🔗 Dependencies (with approval status)</h4>';
+            
+            const outgoing = fullDetails.dependencies_v2.filter(d => d.direction === 'outgoing');
+            const incoming = fullDetails.dependencies_v2.filter(d => d.direction === 'incoming');
+            
+            if (outgoing.length > 0) {
+                html += '<div style="margin-bottom: 8px;"><strong>This task depends on:</strong></div>';
+                html += '<ul style="margin: 0 0 12px 20px; padding: 0;">';
+                for (const dep of outgoing) {
+                    const statusBadge = dep.status === 'CONFIRMED' 
+                        ? '<span style="background:#22c55e;color:white;padding:2px 6px;border-radius:4px;font-size:11px;">✓ CONFIRMED</span>'
+                        : '<span style="background:#f59e0b;color:white;padding:2px 6px;border-radius:4px;font-size:11px;">⏳ PROPOSED</span>';
+                    html += `<li>${escapeHtml(dep.task_title)} (${escapeHtml(dep.task_owner)}) ${statusBadge}</li>`;
+                }
+                html += '</ul>';
+            }
+            
+            if (incoming.length > 0) {
+                html += '<div style="margin-bottom: 8px;"><strong>Tasks depending on this:</strong></div>';
+                html += '<ul style="margin: 0 0 0 20px; padding: 0;">';
+                for (const dep of incoming) {
+                    const statusBadge = dep.status === 'CONFIRMED' 
+                        ? '<span style="background:#22c55e;color:white;padding:2px 6px;border-radius:4px;font-size:11px;">✓ CONFIRMED</span>'
+                        : '<span style="background:#f59e0b;color:white;padding:2px 6px;border-radius:4px;font-size:11px;">⏳ PROPOSED</span>';
+                    html += `<li>${escapeHtml(dep.task_title)} (${escapeHtml(dep.task_owner)}) ${statusBadge}</li>`;
+                }
+                html += '</ul>';
+            }
+            html += '</div>';
+        }
+        
+        // === Pending Proposals (if any) ===
+        if ((fullDetails.merge_proposals && fullDetails.merge_proposals.length > 0) || 
+            (fullDetails.alt_dependency_proposals && fullDetails.alt_dependency_proposals.length > 0)) {
+            html += '<div class="task-proposals-section" style="background: #fef2f2; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ef4444;">';
+            html += '<h4 style="margin: 0 0 8px 0;">⏳ Pending Proposals</h4>';
+            
+            if (fullDetails.merge_proposals && fullDetails.merge_proposals.length > 0) {
+                for (const p of fullDetails.merge_proposals) {
+                    html += `<div style="padding: 8px; background: white; border-radius: 4px; margin-bottom: 8px;">
+                        <strong>🔀 Merge Proposal:</strong> "${escapeHtml(p.from_task_title)}" → "${escapeHtml(p.to_task_title)}"<br>
+                        <small>Proposed by: ${escapeHtml(p.proposed_by)}</small><br>
+                        <small>Reason: ${escapeHtml(p.reason)}</small>
+                    </div>`;
+                }
+            }
+            
+            if (fullDetails.alt_dependency_proposals && fullDetails.alt_dependency_proposals.length > 0) {
+                for (const p of fullDetails.alt_dependency_proposals) {
+                    html += `<div style="padding: 8px; background: white; border-radius: 4px; margin-bottom: 8px;">
+                        <strong>↔️ Alternative Dependency:</strong> Instead of "${escapeHtml(p.original_upstream)}", use "${escapeHtml(p.suggested_upstream)}"<br>
+                        <small>Proposed by: ${escapeHtml(p.proposed_by)}</small><br>
+                        <small>Reason: ${escapeHtml(p.reason)}</small>
+                    </div>`;
+                }
+            }
+            html += '</div>';
+        }
         
         // === Task Info Section (Editable if permitted) ===
         html += '<div class="task-info-section">';
@@ -2160,6 +2303,37 @@ function updateOwnerFilter() {
     applyFilters();
 }
 
+function updateStateFilter() {
+    const checkboxes = document.querySelectorAll('input[data-attr-name="state"]:checked');
+    const button = document.getElementById('filter-btn-state');
+    if (!button) return;
+    
+    const span = button.querySelector('span:first-child');
+    
+    if (checkboxes.length === 0) {
+        span.textContent = 'All';
+        button.classList.remove('has-selection');
+    } else if (checkboxes.length === 1) {
+        span.textContent = getStateLabel(checkboxes[0].value);
+        button.classList.add('has-selection');
+    } else {
+        span.textContent = `${checkboxes.length} selected`;
+        button.classList.add('has-selection');
+    }
+    
+    applyFilters();
+}
+
+function getStateLabel(state) {
+    const stateLabels = {
+        'DRAFT': '📝 Draft',
+        'ACTIVE': '✅ Active',
+        'DONE': '✓ Done',
+        'ARCHIVED': '📦 Archived'
+    };
+    return stateLabels[state] || state;
+}
+
 async function applyFilters() {
     // Owner filter (multi-select)
     const ownerCheckboxes = document.querySelectorAll('input[data-attr-name="owner"]:checked');
@@ -2229,6 +2403,14 @@ async function applyFilters() {
     graphFilters.showChildren = document.getElementById('show-children').checked;
     graphFilters.showDependencies = document.getElementById('show-dependencies').checked;
     
+    // State filter (multi-select)
+    const stateCheckboxes = document.querySelectorAll('input[data-attr-name="state"]:checked');
+    if (stateCheckboxes.length > 0) {
+        graphFilters.state = Array.from(stateCheckboxes).map(cb => cb.value);
+    } else {
+        graphFilters.state = null;
+    }
+    
     // Collect attribute filters (multi-select)
     graphFilters.attributes = {};
     taskAttributes.forEach(attr => {
@@ -2254,6 +2436,9 @@ function clearFilters() {
     
     // Update owner filter button
     updateOwnerFilter();
+    
+    // Update state filter button
+    updateStateFilter();
     
     // Update all attribute filter buttons
     taskAttributes.forEach(attr => {
@@ -2294,6 +2479,13 @@ function renderGraph() {
             } else {
                 return graphFilters.owner.includes(t.owner_name);
             }
+        });
+    }
+    
+    // Filter by state (multi-select support)
+    if (graphFilters.state && graphFilters.state.length > 0) {
+        filteredTasks = filteredTasks.filter(t => {
+            return t.state && graphFilters.state.includes(t.state);
         });
     }
     
@@ -4690,6 +4882,433 @@ function clearMcpResult() {
         resultDiv.innerHTML = '<span style="color: #888;">Select a tool and click Execute to see results...</span>';
     }
     mcpLastResult = null;
+}
+
+
+// ============================================================================
+// Pending Decisions Section
+// ============================================================================
+
+async function loadPendingDecisions() {
+    const container = document.getElementById('decisions-container');
+    const badge = document.getElementById('decisions-badge');
+    
+    container.innerHTML = '<div class="loading">Loading pending decisions...</div>';
+    
+    try {
+        const data = await apiCall('/decisions/pending');
+        const decisions = data.decisions || [];
+        
+        // Update badge
+        if (badge) {
+            badge.textContent = decisions.length;
+            badge.style.display = decisions.length > 0 ? 'inline-block' : 'none';
+        }
+        
+        if (decisions.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px; color: #666;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+                    <h3>All caught up!</h3>
+                    <p>No pending decisions require your attention.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '<div class="decisions-list">';
+        
+        for (const decision of decisions) {
+            html += renderDecisionCard(decision);
+        }
+        
+        html += '</div>';
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading pending decisions:', error);
+        container.innerHTML = `<div class="error">Failed to load pending decisions: ${error.message}</div>`;
+    }
+}
+
+function renderDecisionCard(decision) {
+    const typeLabels = {
+        'TASK_ACCEPTANCE': '📝 Task Suggested',
+        'MERGE_CONSENT': '🔀 Merge Proposal',
+        'DEPENDENCY_ACCEPTANCE': '🔗 Dependency Request',
+        'ALTERNATIVE_DEP_ACCEPTANCE': '↔️ Alternative Dependency'
+    };
+    
+    const typeLabel = typeLabels[decision.type] || decision.type;
+    const context = decision.context || {};
+    
+    let actionsHtml = '';
+    let detailsHtml = '';
+    
+    if (decision.type === 'TASK_ACCEPTANCE') {
+        // Check if user has already proposed a merge for this task
+        const hasPendingMerge = context.has_pending_merge === true;
+        
+        detailsHtml = `
+            <div class="decision-details">
+                <p><strong>Task:</strong> ${escapeHtml(context.task_title || 'Unknown')}</p>
+                <p><strong>Created by:</strong> ${escapeHtml(context.creator_name || 'Unknown')}</p>
+                ${context.task_description ? `<p><strong>Description:</strong> ${escapeHtml(context.task_description)}</p>` : ''}
+                ${hasPendingMerge ? `<p style="color: #6366f1; font-weight: 600;">🔀 You proposed to merge this into "${escapeHtml(context.pending_merge_target)}"</p>` : ''}
+            </div>
+        `;
+        
+        if (hasPendingMerge) {
+            // User has proposed a merge - show option to cancel it
+            actionsHtml = `
+                <div class="decision-actions">
+                    <button onclick="cancelMergeProposal('${context.pending_merge_id}')" class="cancel-merge-btn" style="background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        ↩️ Cancel Merge Suggestion
+                    </button>
+                    <p style="margin: 8px 0 0 0; color: #64748b; font-size: 0.85rem;">Waiting for the task creator to accept your merge proposal...</p>
+                </div>
+            `;
+        } else {
+            // Normal state - show accept/reject/merge options
+            actionsHtml = `
+                <div class="decision-actions">
+                    <button onclick="decideOnTask('${context.task_id}', 'accept')" class="accept-btn">✅ Accept</button>
+                    <button onclick="showRejectTaskDialog('${context.task_id}')" class="reject-btn">❌ Reject</button>
+                    <button onclick="showMergeTaskDialog('${context.task_id}')" class="merge-btn">🔀 Propose Merge</button>
+                </div>
+            `;
+        }
+    } else if (decision.type === 'MERGE_CONSENT') {
+        detailsHtml = `
+            <div class="decision-details">
+                <p><strong>Merge:</strong> "${escapeHtml(context.from_task_title)}" → "${escapeHtml(context.to_task_title)}"</p>
+                <p><strong>Proposed by:</strong> ${escapeHtml(context.proposer_name || 'Unknown')}</p>
+                <p><strong>Reason:</strong> ${escapeHtml(context.reason || 'No reason provided')}</p>
+            </div>
+        `;
+        actionsHtml = `
+            <div class="decision-actions">
+                <button onclick="decideOnMerge('${context.proposal_id}', 'accept')" class="accept-btn">✅ Accept Merge</button>
+                <button onclick="showRejectMergeDialog('${context.proposal_id}')" class="reject-btn">❌ Reject</button>
+            </div>
+        `;
+    } else if (decision.type === 'DEPENDENCY_ACCEPTANCE') {
+        detailsHtml = `
+            <div class="decision-details">
+                <p><strong>"${escapeHtml(context.downstream_task)}"</strong> wants to depend on your task <strong>"${escapeHtml(context.upstream_task)}"</strong></p>
+            </div>
+        `;
+        actionsHtml = `
+            <div class="decision-actions">
+                <button onclick="decideOnDependency('${context.dependency_id}', 'accept')" class="accept-btn">✅ Accept</button>
+                <button onclick="showRejectDependencyDialog('${context.dependency_id}')" class="reject-btn">❌ Reject</button>
+                <button onclick="showAlternativeDialog('${context.dependency_id}')" class="alt-btn">↔️ Suggest Alternative</button>
+            </div>
+        `;
+    } else if (decision.type === 'ALTERNATIVE_DEP_ACCEPTANCE') {
+        detailsHtml = `
+            <div class="decision-details">
+                <p><strong>Instead of:</strong> ${escapeHtml(context.original_upstream)}</p>
+                <p><strong>Suggested:</strong> ${escapeHtml(context.suggested_upstream)}</p>
+                <p><strong>Proposed by:</strong> ${escapeHtml(context.proposer_name || 'Unknown')}</p>
+                <p><strong>Reason:</strong> ${escapeHtml(context.reason || 'No reason provided')}</p>
+            </div>
+        `;
+        actionsHtml = `
+            <div class="decision-actions">
+                <button onclick="decideOnAlternative('${context.proposal_id}', 'accept')" class="accept-btn">✅ Accept Alternative</button>
+                <button onclick="showRejectAlternativeDialog('${context.proposal_id}')" class="reject-btn">❌ Reject</button>
+            </div>
+        `;
+    }
+    
+    return `
+        <div class="decision-card" data-type="${decision.type}">
+            <div class="decision-header">
+                <span class="decision-type">${typeLabel}</span>
+                <span class="decision-date">${formatTimestamp(decision.created_at)}</span>
+            </div>
+            <div class="decision-description">${escapeHtml(decision.description)}</div>
+            ${detailsHtml}
+            ${actionsHtml}
+        </div>
+    `;
+}
+
+async function decideOnTask(taskId, action, reason = null, mergeIntoTaskId = null) {
+    try {
+        const body = { action };
+        if (reason) body.reason = reason;
+        if (mergeIntoTaskId) body.merge_into_task_id = mergeIntoTaskId;
+        
+        await apiCall(`/decisions/task/${taskId}`, {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
+        
+        alert(`Task ${action}ed successfully!`);
+        loadPendingDecisions();
+        
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+async function decideOnMerge(proposalId, action, reason = null) {
+    try {
+        const body = { action };
+        if (reason) body.reason = reason;
+        
+        await apiCall(`/decisions/merge/${proposalId}`, {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
+        
+        alert(`Merge ${action}ed successfully!`);
+        loadPendingDecisions();
+        
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+async function cancelMergeProposal(proposalId) {
+    if (!confirm('Are you sure you want to cancel your merge suggestion?')) {
+        return;
+    }
+    
+    try {
+        await apiCall(`/decisions/merge/${proposalId}`, {
+            method: 'DELETE'
+        });
+        
+        alert('Merge suggestion cancelled. You can now accept, reject, or propose a different merge.');
+        loadPendingDecisions();
+        
+    } catch (error) {
+        alert('Error cancelling merge: ' + error.message);
+    }
+}
+
+async function decideOnDependency(dependencyId, action, reason = null, alternativeTaskId = null) {
+    try {
+        const body = { action };
+        if (reason) body.reason = reason;
+        if (alternativeTaskId) body.alternative_task_id = alternativeTaskId;
+        
+        await apiCall(`/decisions/dependency/${dependencyId}`, {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
+        
+        alert(`Dependency ${action}ed successfully!`);
+        loadPendingDecisions();
+        
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+async function decideOnAlternative(proposalId, action, reason = null) {
+    try {
+        const body = { action };
+        if (reason) body.reason = reason;
+        
+        await apiCall(`/decisions/alternative/${proposalId}`, {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
+        
+        alert(`Alternative ${action}ed successfully!`);
+        loadPendingDecisions();
+        
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+function showRejectTaskDialog(taskId) {
+    const reason = prompt('Please provide a reason for rejection:');
+    if (reason && reason.trim()) {
+        decideOnTask(taskId, 'reject', reason.trim());
+    }
+}
+
+async function showMergeTaskDialog(taskId) {
+    try {
+        // Only get tasks owned by current user (can only propose merging into your own tasks)
+        const tasks = await apiCall('/tasks?include_self=true&include_aligned=false');
+        const myTasks = tasks.filter(t => t.id !== taskId && t.owner_user_id === currentUser.id);
+        
+        if (myTasks.length === 0) {
+            alert('You have no other tasks to merge into. You can only propose merging into your own tasks.');
+            return;
+        }
+        
+        // Create a proper modal dialog
+        const modalHtml = `
+            <div id="merge-modal" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+                <div class="modal-content" style="background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                    <h3 style="margin: 0 0 16px 0; color: #1e293b;">🔀 Propose Task Merge</h3>
+                    <p style="color: #64748b; margin-bottom: 16px;">Select one of your tasks to merge this task into:</p>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Merge into:</label>
+                        <select id="merge-target-select" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; background: white;">
+                            <option value="">-- Select a task --</option>
+                            ${myTasks.map(t => `<option value="${t.id}">${escapeHtml(t.title)}</option>`).join('')}
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Reason for merge:</label>
+                        <textarea id="merge-reason" placeholder="Why should these tasks be merged?" 
+                            style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; min-height: 80px; resize: vertical;"></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button onclick="closeMergeModal()" style="padding: 10px 20px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; font-size: 1rem;">Cancel</button>
+                        <button onclick="submitMergeProposal('${taskId}')" style="padding: 10px 20px; border: none; border-radius: 8px; background: #6366f1; color: white; cursor: pointer; font-size: 1rem; font-weight: 600;">🔀 Propose Merge</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove any existing modal
+        closeMergeModal();
+        
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Focus the select
+        setTimeout(() => document.getElementById('merge-target-select')?.focus(), 100);
+        
+    } catch (error) {
+        alert('Error loading tasks: ' + error.message);
+    }
+}
+
+function closeMergeModal() {
+    const modal = document.getElementById('merge-modal');
+    if (modal) modal.remove();
+}
+
+function submitMergeProposal(taskId) {
+    const targetSelect = document.getElementById('merge-target-select');
+    const reasonInput = document.getElementById('merge-reason');
+    
+    const targetTaskId = targetSelect?.value;
+    const reason = reasonInput?.value?.trim();
+    
+    if (!targetTaskId) {
+        alert('Please select a task to merge into.');
+        return;
+    }
+    
+    if (!reason) {
+        alert('Please provide a reason for the merge.');
+        return;
+    }
+    
+    closeMergeModal();
+    decideOnTask(taskId, 'propose_merge', reason, targetTaskId);
+}
+
+function showRejectMergeDialog(proposalId) {
+    const reason = prompt('Please provide a reason for rejecting the merge:');
+    if (reason && reason.trim()) {
+        decideOnMerge(proposalId, 'reject', reason.trim());
+    }
+}
+
+function showRejectDependencyDialog(dependencyId) {
+    const reason = prompt('Please provide a reason for rejecting the dependency:');
+    if (reason && reason.trim()) {
+        decideOnDependency(dependencyId, 'reject', reason.trim());
+    }
+}
+
+async function showAlternativeDialog(dependencyId) {
+    try {
+        // Only show user's own tasks as alternatives
+        const tasks = await apiCall('/tasks?include_self=true&include_aligned=false');
+        const myTasks = tasks.filter(t => t.owner_user_id === currentUser.id);
+        
+        if (myTasks.length === 0) {
+            alert('You have no tasks to suggest as alternatives.');
+            return;
+        }
+        
+        // Create a proper modal dialog
+        const modalHtml = `
+            <div id="alt-dep-modal" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+                <div class="modal-content" style="background: white; padding: 24px; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                    <h3 style="margin: 0 0 16px 0; color: #1e293b;">↔️ Suggest Alternative Dependency</h3>
+                    <p style="color: #64748b; margin-bottom: 16px;">Select one of your tasks as an alternative:</p>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Alternative task:</label>
+                        <select id="alt-task-select" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; background: white;">
+                            <option value="">-- Select a task --</option>
+                            ${myTasks.map(t => `<option value="${t.id}">${escapeHtml(t.title)}</option>`).join('')}
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Reason:</label>
+                        <textarea id="alt-reason" placeholder="Why is this a better dependency?" 
+                            style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; min-height: 80px; resize: vertical;"></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button onclick="closeAltDepModal()" style="padding: 10px 20px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; font-size: 1rem;">Cancel</button>
+                        <button onclick="submitAltDependency('${dependencyId}')" style="padding: 10px 20px; border: none; border-radius: 8px; background: #6366f1; color: white; cursor: pointer; font-size: 1rem; font-weight: 600;">↔️ Suggest</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove any existing modal
+        closeAltDepModal();
+        
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Focus the select
+        setTimeout(() => document.getElementById('alt-task-select')?.focus(), 100);
+        
+    } catch (error) {
+        alert('Error loading tasks: ' + error.message);
+    }
+}
+
+function closeAltDepModal() {
+    const modal = document.getElementById('alt-dep-modal');
+    if (modal) modal.remove();
+}
+
+function submitAltDependency(dependencyId) {
+    const altSelect = document.getElementById('alt-task-select');
+    const reasonInput = document.getElementById('alt-reason');
+    
+    const altTaskId = altSelect?.value;
+    const reason = reasonInput?.value?.trim();
+    
+    if (!altTaskId) {
+        alert('Please select an alternative task.');
+        return;
+    }
+    
+    closeAltDepModal();
+    decideOnDependency(dependencyId, 'alternative', reason || 'Suggested alternative', altTaskId);
+}
+
+
+function showRejectAlternativeDialog(proposalId) {
+    const reason = prompt('Please provide a reason for rejecting the alternative:');
+    if (reason && reason.trim()) {
+        decideOnAlternative(proposalId, 'reject', reason.trim());
+    }
 }
 
 

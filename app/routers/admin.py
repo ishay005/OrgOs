@@ -9,7 +9,8 @@ from app.models import (
     User, Task, AttributeAnswer, QuestionLog,
     SimilarityScore, ChatThread, ChatMessage, TaskDependency,
     AttributeDefinition, EntityType, DailySyncSession, PromptTemplate,
-    TaskRelevantUser, QuestionsSession
+    TaskRelevantUser, QuestionsSession,
+    TaskAlias, TaskMergeProposal, TaskDependencyV2, AlternativeDependencyProposal, PendingDecision
 )
 import logging
 
@@ -37,6 +38,32 @@ async def clear_all_data(db: Session = Depends(get_db)):
             deleted_counts["questions_sessions"] = db.query(QuestionsSession).delete()
         except:
             deleted_counts["questions_sessions"] = 0
+        
+        # Delete state machine tables
+        try:
+            deleted_counts["pending_decisions"] = db.query(PendingDecision).delete()
+        except:
+            deleted_counts["pending_decisions"] = 0
+        
+        try:
+            deleted_counts["alternative_dependency_proposals"] = db.query(AlternativeDependencyProposal).delete()
+        except:
+            deleted_counts["alternative_dependency_proposals"] = 0
+        
+        try:
+            deleted_counts["task_dependencies_v2"] = db.query(TaskDependencyV2).delete()
+        except:
+            deleted_counts["task_dependencies_v2"] = 0
+        
+        try:
+            deleted_counts["task_merge_proposals"] = db.query(TaskMergeProposal).delete()
+        except:
+            deleted_counts["task_merge_proposals"] = 0
+        
+        try:
+            deleted_counts["task_aliases"] = db.query(TaskAlias).delete()
+        except:
+            deleted_counts["task_aliases"] = 0
         
         deleted_counts["attribute_answers"] = db.query(AttributeAnswer).delete()
         deleted_counts["question_logs"] = db.query(QuestionLog).delete()
@@ -265,3 +292,200 @@ async def fix_daily_sync_enum(db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Enum fix failed: {str(e)}")
+
+
+@router.api_route("/migrate-state-machines", methods=["GET", "POST"])
+async def migrate_state_machines(db: Session = Depends(get_db)):
+    """
+    Migrate database schema for state machines:
+    - Add Task.state, Task.created_by_user_id
+    - Create TaskAlias, TaskMergeProposal, TaskDependencyV2
+    - Create AlternativeDependencyProposal, PendingDecision
+    - Migrate existing dependencies to V2
+    """
+    results = {"actions": []}
+    
+    try:
+        # --- Task table extensions ---
+        try:
+            db.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by_user_id UUID REFERENCES users(id)"))
+            results["actions"].append("Added 'created_by_user_id' to tasks")
+        except Exception as e:
+            results["actions"].append(f"created_by_user_id: {str(e)}")
+        
+        try:
+            db.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS state VARCHAR DEFAULT 'ACTIVE'"))
+            results["actions"].append("Added 'state' column to tasks")
+        except Exception as e:
+            results["actions"].append(f"state: {str(e)}")
+        
+        try:
+            db.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS state_changed_at TIMESTAMP"))
+            results["actions"].append("Added 'state_changed_at' to tasks")
+        except Exception as e:
+            results["actions"].append(f"state_changed_at: {str(e)}")
+        
+        try:
+            db.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS state_reason TEXT"))
+            results["actions"].append("Added 'state_reason' to tasks")
+        except Exception as e:
+            results["actions"].append(f"state_reason: {str(e)}")
+        
+        # Set defaults for existing tasks
+        try:
+            db.execute(text("UPDATE tasks SET state = 'ACTIVE' WHERE state IS NULL"))
+            db.execute(text("UPDATE tasks SET created_by_user_id = owner_user_id WHERE created_by_user_id IS NULL"))
+            results["actions"].append("Set defaults for existing tasks")
+        except Exception as e:
+            results["actions"].append(f"defaults: {str(e)}")
+        
+        # --- TaskAlias table ---
+        try:
+            db.execute(text("""
+                CREATE TABLE IF NOT EXISTS task_aliases (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    canonical_task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                    alias_title VARCHAR NOT NULL,
+                    alias_created_by_user_id UUID NOT NULL REFERENCES users(id),
+                    merged_from_task_id UUID REFERENCES tasks(id),
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            db.execute(text("CREATE INDEX IF NOT EXISTS idx_task_alias_canonical ON task_aliases(canonical_task_id)"))
+            results["actions"].append("Created task_aliases table")
+        except Exception as e:
+            results["actions"].append(f"task_aliases: {str(e)}")
+        
+        # --- TaskMergeProposal table ---
+        try:
+            db.execute(text("""
+                CREATE TABLE IF NOT EXISTS task_merge_proposals (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    from_task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                    to_task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                    proposed_by_user_id UUID NOT NULL REFERENCES users(id),
+                    proposal_reason TEXT NOT NULL,
+                    status VARCHAR NOT NULL DEFAULT 'PROPOSED',
+                    rejected_by_user_id UUID REFERENCES users(id),
+                    rejected_reason TEXT,
+                    accepted_by_user_id UUID REFERENCES users(id),
+                    accepted_at TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            db.execute(text("CREATE INDEX IF NOT EXISTS idx_merge_proposal_from_task ON task_merge_proposals(from_task_id)"))
+            db.execute(text("CREATE INDEX IF NOT EXISTS idx_merge_proposal_status ON task_merge_proposals(status)"))
+            results["actions"].append("Created task_merge_proposals table")
+        except Exception as e:
+            results["actions"].append(f"task_merge_proposals: {str(e)}")
+        
+        # --- TaskDependencyV2 table ---
+        try:
+            db.execute(text("""
+                CREATE TABLE IF NOT EXISTS task_dependencies_v2 (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    downstream_task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                    upstream_task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+                    status VARCHAR NOT NULL DEFAULT 'PROPOSED',
+                    created_by_user_id UUID NOT NULL REFERENCES users(id),
+                    accepted_by_user_id UUID REFERENCES users(id),
+                    accepted_at TIMESTAMP,
+                    rejected_by_user_id UUID REFERENCES users(id),
+                    rejected_at TIMESTAMP,
+                    rejected_reason TEXT,
+                    removed_by_user_id UUID REFERENCES users(id),
+                    removed_at TIMESTAMP,
+                    removed_reason TEXT,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            db.execute(text("CREATE INDEX IF NOT EXISTS idx_dep_v2_downstream ON task_dependencies_v2(downstream_task_id)"))
+            db.execute(text("CREATE INDEX IF NOT EXISTS idx_dep_v2_upstream ON task_dependencies_v2(upstream_task_id)"))
+            db.execute(text("CREATE INDEX IF NOT EXISTS idx_dep_v2_status ON task_dependencies_v2(status)"))
+            results["actions"].append("Created task_dependencies_v2 table")
+        except Exception as e:
+            results["actions"].append(f"task_dependencies_v2: {str(e)}")
+        
+        # --- AlternativeDependencyProposal table ---
+        try:
+            db.execute(text("""
+                CREATE TABLE IF NOT EXISTS alternative_dependency_proposals (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    original_dependency_id UUID NOT NULL REFERENCES task_dependencies_v2(id) ON DELETE CASCADE,
+                    downstream_task_id UUID NOT NULL REFERENCES tasks(id),
+                    original_upstream_task_id UUID NOT NULL REFERENCES tasks(id),
+                    suggested_upstream_task_id UUID NOT NULL REFERENCES tasks(id),
+                    proposed_by_user_id UUID NOT NULL REFERENCES users(id),
+                    proposal_reason TEXT NOT NULL,
+                    status VARCHAR NOT NULL DEFAULT 'PROPOSED',
+                    rejected_by_user_id UUID REFERENCES users(id),
+                    rejected_reason TEXT,
+                    accepted_by_user_id UUID REFERENCES users(id),
+                    accepted_at TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            db.execute(text("CREATE INDEX IF NOT EXISTS idx_alt_dep_status ON alternative_dependency_proposals(status)"))
+            db.execute(text("CREATE INDEX IF NOT EXISTS idx_alt_dep_downstream ON alternative_dependency_proposals(downstream_task_id)"))
+            results["actions"].append("Created alternative_dependency_proposals table")
+        except Exception as e:
+            results["actions"].append(f"alternative_dependency_proposals: {str(e)}")
+        
+        # --- PendingDecision table ---
+        try:
+            db.execute(text("""
+                CREATE TABLE IF NOT EXISTS pending_decisions (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID NOT NULL REFERENCES users(id),
+                    decision_type VARCHAR NOT NULL,
+                    entity_type VARCHAR NOT NULL,
+                    entity_id UUID NOT NULL,
+                    description TEXT NOT NULL,
+                    is_resolved BOOLEAN DEFAULT FALSE,
+                    resolved_at TIMESTAMP,
+                    resolution VARCHAR,
+                    created_at TIMESTAMP DEFAULT NOW()
+                )
+            """))
+            db.execute(text("CREATE INDEX IF NOT EXISTS idx_pending_decision_user ON pending_decisions(user_id, is_resolved)"))
+            db.execute(text("CREATE INDEX IF NOT EXISTS idx_pending_decision_entity ON pending_decisions(entity_type, entity_id)"))
+            results["actions"].append("Created pending_decisions table")
+        except Exception as e:
+            results["actions"].append(f"pending_decisions: {str(e)}")
+        
+        # --- Migrate existing dependencies to V2 ---
+        try:
+            db.execute(text("""
+                INSERT INTO task_dependencies_v2 (id, downstream_task_id, upstream_task_id, status, created_by_user_id, accepted_at)
+                SELECT 
+                    gen_random_uuid(),
+                    td.task_id,
+                    td.depends_on_task_id,
+                    'CONFIRMED',
+                    t.owner_user_id,
+                    NOW()
+                FROM task_dependencies td
+                JOIN tasks t ON t.id = td.task_id
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM task_dependencies_v2 v2 
+                    WHERE v2.downstream_task_id = td.task_id 
+                    AND v2.upstream_task_id = td.depends_on_task_id
+                )
+            """))
+            results["actions"].append("Migrated existing dependencies to V2")
+        except Exception as e:
+            results["actions"].append(f"migrate dependencies: {str(e)}")
+        
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "State machines migration completed!",
+            "results": results
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Migration failed: {str(e)}")

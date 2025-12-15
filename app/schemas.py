@@ -53,6 +53,7 @@ class AlignmentResponse(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
+    owner_user_id: Optional[UUID] = None  # If not provided, defaults to current user
     parent_id: Optional[UUID] = None
     children: Optional[List[str]] = None  # List of task titles (create if don't exist)
     dependencies: Optional[List[UUID]] = None  # List of task IDs

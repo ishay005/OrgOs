@@ -3,12 +3,17 @@ Tasks and ontology endpoints
 """
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from app.database import get_db
 from app.auth import get_current_user
-from app.models import User, Task, AttributeDefinition, EntityType, TaskDependency, TaskRelevantUser
+from app.models import (
+    User, Task, AttributeDefinition, EntityType, TaskDependency, TaskRelevantUser,
+    TaskState, TaskAlias, TaskMergeProposal, MergeProposalStatus,
+    TaskDependencyV2, DependencyStatus, AlternativeDependencyProposal, AlternativeDepStatus,
+    PendingDecision, PendingDecisionType
+)
 from app.schemas import (
     TaskCreate, TaskResponse,
     AttributeDefinitionResponse, TaskGraphNode
@@ -76,24 +81,59 @@ async def create_task(
     db: Session = Depends(get_db)
 ):
     """
-    Create a new task owned by current user.
+    Create a new task.
+    If owner_user_id is provided and different from current user:
+      - Task state is DRAFT
+      - A PendingDecision is created for the owner to accept/reject
+    Otherwise:
+      - Task state is ACTIVE
     Supports parent-child relationships and dependencies.
     """
+    from datetime import datetime
+    
     # Validate parent exists if provided
     if task_data.parent_id:
         parent_task = db.query(Task).filter(Task.id == task_data.parent_id).first()
         if not parent_task:
             raise HTTPException(status_code=400, detail=f"Parent task {task_data.parent_id} does not exist")
     
+    # Determine owner: use provided owner_user_id or default to current user
+    owner_user_id = task_data.owner_user_id if task_data.owner_user_id else current_user.id
+    
+    # Validate owner exists
+    owner = db.query(User).filter(User.id == owner_user_id).first()
+    if not owner:
+        raise HTTPException(status_code=400, detail=f"Owner user {owner_user_id} does not exist")
+    
+    # Determine if this is a task created for someone else
+    is_for_someone_else = owner_user_id != current_user.id
+    
+    # Set initial state based on ownership
+    initial_state = TaskState.DRAFT if is_for_someone_else else TaskState.ACTIVE
+    
     # Create the main task
     task = Task(
         title=task_data.title,
         description=task_data.description,
-        owner_user_id=current_user.id,
-        parent_id=task_data.parent_id
+        owner_user_id=owner_user_id,
+        created_by_user_id=current_user.id,
+        parent_id=task_data.parent_id,
+        state=initial_state,
+        state_changed_at=datetime.utcnow()
     )
     db.add(task)
     db.flush()  # Get the ID without committing
+    
+    # If task is created for someone else, create a PendingDecision
+    if is_for_someone_else:
+        pending_decision = PendingDecision(
+            user_id=owner_user_id,
+            decision_type=PendingDecisionType.TASK_ACCEPTANCE,
+            entity_type="task",
+            entity_id=task.id,
+            description=f"{current_user.name} suggested task '{task.title}' for you. Accept or reject?"
+        )
+        db.add(pending_decision)
     
     # Handle children: create child tasks if they don't exist
     if task_data.children:
@@ -101,17 +141,20 @@ async def create_task(
             # Check if a task with this title already exists for this user
             existing_child = db.query(Task).filter(
                 Task.title == child_title,
-                Task.owner_user_id == current_user.id,
+                Task.owner_user_id == owner_user_id,
                 Task.is_active == True
             ).first()
             
             if not existing_child:
-                # Create new child task
+                # Create new child task (same state as parent)
                 child_task = Task(
                     title=child_title,
                     description=f"Child of: {task.title}",
-                    owner_user_id=current_user.id,
-                    parent_id=task.id
+                    owner_user_id=owner_user_id,
+                    created_by_user_id=current_user.id,
+                    parent_id=task.id,
+                    state=initial_state,
+                    state_changed_at=datetime.utcnow()
                 )
                 db.add(child_task)
             else:
@@ -150,7 +193,7 @@ async def create_task(
         "title": task.title,
         "description": task.description,
         "owner_user_id": task.owner_user_id,
-        "owner_name": current_user.name,
+        "owner_name": owner.name,
         "parent_id": task.parent_id,
         "is_active": task.is_active,
         "created_at": task.created_at
@@ -228,20 +271,51 @@ async def update_task(
     if update_data.is_active is not None:
         task.is_active = update_data.is_active
     
-    # Update owner (with validation)
+    # Update owner (with validation and double consent)
     if update_data.owner_user_id is not None:
+        from datetime import datetime
+        
         new_owner = db.query(User).filter(User.id == update_data.owner_user_id).first()
         if not new_owner:
             raise HTTPException(status_code=404, detail="New owner not found")
-        task.owner_user_id = update_data.owner_user_id
         
-        # Recalculate relevant users when owner changes
-        try:
-            from populate_relevant_users import update_relevant_users_for_task
-            update_relevant_users_for_task(db, task.id)
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).warning(f"Could not update relevant users: {e}")
+        old_owner_id = task.owner_user_id
+        new_owner_id = update_data.owner_user_id
+        
+        # Check if owner is actually changing
+        if new_owner_id != old_owner_id:
+            # Update the owner
+            task.owner_user_id = new_owner_id
+            
+            # Move task to DRAFT state and create PendingDecision for new owner
+            task.state = TaskState.DRAFT
+            task.state_changed_at = datetime.utcnow()
+            task.state_reason = f"Ownership transferred from {current_user.name}"
+            
+            # Clear any existing pending decisions for this task
+            db.query(PendingDecision).filter(
+                PendingDecision.entity_type == "task",
+                PendingDecision.entity_id == task.id,
+                PendingDecision.is_resolved == False
+            ).delete()
+            
+            # Create new pending decision for the new owner
+            pending_decision = PendingDecision(
+                user_id=new_owner_id,
+                decision_type=PendingDecisionType.TASK_ACCEPTANCE,
+                entity_type="task",
+                entity_id=task.id,
+                description=f"{current_user.name} transferred task '{task.title}' to you. Accept or reject?"
+            )
+            db.add(pending_decision)
+            
+            # Recalculate relevant users when owner changes
+            try:
+                from populate_relevant_users import update_relevant_users_for_task
+                update_relevant_users_for_task(db, task.id)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f"Could not update relevant users: {e}")
     
     # Update parent (with validation)
     # parent_id can be: None (not provided), "" (clear/set to null), or UUID (set to new parent)
@@ -326,6 +400,195 @@ async def delete_task(
     db.commit()
     
     return {"message": "Task deleted successfully", "task_id": str(task_id)}
+
+
+@router.get("/{task_id}/full-details")
+async def get_task_full_details(
+    task_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get comprehensive task details including:
+    - Task state (DRAFT, ACTIVE, DONE, ARCHIVED)
+    - Owner and Creator info
+    - Aliases (from merged tasks)
+    - Dependencies with state machine status (PROPOSED, CONFIRMED, REJECTED)
+    - Pending proposals (merge, dependency alternatives)
+    - Attribute answers from all users
+    """
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Get owner
+    owner = db.query(User).filter(User.id == task.owner_user_id).first()
+    
+    # Get creator
+    creator = None
+    if task.created_by_user_id:
+        creator = db.query(User).filter(User.id == task.created_by_user_id).first()
+    
+    # Get task state
+    task_state = task.state.value if hasattr(task, 'state') and task.state else "ACTIVE"
+    
+    # Get aliases (for merged tasks)
+    aliases = []
+    try:
+        alias_entries = db.query(TaskAlias).filter(TaskAlias.canonical_task_id == task_id).all()
+        for alias in alias_entries:
+            alias_creator = db.query(User).filter(User.id == alias.alias_created_by_user_id).first()
+            aliases.append({
+                "id": str(alias.id),
+                "title": alias.alias_title,
+                "creator_name": alias_creator.name if alias_creator else "Unknown",
+                "merged_from_task_id": str(alias.merged_from_task_id) if alias.merged_from_task_id else None
+            })
+    except Exception:
+        pass
+    
+    # Get V2 dependencies with status
+    dependencies_v2 = []
+    try:
+        # Outgoing (this task depends on)
+        outgoing = db.query(TaskDependencyV2).filter(
+            TaskDependencyV2.downstream_task_id == task_id,
+            TaskDependencyV2.status.in_([DependencyStatus.PROPOSED, DependencyStatus.CONFIRMED])
+        ).all()
+        for dep in outgoing:
+            upstream = db.query(Task).filter(Task.id == dep.upstream_task_id).first()
+            upstream_owner = db.query(User).filter(User.id == upstream.owner_user_id).first() if upstream else None
+            dependencies_v2.append({
+                "dependency_id": str(dep.id),
+                "direction": "outgoing",
+                "task_id": str(dep.upstream_task_id),
+                "task_title": upstream.title if upstream else "Unknown",
+                "task_owner": upstream_owner.name if upstream_owner else "Unknown",
+                "status": dep.status.value,
+                "created_by": None,  # Add later if needed
+                "rejected_reason": dep.rejected_reason
+            })
+        
+        # Incoming (other tasks depend on this)
+        incoming = db.query(TaskDependencyV2).filter(
+            TaskDependencyV2.upstream_task_id == task_id,
+            TaskDependencyV2.status.in_([DependencyStatus.PROPOSED, DependencyStatus.CONFIRMED])
+        ).all()
+        for dep in incoming:
+            downstream = db.query(Task).filter(Task.id == dep.downstream_task_id).first()
+            downstream_owner = db.query(User).filter(User.id == downstream.owner_user_id).first() if downstream else None
+            dependencies_v2.append({
+                "dependency_id": str(dep.id),
+                "direction": "incoming",
+                "task_id": str(dep.downstream_task_id),
+                "task_title": downstream.title if downstream else "Unknown",
+                "task_owner": downstream_owner.name if downstream_owner else "Unknown",
+                "status": dep.status.value,
+                "created_by": None,
+                "rejected_reason": dep.rejected_reason
+            })
+    except Exception:
+        pass
+    
+    # Get pending merge proposals involving this task
+    merge_proposals = []
+    try:
+        proposals = db.query(TaskMergeProposal).filter(
+            ((TaskMergeProposal.from_task_id == task_id) | (TaskMergeProposal.to_task_id == task_id)),
+            TaskMergeProposal.status == MergeProposalStatus.PROPOSED
+        ).all()
+        for p in proposals:
+            from_task = db.query(Task).filter(Task.id == p.from_task_id).first()
+            to_task = db.query(Task).filter(Task.id == p.to_task_id).first()
+            proposer = db.query(User).filter(User.id == p.proposed_by_user_id).first()
+            merge_proposals.append({
+                "id": str(p.id),
+                "from_task_id": str(p.from_task_id),
+                "from_task_title": from_task.title if from_task else "Unknown",
+                "to_task_id": str(p.to_task_id),
+                "to_task_title": to_task.title if to_task else "Unknown",
+                "proposed_by": proposer.name if proposer else "Unknown",
+                "reason": p.proposal_reason,
+                "status": p.status.value
+            })
+    except Exception:
+        pass
+    
+    # Get alternative dependency proposals
+    alt_dep_proposals = []
+    try:
+        alt_proposals = db.query(AlternativeDependencyProposal).filter(
+            ((AlternativeDependencyProposal.downstream_task_id == task_id) |
+             (AlternativeDependencyProposal.original_upstream_task_id == task_id) |
+             (AlternativeDependencyProposal.suggested_upstream_task_id == task_id)),
+            AlternativeDependencyProposal.status == AlternativeDepStatus.PROPOSED
+        ).all()
+        for ap in alt_proposals:
+            downstream = db.query(Task).filter(Task.id == ap.downstream_task_id).first()
+            orig_upstream = db.query(Task).filter(Task.id == ap.original_upstream_task_id).first()
+            suggested = db.query(Task).filter(Task.id == ap.suggested_upstream_task_id).first()
+            proposer = db.query(User).filter(User.id == ap.proposed_by_user_id).first()
+            alt_dep_proposals.append({
+                "id": str(ap.id),
+                "downstream_task": downstream.title if downstream else "Unknown",
+                "original_upstream": orig_upstream.title if orig_upstream else "Unknown",
+                "suggested_upstream": suggested.title if suggested else "Unknown",
+                "proposed_by": proposer.name if proposer else "Unknown",
+                "reason": ap.proposal_reason,
+                "status": ap.status.value
+            })
+    except Exception:
+        pass
+    
+    # Get parent
+    parent = None
+    if task.parent_id:
+        parent_task = db.query(Task).filter(Task.id == task.parent_id).first()
+        if parent_task:
+            parent_owner = db.query(User).filter(User.id == parent_task.owner_user_id).first()
+            parent = {
+                "id": str(parent_task.id),
+                "title": parent_task.title,
+                "owner_name": parent_owner.name if parent_owner else "Unknown"
+            }
+    
+    # Get children
+    children = []
+    if hasattr(task, 'children') and task.children:
+        for child in task.children:
+            if child.is_active:
+                child_owner = db.query(User).filter(User.id == child.owner_user_id).first()
+                children.append({
+                    "id": str(child.id),
+                    "title": child.title,
+                    "owner_name": child_owner.name if child_owner else "Unknown",
+                    "state": child.state.value if hasattr(child, 'state') and child.state else "ACTIVE"
+                })
+    
+    return {
+        "id": str(task.id),
+        "title": task.title,
+        "description": task.description,
+        "state": task_state,
+        "state_reason": task.state_reason if hasattr(task, 'state_reason') else None,
+        "state_changed_at": task.state_changed_at.isoformat() if hasattr(task, 'state_changed_at') and task.state_changed_at else None,
+        "owner": {
+            "id": str(owner.id) if owner else None,
+            "name": owner.name if owner else "Unknown"
+        },
+        "creator": {
+            "id": str(creator.id) if creator else None,
+            "name": creator.name if creator else None
+        } if creator else None,
+        "parent": parent,
+        "children": children,
+        "is_active": task.is_active,
+        "created_at": task.created_at.isoformat() if task.created_at else None,
+        "aliases": aliases,
+        "dependencies_v2": dependencies_v2,
+        "merge_proposals": merge_proposals,
+        "alt_dependency_proposals": alt_dep_proposals
+    }
 
 
 @router.get("/{task_id}/dependencies")
@@ -617,7 +880,9 @@ async def get_task_graph_with_attributes(
             "dependency_ids": [str(did) for did in dependency_ids],
             "attributes": attributes,
             "relevant_user_ids": relevant_user_ids,
-            "relevant_user_names": relevant_user_names
+            "relevant_user_names": relevant_user_names,
+            "state": task.state.value if task.state else "ACTIVE",
+            "created_by_user_id": str(task.created_by_user_id) if task.created_by_user_id else None
         })
     
     return result
