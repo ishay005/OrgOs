@@ -212,17 +212,13 @@
                     <div class="prompt-controls-row">
                         <div class="prompt-mode-selector">
                             <label>Mode:</label>
-                            <select id="prompt-mode-select">
-                                <option value="morning_brief_true">Morning Brief (with pending)</option>
-                                <option value="morning_brief_false">Morning Brief (without pending)</option>
-                                <option value="user_question_true">User Question (with pending)</option>
-                                <option value="user_question_false">User Question (without pending)</option>
-                                <option value="collect_data_true">Collect Data (with pending)</option>
-                                <option value="collect_data_false">Collect Data (without pending)</option>
+                            <select id="prompt-mode-select" onchange="loadPromptForMode()">
+                                <option value="morning_brief">Morning Brief</option>
+                                <option value="questions">Questions (Free Chat)</option>
                                 <optgroup label="Daily Sync">
-                                    <option value="daily_opening_brief_false">Daily: Opening Brief</option>
-                                    <option value="daily_questions_true">Daily: Questions (user + Robin, with pending)</option>
-                                    <option value="daily_summary_false">Daily: Summary</option>
+                                    <option value="daily_opening">Daily: Opening</option>
+                                    <option value="daily_questions">Daily: Questions</option>
+                                    <option value="daily_summary">Daily: Summary</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -245,84 +241,16 @@
                             <textarea id="prompt-text" rows="20" style="width: 100%; font-family: monospace; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Loading prompt..."></textarea>
                         </div>
                         
-                        <div class="prompt-editor-section">
-                            <label><strong>Context Configuration:</strong></label>
-                            <div class="context-config-grid">
-                                <div class="context-field">
-                                    <label>💬 Chat History Size:</label>
-                                    <input type="number" id="ctx-history-size" min="0" max="10" value="3">
-                                </div>
-                                
-                                <div class="context-section-header">📋 Tasks to Include:</div>
-                                <div class="context-field-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="ctx-include-personal-tasks" checked>
-                                        <span>Personal Tasks (owned by user)</span>
-                                    </label>
-                                </div>
-                                <div class="context-field-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="ctx-include-manager-tasks">
-                                        <span>Manager's Tasks</span>
-                                    </label>
-                                </div>
-                                <div class="context-field-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="ctx-include-employee-tasks">
-                                        <span>Employee Tasks</span>
-                                    </label>
-                                </div>
-                                <div class="context-field-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="ctx-include-aligned-tasks">
-                                        <span>Aligned Users' Tasks</span>
-                                    </label>
-                                </div>
-                                <div class="context-field-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="ctx-include-all-org-tasks">
-                                        <span>All Org Tasks</span>
-                                    </label>
-                                </div>
-                                
-                                <div class="context-section-header">👥 Organization Structure:</div>
-                                <div class="context-field-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="ctx-include-user-info" checked disabled>
-                                        <span>User Info (always included) ✓</span>
-                                    </label>
-                                </div>
-                                <div class="context-field-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="ctx-include-manager" checked disabled>
-                                        <span>Manager Info (always included) ✓</span>
-                                    </label>
-                                </div>
-                                <div class="context-field-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="ctx-include-employees">
-                                        <span>Employee List</span>
-                                    </label>
-                                </div>
-                                <div class="context-field-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="ctx-include-aligned-users">
-                                        <span>Aligned Users List</span>
-                                    </label>
-                                </div>
-                                <div class="context-field-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="ctx-include-all-users">
-                                        <span>All Org Users</span>
-                                    </label>
-                                </div>
-                                
-                                <div class="context-section-header">❓ Questions:</div>
-                                <div class="context-field-checkbox">
-                                    <label>
-                                        <input type="checkbox" id="ctx-include-pending" checked>
-                                        <span>Include Pending Questions</span>
-                                    </label>
+                        <div class="prompt-editor-section" style="background: #e8f4e8; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #22c55e;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 20px;">🔧</span>
+                                <div>
+                                    <strong style="color: #166534;">MCP Tools Architecture</strong>
+                                    <p style="margin: 4px 0 0 0; color: #374151; font-size: 13px;">
+                                        <b>Context:</b> Fetched dynamically via tools (get_user_context, get_daily_task_context, etc.)<br>
+                                        <b>Schema:</b> Enforced by API via text.format<br>
+                                        <b>History:</b> Managed by conversation mechanism
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -334,11 +262,11 @@
                         </div>
                         
                         <div class="prompt-editor-section">
-                            <label><strong>👁️ Live Preview - Full Prompt with Context:</strong></label>
+                            <label><strong>👁️ Prompt Preview:</strong></label>
                             <div style="background: #f0f0f0; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
-                                <small style="color: #666;">This shows how the prompt will look with sample context data based on your selected filters. Updates as you type!</small>
+                                <small style="color: #666;">This shows the current prompt text. Context is dynamically fetched via MCP tools at runtime.</small>
                             </div>
-                            <div id="prompt-preview" style="background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; max-height: 500px; overflow-y: auto; line-height: 1.5;">
+                            <div id="prompt-preview" style="background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; max-height: 400px; overflow-y: auto; line-height: 1.5;">
                                 <span style="color: #888;">Preview will appear here...</span>
                             </div>
                         </div>
@@ -626,7 +554,7 @@
         </div>
     </div>
 
-    <script src="/static/app.js?v=2024121119"></script>
+    <script src="/static/app.js?v=2024121127"></script>
 </body>
 </html>
 

@@ -98,44 +98,6 @@ class AttributeDefinitionResponse(BaseModel):
         from_attributes = True
 
 
-# Question schemas
-class QuestionResponse(BaseModel):
-    question_id: UUID
-    target_user_id: UUID
-    target_user_name: str
-    task_id: Optional[UUID]
-    task_title: Optional[str]
-    attribute_id: UUID
-    attribute_name: str
-    attribute_label: str
-    attribute_type: str
-    allowed_values: Optional[List[str]]
-    is_followup: bool
-    previous_value: Optional[str]
-    question_text: str
-
-
-class AnswerCreate(BaseModel):
-    question_id: UUID
-    value: Optional[str] = None
-    refused: bool = False
-
-
-class AnswerResponse(BaseModel):
-    id: UUID
-    answered_by_user_id: UUID
-    target_user_id: UUID
-    task_id: Optional[UUID]
-    attribute_id: UUID
-    value: Optional[str]
-    refused: bool
-    created_at: datetime
-    updated_at: datetime
-    
-    class Config:
-        from_attributes = True
-
-
 # Misalignment schemas
 class MisalignmentResponse(BaseModel):
     other_user_id: UUID
@@ -147,18 +109,6 @@ class MisalignmentResponse(BaseModel):
     attribute_label: str
     your_value: str
     their_value: str
-    similarity_score: float
-
-
-# Debug schemas
-class SimilarityDebugRequest(BaseModel):
-    attribute_type: str
-    allowed_values: Optional[List[str]] = None
-    value_a: str
-    value_b: str
-
-
-class SimilarityDebugResponse(BaseModel):
     similarity_score: float
 
 

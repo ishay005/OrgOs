@@ -9,7 +9,7 @@ from app.models import (
     User, Task, AttributeAnswer, QuestionLog,
     SimilarityScore, ChatThread, ChatMessage, TaskDependency,
     AttributeDefinition, EntityType, DailySyncSession, PromptTemplate,
-    TaskRelevantUser
+    TaskRelevantUser, QuestionsSession
 )
 import logging
 
@@ -31,6 +31,13 @@ async def clear_all_data(db: Session = Depends(get_db)):
         
         deleted_counts["similarity_scores"] = db.query(SimilarityScore).delete()
         deleted_counts["daily_sync_sessions"] = db.query(DailySyncSession).delete()
+        
+        # Try to delete questions_sessions (may not exist yet)
+        try:
+            deleted_counts["questions_sessions"] = db.query(QuestionsSession).delete()
+        except:
+            deleted_counts["questions_sessions"] = 0
+        
         deleted_counts["attribute_answers"] = db.query(AttributeAnswer).delete()
         deleted_counts["question_logs"] = db.query(QuestionLog).delete()
         deleted_counts["chat_messages"] = db.query(ChatMessage).delete()
@@ -68,7 +75,9 @@ async def clear_all_data(db: Session = Depends(get_db)):
 async def update_schema(db: Session = Depends(get_db)):
     """
     Update database schema:
-    - Add team column to users
+    - Add team and role columns to users
+    - Add conversation_id to daily_sync_sessions
+    - Create questions_sessions table
     - Drop alignment_edges table (deprecated)
     """
     results = {"actions": []}
@@ -87,6 +96,40 @@ async def update_schema(db: Session = Depends(get_db)):
             results["actions"].append("Added 'role' column to users table")
         except Exception as e:
             results["actions"].append(f"Role column: {str(e)}")
+        
+        # Add conversation_id to daily_sync_sessions
+        try:
+            db.execute(text("ALTER TABLE daily_sync_sessions ADD COLUMN IF NOT EXISTS conversation_id VARCHAR"))
+            results["actions"].append("Added 'conversation_id' column to daily_sync_sessions")
+        except Exception as e:
+            results["actions"].append(f"Conversation ID column: {str(e)}")
+        
+        # Create questions_sessions table
+        try:
+            db.execute(text("""
+                CREATE TABLE IF NOT EXISTS questions_sessions (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID NOT NULL REFERENCES users(id),
+                    thread_id UUID NOT NULL REFERENCES chat_threads(id),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                    conversation_id VARCHAR
+                )
+            """))
+            results["actions"].append("Created 'questions_sessions' table")
+        except Exception as e:
+            results["actions"].append(f"Questions sessions table: {str(e)}")
+        
+        # Create index for questions sessions
+        try:
+            db.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_questions_session_active 
+                ON questions_sessions(user_id, is_active)
+            """))
+            results["actions"].append("Created index on questions_sessions")
+        except Exception as e:
+            results["actions"].append(f"Questions sessions index: {str(e)}")
         
         # Drop deprecated alignment_edges table
         try:

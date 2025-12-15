@@ -291,6 +291,9 @@ class DailySyncSession(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = Column(Boolean, nullable=False, default=True)
     
+    # OpenAI conversation ID for multi-turn context (for future Assistants API)
+    conversation_id = Column(String, nullable=True)
+    
     # Store snapshot of insight questions for this session (as JSON)
     # Format: [{"id": "uuid", "text": "...", "value": 10, "reason": "..."}, ...]
     insight_questions = Column(JSON, nullable=False, default=[])
@@ -309,6 +312,35 @@ class DailySyncSession(Base):
     
     def __repr__(self):
         return f"<DailySyncSession user={self.user_id} phase={self.phase} active={self.is_active}>"
+
+
+class QuestionsSession(Base):
+    """
+    Tracks an active Questions mode session for a user.
+    Questions mode is free-form conversation with model-driven termination.
+    """
+    __tablename__ = "questions_sessions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+    thread_id = Column(UUID(as_uuid=True), ForeignKey('chat_threads.id'), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = Column(Boolean, nullable=False, default=True)
+    
+    # OpenAI conversation ID for multi-turn context
+    conversation_id = Column(String, nullable=True)
+    
+    # Relationships
+    user = relationship("User", backref="questions_sessions")
+    thread = relationship("ChatThread")
+    
+    __table_args__ = (
+        Index('idx_questions_session_active', 'user_id', 'is_active'),
+    )
+    
+    def __repr__(self):
+        return f"<QuestionsSession user={self.user_id} active={self.is_active}>"
 
 
 class MessageDebugData(Base):

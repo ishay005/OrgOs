@@ -131,7 +131,6 @@ function showDashboard() {
     showSection('robin');
     
     // Load other dashboard data in background
-    loadAlignments();
     loadMisalignments();
 }
 
@@ -149,8 +148,6 @@ function showSection(sectionName) {
         loadPendingQuestions();
     } else if (sectionName === 'prompts') {
         loadPrompts().catch(err => console.error('Error loading prompts:', err));
-    } else if (sectionName === 'alignments') {
-        loadAlignments();
     } else if (sectionName === 'misalignments') {
         loadMisalignments();
     } else if (sectionName === 'graph') {
@@ -947,64 +944,6 @@ function closeUserMisalignmentModal() {
 // Dashboard - Tasks
 // ============================================================================
 
-
-// ============================================================================
-// Dashboard - Alignments
-// ============================================================================
-
-async function loadAlignments() {
-    const listDiv = document.getElementById('alignments-list');
-    listDiv.innerHTML = '<div class="loading">Loading team members</div>';
-    
-    try {
-        const [allUsers, alignments] = await Promise.all([
-            apiCall('/users', { skipAuth: true }),
-            apiCall('/alignments')
-        ]);
-        
-        const alignedIds = new Set(alignments.map(a => a.target_user_id));
-        
-        // Filter out current user
-        const otherUsers = allUsers.filter(u => u.id !== currentUser.id);
-        
-        if (otherUsers.length === 0) {
-            listDiv.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">👥</div>
-                    <p>No other users yet. Invite teammates to join!</p>
-                </div>
-            `;
-            return;
-        }
-        
-        listDiv.innerHTML = otherUsers.map(user => `
-            <div class="toggle-container">
-                <span>👤 ${user.name}</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" 
-                           ${alignedIds.has(user.id) ? 'checked' : ''} 
-                           onchange="toggleAlignment('${user.id}', this.checked)">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        `).join('');
-        
-    } catch (error) {
-        listDiv.innerHTML = `<div class="message error">Failed to load alignments: ${error.message}</div>`;
-    }
-}
-
-async function toggleAlignment(userId, align) {
-    try {
-        await apiCall('/alignments', {
-            method: 'POST',
-            body: JSON.stringify({ target_user_id: userId, align })
-        });
-    } catch (error) {
-        alert('Failed to update alignment: ' + error.message);
-        loadAlignments(); // Reload to reset state
-    }
-}
 
 // ============================================================================
 // Dashboard - Misalignments
@@ -2909,9 +2848,50 @@ async function sendMessageToRobin() {
 }
 
 async function triggerMorningBrief() {
-    const input = document.getElementById('robin-input');
-    input.value = 'morning_brief';
-    await sendMessageToRobin();
+    // End any active Daily Sync first
+    if (dailySyncActive) {
+        console.log('⚠️ Ending Daily Sync to trigger morning brief');
+        dailySyncActive = false;
+        dailySyncSessionId = null;
+        dailySyncPhase = null;
+        updateDailySyncIndicator();
+    }
+    
+    // Show typing indicator
+    showTypingIndicator();
+    
+    try {
+        const response = await fetch('/chat/brief', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': currentUser.id
+            }
+        });
+        
+        hideTypingIndicator();
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Add messages to UI
+        for (const msg of data.messages) {
+            appendMessageToUI(msg);
+        }
+        
+        scrollToBottom();
+    } catch (error) {
+        hideTypingIndicator();
+        console.error('Error getting morning brief:', error);
+        appendMessageToUI({
+            sender: 'robin',
+            text: 'Sorry, I had trouble generating your morning brief. Please try again.',
+            created_at: new Date().toISOString()
+        });
+    }
 }
 
 // ===== Daily Sync Functions =====
@@ -3688,40 +3668,93 @@ async function showMessageDebugData(messageId) {
         }
         
         const data = await response.json();
+        const fullResponse = data.full_response || {};
         
-        // Create a combined view of prompt + response
-        const debugInfo = {
-            "📥 FULL PROMPT": data.full_prompt,
-            "📤 FULL RESPONSE": data.full_response,
-            "⏰ Created": data.created_at
+        // Helper for syntax-highlighted JSON
+        const prettyJson = (obj) => {
+            const json = JSON.stringify(obj, null, 2);
+            return json
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)/g, (match) => {
+                    if (/:$/.test(match)) {
+                        return `<span class="json-key">${match}</span>`;
+                    }
+                    return `<span class="json-string">${match}</span>`;
+                })
+                .replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>')
+                .replace(/\bnull\b/g, '<span class="json-null">null</span>')
+                .replace(/\b(-?\d+\.?\d*)\b/g, '<span class="json-number">$1</span>');
         };
+        
+        // Build compact debug view
+        const mode = fullResponse.mode || 'N/A';
+        const submode = fullResponse.submode || '—';
+        const toolCalls = fullResponse.tool_calls_made || [];
+        const updates = fullResponse.updates || [];
+        const control = fullResponse.control || {};
+        const prompt = data.full_prompt || [];
+        const parsedResponse = fullResponse.parsed_response || {};
+        const rawContent = fullResponse.raw_content || '';
+        
+        let html = `
+        <div class="debug-header">
+            <span class="debug-badge">${mode}</span>
+            ${submode !== '—' ? `<span class="debug-badge secondary">${submode}</span>` : ''}
+            <span class="debug-badge ${control.conversation_done ? 'done' : 'active'}">
+                ${control.conversation_done ? '✓ Done' : '◉ Active'}
+            </span>
+            ${control.next_phase ? `<span class="debug-badge warning">→ ${control.next_phase}</span>` : ''}
+        </div>
+        
+        <div class="debug-row">
+            <span class="debug-label">🔧 Tools:</span>
+            <span>${toolCalls.length > 0 ? toolCalls.map(t => `<code>${typeof t === 'object' ? t.name : t}</code>`).join(' ') : '<em>none</em>'}</span>
+        </div>
+        
+        <div class="debug-row">
+            <span class="debug-label">📝 Updates:</span>
+            <span>${updates.length > 0 ? `${updates.length} update(s)` : '<em>none</em>'}</span>
+        </div>`;
+        
+        // Tool calls detail (if any)
+        if (toolCalls.length > 0 && typeof toolCalls[0] === 'object') {
+            html += `<details class="debug-details"><summary>🔧 Tool Calls & Results (${toolCalls.length})</summary>
+                <div class="tool-calls-container">`;
+            for (const tc of toolCalls) {
+                html += `<div class="tool-call-item">
+                    <div class="tool-call-header"><code>${tc.name}</code></div>
+                    <div class="tool-call-args"><strong>Args:</strong><pre class="debug-json-pretty">${prettyJson(tc.args || {})}</pre></div>
+                    <div class="tool-call-result"><strong>Result:</strong><pre class="debug-json-pretty">${prettyJson(tc.result || {})}</pre></div>
+                </div>`;
+            }
+            html += `</div></details>`;
+        }
+        
+        // Updates detail (if any)
+        if (updates.length > 0) {
+            html += `<details class="debug-details"><summary>📝 Updates Applied</summary>
+                <pre class="debug-json-pretty">${prettyJson(updates)}</pre></details>`;
+        }
+        
+        // Prompt section
+        html += `<details class="debug-details"><summary>📥 Prompt (${prompt.length} messages)</summary>
+            <pre class="debug-json-pretty">${prettyJson(prompt)}</pre></details>`;
+        
+        // Response section
+        html += `<details class="debug-details"><summary>📤 Response</summary>
+            <pre class="debug-json-pretty">${prettyJson(parsedResponse)}</pre></details>`;
+        
+        // Raw output (if different/exists)
+        if (rawContent && rawContent.length > 10) {
+            html += `<details class="debug-details"><summary>📄 Raw Output</summary>
+                <pre class="debug-json-pretty">${escapeHtml(rawContent)}</pre></details>`;
+        }
+        
+        html += `<div class="debug-footer">⏰ ${data.created_at}</div>`;
         
         const modal = document.getElementById('debug-prompt-modal');
         const content = document.getElementById('debug-prompt-content');
-        
-        // Format with syntax highlighting
-        const formatted = JSON.stringify(debugInfo, null, 2);
-        const highlighted = formatted
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                let cls = 'json-number';
-                if (/^"/.test(match)) {
-                    if (/:$/.test(match)) {
-                        cls = 'json-key';
-                    } else {
-                        cls = 'json-string';
-                    }
-                } else if (/true|false/.test(match)) {
-                    cls = 'json-boolean';
-                } else if (/null/.test(match)) {
-                    cls = 'json-null';
-                }
-                return '<span class="' + cls + '">' + match + '</span>';
-            });
-        
-        content.innerHTML = `<pre style="margin: 0;">${highlighted}</pre>`;
+        content.innerHTML = html;
         modal.classList.remove('hidden');
         
     } catch (error) {
@@ -3774,21 +3807,20 @@ async function loadPrompts() {
         const prompts = await response.json();
         console.log('Received prompts:', prompts.length);
         
-        // Store prompts by key
+        // Store prompts by mode (new simplified structure)
         currentPrompts = {};
         prompts.forEach(p => {
-            const key = `${p.mode}_${p.has_pending}`;
-            currentPrompts[key] = p;
-            console.log(`Stored prompt: ${key}`);
+            // Store by mode only (no more has_pending distinction)
+            if (!currentPrompts[p.mode] || p.version > currentPrompts[p.mode].version) {
+                currentPrompts[p.mode] = p;
+                console.log(`Stored prompt: ${p.mode} v${p.version}`);
+            }
         });
         
         console.log('All prompts stored:', Object.keys(currentPrompts));
         
-        // Setup event listeners (only once)
-        setupPromptEventListeners();
-        
-        // Load the selected prompt and its history
-        await loadSelectedPrompt();
+        // Load the selected prompt
+        await loadPromptForMode();
         
         console.log('Prompts loaded successfully!');
         
@@ -3796,7 +3828,6 @@ async function loadPrompts() {
         console.error('Error loading prompts:', error);
         showPromptStatus('Failed to load prompts: ' + error.message, 'error');
         
-        // Show error in UI
         const promptText = document.getElementById('prompt-text');
         if (promptText) {
             promptText.value = `Error loading prompts: ${error.message}\n\nPlease check the browser console for details.`;
@@ -3804,102 +3835,42 @@ async function loadPrompts() {
     }
 }
 
-let promptEventListenersSetup = false;
-
-function setupPromptEventListeners() {
-    if (promptEventListenersSetup) return;
-    
-    const modeSelect = document.getElementById('prompt-mode-select');
-    const versionSelect = document.getElementById('prompt-version-select');
-    
-    if (modeSelect) {
-        modeSelect.addEventListener('change', () => {
-            console.log('Mode changed to:', modeSelect.value);
-            loadSelectedPrompt().catch(err => console.error('Error loading prompt:', err));
-        });
-    }
-    
-    if (versionSelect) {
-        versionSelect.addEventListener('change', () => {
-            console.log('Version changed to:', versionSelect.value);
-            loadPromptVersion().catch(err => console.error('Error loading version:', err));
-        });
-    }
-    
-    // Add listeners for all prompt/context fields to update preview
-    const promptText = document.getElementById('prompt-text');
-    if (promptText) {
-        promptText.addEventListener('input', updatePromptPreview);
-    }
-    
-    // Add listeners for all context checkboxes
-    const contextFields = [
-        'ctx-history-size',
-        'ctx-include-personal-tasks',
-        'ctx-include-manager-tasks',
-        'ctx-include-employee-tasks',
-        'ctx-include-aligned-tasks',
-        'ctx-include-all-org-tasks',
-        'ctx-include-employees',
-        'ctx-include-aligned-users',
-        'ctx-include-all-users',
-        'ctx-include-pending'
-    ];
-    
-    contextFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field) {
-            field.addEventListener('change', updatePromptPreview);
-        }
-    });
-    
-    promptEventListenersSetup = true;
-    console.log('Prompt event listeners setup complete');
-}
-
-async function loadSelectedPrompt() {
-    console.log('loadSelectedPrompt() called');
-    
+async function loadPromptForMode() {
     const select = document.getElementById('prompt-mode-select');
-    if (!select) {
-        console.error('❌ Prompt mode select not found');
-        return;
+    const mode = select.value;
+    
+    console.log(`Loading prompt for mode: ${mode}`);
+    
+    const prompt = currentPrompts[mode];
+    const promptTextEl = document.getElementById('prompt-text');
+    const versionInfo = document.getElementById('prompt-version-info');
+    const preview = document.getElementById('prompt-preview');
+    
+    if (prompt) {
+        promptTextEl.value = prompt.prompt_text || '';
+        versionInfo.textContent = `Version ${prompt.version} | ${prompt.notes || 'No notes'}`;
+        
+        // Update preview
+        if (preview) {
+            preview.innerHTML = `<span style="color: #9cdcfe;">${escapeHtml(prompt.prompt_text || '')}</span>`;
+        }
+    } else {
+        promptTextEl.value = `No prompt found for mode: ${mode}\n\nRun seed_mcp_prompts.py to create initial prompts.`;
+        versionInfo.textContent = 'No prompt loaded';
     }
     
-    const key = select.value;
-    console.log(`Selected key: ${key}`);
-    // Split on the LAST underscore to handle modes like "morning_brief"
-    const lastUnderscore = key.lastIndexOf('_');
-    const mode = key.substring(0, lastUnderscore);
-    const hasPendingStr = key.substring(lastUnderscore + 1);
-    const hasPending = hasPendingStr === 'true';
-    
-    // Load version history for this mode
-    await loadVersionHistory(mode, hasPending);
-    
-    const prompt = currentPrompts[key];
-    
-    if (!prompt) {
-        console.error('❌ Prompt not found for key:', key);
-        console.log('Available keys:', Object.keys(currentPrompts));
-        const promptText = document.getElementById('prompt-text');
-        const versionInfo = document.getElementById('prompt-version-info');
-        if (promptText) promptText.value = `Error: Prompt not found for ${key}\n\nAvailable: ${Object.keys(currentPrompts).join(', ')}`;
-        if (versionInfo) versionInfo.textContent = `Error: Prompt not found`;
-        return;
-    }
-    
-    console.log('✅ Found prompt:', prompt.mode, 'v' + prompt.version);
-    
-    // Populate the form with this prompt
-    populatePromptForm(prompt);
-    
-    console.log('✅ Form populated');
+    // Load version history
+    await loadVersionHistory(mode);
 }
 
-async function loadVersionHistory(mode, hasPending) {
+// Event listeners are now set up via onchange in HTML
+
+// loadSelectedPrompt is now replaced by loadPromptForMode
+
+async function loadVersionHistory(mode) {
     try {
-        const response = await fetch(`/prompts/history/${mode}/${hasPending}`, {
+        // Use false for has_pending since it's not used in MCP architecture
+        const response = await fetch(`/prompts/history/${mode}/false`, {
             headers: {
                 'X-User-Id': currentUser.id
             }
@@ -3910,8 +3881,7 @@ async function loadVersionHistory(mode, hasPending) {
         }
         
         const versions = await response.json();
-        const key = `${mode}_${hasPending}`;
-        promptVersionHistory[key] = versions;
+        promptVersionHistory[mode] = versions;
         
         // Populate version dropdown
         const versionSelect = document.getElementById('prompt-version-select');
@@ -3936,43 +3906,6 @@ function populatePromptForm(prompt) {
         promptTextArea.value = prompt.prompt_text || '';
     }
     
-    // Populate context config individual fields
-    const ctx = prompt.context_config || {};
-    
-    // Chat history
-    const historySize = document.getElementById('ctx-history-size');
-    if (historySize) historySize.value = ctx.history_size || 2;
-    
-    // Task filters (backward compatibility: if old "include_tasks" exists, map to personal_tasks)
-    const includePersonalTasks = document.getElementById('ctx-include-personal-tasks');
-    if (includePersonalTasks) includePersonalTasks.checked = ctx.include_personal_tasks !== false || ctx.include_tasks !== false;
-    
-    const includeManagerTasks = document.getElementById('ctx-include-manager-tasks');
-    if (includeManagerTasks) includeManagerTasks.checked = ctx.include_manager_tasks === true;
-    
-    const includeEmployeeTasks = document.getElementById('ctx-include-employee-tasks');
-    if (includeEmployeeTasks) includeEmployeeTasks.checked = ctx.include_employee_tasks === true;
-    
-    const includeAlignedTasks = document.getElementById('ctx-include-aligned-tasks');
-    if (includeAlignedTasks) includeAlignedTasks.checked = ctx.include_aligned_tasks === true;
-    
-    const includeAllOrgTasks = document.getElementById('ctx-include-all-org-tasks');
-    if (includeAllOrgTasks) includeAllOrgTasks.checked = ctx.include_all_org_tasks === true;
-    
-    // Organization structure (user info and manager are always included)
-    const includeEmployees = document.getElementById('ctx-include-employees');
-    if (includeEmployees) includeEmployees.checked = ctx.include_employees === true;
-    
-    const includeAlignedUsers = document.getElementById('ctx-include-aligned-users');
-    if (includeAlignedUsers) includeAlignedUsers.checked = ctx.include_aligned_users === true;
-    
-    const includeAllUsers = document.getElementById('ctx-include-all-users');
-    if (includeAllUsers) includeAllUsers.checked = ctx.include_all_users === true;
-    
-    // Pending questions
-    const includePending = document.getElementById('ctx-include-pending');
-    if (includePending) includePending.checked = ctx.include_pending !== false;
-    
     // Clear notes and show version
     const notesField = document.getElementById('prompt-notes');
     if (notesField) notesField.value = '';
@@ -3984,8 +3917,11 @@ function populatePromptForm(prompt) {
         versionInfo.textContent = `Version ${prompt.version} | ${activeStatus} | Created: ${createdDate} | By: ${prompt.created_by || 'System'}`;
     }
     
-    // Update preview with the loaded prompt
-    updatePromptPreview();
+    // Update preview
+    const preview = document.getElementById('prompt-preview');
+    if (preview) {
+        preview.innerHTML = `<span style="color: #9cdcfe;">${escapeHtml(prompt.prompt_text || '')}</span>`;
+    }
 }
 
 async function loadPromptVersion() {
@@ -4005,45 +3941,16 @@ async function loadPromptVersion() {
 
 async function savePrompt() {
     const select = document.getElementById('prompt-mode-select');
-    const key = select.value;
-    // Split on the LAST underscore to handle modes like "morning_brief"
-    const lastUnderscore = key.lastIndexOf('_');
-    const mode = key.substring(0, lastUnderscore);
-    const hasPendingStr = key.substring(lastUnderscore + 1);
-    const hasPending = hasPendingStr === 'true';
+    const mode = select.value;
     
     const promptTextEl = document.getElementById('prompt-text');
     const promptText = promptTextEl ? promptTextEl.value : '';
     const notes = document.getElementById('prompt-notes').value;
     
     console.log('💾 Saving prompt...');
-    console.log('Mode:', mode, 'Has Pending:', hasPending);
+    console.log('Mode:', mode);
     console.log('Prompt text length:', promptText.length);
-    console.log('Prompt text (first 100 chars):', promptText.substring(0, 100));
     console.log('Notes:', notes);
-    
-    // Build context config from individual fields
-    const contextConfig = {
-        // Chat history
-        history_size: parseInt(document.getElementById('ctx-history-size').value) || 2,
-        
-        // Task filters
-        include_personal_tasks: document.getElementById('ctx-include-personal-tasks').checked,
-        include_manager_tasks: document.getElementById('ctx-include-manager-tasks').checked,
-        include_employee_tasks: document.getElementById('ctx-include-employee-tasks').checked,
-        include_aligned_tasks: document.getElementById('ctx-include-aligned-tasks').checked,
-        include_all_org_tasks: document.getElementById('ctx-include-all-org-tasks').checked,
-        
-        // Organization structure (user info and manager are always included)
-        include_user_info: true,
-        include_manager: true,
-        include_employees: document.getElementById('ctx-include-employees').checked,
-        include_aligned_users: document.getElementById('ctx-include-aligned-users').checked,
-        include_all_users: document.getElementById('ctx-include-all-users').checked,
-        
-        // Pending questions
-        include_pending: document.getElementById('ctx-include-pending').checked
-    };
     
     if (!promptText.trim()) {
         showPromptStatus('❌ Prompt text cannot be empty', 'error');
@@ -4058,9 +3965,9 @@ async function savePrompt() {
     try {
         const payload = {
             mode: mode,
-            has_pending: hasPending,
+            has_pending: false,  // Not used in MCP architecture
             prompt_text: promptText,
-            context_config: contextConfig,
+            context_config: {},  // Not used in MCP architecture
             created_by: currentUser.name,
             notes: notes || null
         };

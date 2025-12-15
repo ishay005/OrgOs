@@ -15,6 +15,10 @@ python3 app/seed.py
 echo "📝 Seeding prompt templates..."
 python3 seed_prompts.py || echo "⚠️  Prompt seeding failed (not critical)"
 
+# Seed MCP-based prompts (idempotent - updates if different)
+echo "📝 Seeding MCP prompts..."
+python3 seed_mcp_prompts.py || echo "⚠️  MCP prompt seeding failed (not critical)"
+
 # Clear all data (optional - for resetting production)
 if [ "$RUN_CLEAR_DATA" = "true" ]; then
     echo "🗑️  Clearing all user data..."

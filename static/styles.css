@@ -2295,6 +2295,184 @@ input:checked + .slider:before {
     font-weight: 600;
 }
 
+/* Debug Data Modal - Compact Design */
+.debug-header {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.debug-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: #6366f1;
+    color: white;
+}
+
+.debug-badge.secondary {
+    background: #8b5cf6;
+}
+
+.debug-badge.active {
+    background: #10b981;
+}
+
+.debug-badge.done {
+    background: #6b7280;
+}
+
+.debug-badge.warning {
+    background: #f59e0b;
+}
+
+.debug-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.debug-label {
+    font-weight: 600;
+    color: #374151;
+    min-width: 80px;
+}
+
+.debug-row code {
+    background: #e0e7ff;
+    color: #4338ca;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'SF Mono', Monaco, monospace;
+}
+
+.debug-details {
+    margin: 8px 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.debug-details summary {
+    padding: 8px 12px;
+    background: #f9fafb;
+    cursor: pointer;
+    font-size: 12px;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.debug-details summary:hover {
+    background: #f3f4f6;
+}
+
+.debug-details[open] summary {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.debug-json-pretty {
+    margin: 0;
+    padding: 12px;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    font-size: 11px;
+    font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+    line-height: 1.5;
+    overflow-x: auto;
+    max-height: 300px;
+    white-space: pre;
+}
+
+.debug-json-pretty .json-key {
+    color: #89b4fa;
+}
+
+.debug-json-pretty .json-string {
+    color: #a6e3a1;
+}
+
+.debug-json-pretty .json-number {
+    color: #fab387;
+}
+
+.debug-json-pretty .json-boolean {
+    color: #cba6f7;
+    font-weight: 600;
+}
+
+.debug-json-pretty .json-null {
+    color: #f38ba8;
+    font-style: italic;
+}
+
+.debug-footer {
+    text-align: right;
+    color: #9ca3af;
+    font-size: 11px;
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Tool Call Items */
+.tool-calls-container {
+    padding: 8px;
+}
+
+.tool-call-item {
+    margin-bottom: 12px;
+    border: 1px solid #374151;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #1e1e2e;
+}
+
+.tool-call-item:last-child {
+    margin-bottom: 0;
+}
+
+.tool-call-header {
+    padding: 8px 12px;
+    background: #2d2d44;
+    border-bottom: 1px solid #374151;
+}
+
+.tool-call-header code {
+    color: #89b4fa;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.tool-call-args,
+.tool-call-result {
+    padding: 4px 12px;
+}
+
+.tool-call-args strong,
+.tool-call-result strong {
+    color: #9ca3af;
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.tool-call-args .debug-json-pretty,
+.tool-call-result .debug-json-pretty {
+    margin: 4px 0 8px 0;
+    padding: 8px;
+    max-height: 150px;
+    font-size: 10px;
+}
+
 
 /* ============================================================================
    Import/Export Styles

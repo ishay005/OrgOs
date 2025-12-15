@@ -1,5 +1,10 @@
 """
 Daily Sync API endpoints
+
+Updated for the new architecture with:
+- call_robin() using function calling
+- Model-driven phase transitions (questions -> summary)
+- Simplified flow: opening -> questions -> summary -> done
 """
 import logging
 from datetime import datetime
@@ -7,15 +12,21 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 from uuid import UUID
 from pydantic import BaseModel
+from typing import Optional
 
 from app.database import get_db
-from app.models import ChatThread, ChatMessage, DailySyncSession, DailySyncPhase, MessageDebugData
-from app.services import daily_sync_orchestrator
+from app.models import ChatThread, ChatMessage, DailySyncSession, DailySyncPhase, MessageDebugData, User
+from app.services.robin_core import start_daily_sync, continue_daily_sync, RobinReply
+from app.services.cortex_tools import get_insight_questions_for_daily
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/daily", tags=["daily_sync"])
 
+
+# ============================================================================
+# Request/Response Models
+# ============================================================================
 
 class DailySyncStartResponse(BaseModel):
     messages: list[dict]
@@ -33,232 +44,285 @@ class DailySyncSendResponse(BaseModel):
     is_complete: bool
 
 
+class DailySyncStatusResponse(BaseModel):
+    has_active_session: bool
+    session_id: Optional[str] = None
+    phase: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+def _get_active_session(db: Session, user_id: UUID) -> Optional[DailySyncSession]:
+    """Get the active Daily Sync session for a user, if any"""
+    return db.query(DailySyncSession).filter(
+        DailySyncSession.user_id == user_id,
+        DailySyncSession.is_active == True
+    ).first()
+
+
+def _ensure_thread_exists(db: Session, user_id: UUID) -> ChatThread:
+    """Ensure a chat thread exists for the user"""
+    thread = db.query(ChatThread).filter(ChatThread.user_id == user_id).first()
+    if not thread:
+        thread = ChatThread(user_id=user_id)
+        db.add(thread)
+        db.commit()
+        db.refresh(thread)
+    return thread
+
+
+def _create_daily_session(
+    db: Session, 
+    user_id: UUID, 
+    thread_id: UUID
+) -> DailySyncSession:
+    """Create a new Daily Sync session"""
+    # Get insight questions to cache in session
+    insight_questions = get_insight_questions_for_daily(db, user_id, None)
+    insight_questions_json = [q.model_dump() for q in insight_questions]
+    
+    session = DailySyncSession(
+        user_id=user_id,
+        thread_id=thread_id,
+        phase=DailySyncPhase.OPENING_BRIEF,
+        is_active=True,
+        insight_questions=insight_questions_json,
+        asked_question_ids=[],
+        answered_question_ids=[]
+    )
+    db.add(session)
+    db.commit()
+    db.refresh(session)
+    
+    logger.info(f"Created Daily Sync session {session.id} with {len(insight_questions_json)} insight questions")
+    return session
+
+
+def _save_robin_messages(
+    db: Session, 
+    thread_id: UUID, 
+    reply: RobinReply
+) -> list[dict]:
+    """Save Robin's messages and return response dicts"""
+    messages = []
+    
+    for msg_text in reply.display_messages:
+        if not msg_text:
+            continue
+            
+        chat_msg = ChatMessage(
+            thread_id=thread_id,
+            sender="robin",
+            text=msg_text,
+            msg_metadata={
+                "mode": reply.mode,
+                "submode": reply.submode,
+                "tool_calls": reply.tool_calls_made,
+                "has_debug": True
+            }
+        )
+        db.add(chat_msg)
+        db.commit()
+        db.refresh(chat_msg)
+        
+        # Save comprehensive debug data
+        if reply.raw_response:
+            debug = MessageDebugData(
+                message_id=chat_msg.id,
+                full_prompt=reply.raw_response.get("full_prompt", []),
+                full_response={
+                    "mode": reply.mode,
+                    "submode": reply.submode,
+                    "tool_calls_made": reply.tool_calls_made,
+                    "parsed_response": reply.raw_response.get("raw_response", {}),
+                    "raw_content": reply.raw_response.get("raw_content", ""),
+                    "updates": [u.model_dump() for u in reply.updates],
+                    "control": reply.control.model_dump()
+                }
+            )
+            db.add(debug)
+            db.commit()
+        
+        messages.append({
+            "id": str(chat_msg.id),
+            "text": chat_msg.text,
+            "sender": "robin",
+            "created_at": chat_msg.created_at.isoformat()
+        })
+    
+    return messages
+
+
+def _update_session_phase(
+    db: Session, 
+    session: DailySyncSession, 
+    reply: RobinReply
+):
+    """Update session phase based on Robin's control signals"""
+    current_phase = session.phase
+    if hasattr(current_phase, 'value'):
+        current_phase = current_phase.value
+    
+    # Check for phase transition
+    if reply.control.next_phase == "summary":
+        session.phase = DailySyncPhase.SUMMARY
+        logger.info(f"Phase transition: {current_phase} -> summary")
+    
+    # Check for completion
+    if reply.control.conversation_done:
+        session.phase = DailySyncPhase.DONE
+        session.is_active = False
+        logger.info(f"Daily Sync complete, session {session.id} marked inactive")
+    
+    session.updated_at = datetime.utcnow()
+    db.commit()
+
+
+# ============================================================================
+# API Endpoints
+# ============================================================================
+
 @router.post("/start", response_model=DailySyncStartResponse)
-async def start_daily_sync(
+async def start_daily(
     db: Session = Depends(get_db),
     x_user_id: str = Header(...)
 ):
     """
     Start a new Daily Sync session.
     
-    Creates a session, generates greeting + morning brief,
-    and returns initial messages.
+    Creates a session and generates the opening message.
     """
     try:
         user_id = UUID(x_user_id)
-    except Exception as e:
-        logger.error(f"❌ Invalid user ID: {x_user_id}")
+    except Exception:
         raise HTTPException(status_code=400, detail=f"Invalid user ID: {x_user_id}")
     
     logger.info(f"🚀 /daily/start called for user {user_id}")
     
+    # Check for existing session
+    existing = _get_active_session(db, user_id)
+    if existing:
+        phase = existing.phase.value if hasattr(existing.phase, 'value') else existing.phase
+        raise HTTPException(
+            status_code=400,
+            detail=f"Daily Sync already in progress (phase: {phase}). End it first."
+        )
+    
+    # Ensure thread exists
+    thread = _ensure_thread_exists(db, user_id)
+    
+    # Create session
+    session = _create_daily_session(db, user_id, thread.id)
+    
+    # Add system message
+    system_msg = ChatMessage(
+        thread_id=thread.id,
+        sender="system",
+        text="🌅 Daily Sync started"
+    )
+    db.add(system_msg)
+    db.commit()
+    
     try:
-        # Check if there's already an active session
-        existing_session = daily_sync_orchestrator.get_active_daily_session(db, user_id)
-        if existing_session:
-            logger.warning(f"⚠️  User {user_id} already has active Daily Sync session in phase {existing_session.phase}")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Daily Sync already in progress (phase: {existing_session.phase}). Complete or cancel it first."
-            )
-        
-        # Get or create chat thread
-        thread = db.query(ChatThread).filter(ChatThread.user_id == user_id).first()
-        if not thread:
-            thread = ChatThread(user_id=user_id)
-            db.add(thread)
-            db.commit()
-            db.refresh(thread)
-        
-        # Get insight questions
-        insight_questions = daily_sync_orchestrator.get_insight_questions_for_daily_sync(db, user_id)
-        
-        # Create session
-        session = daily_sync_orchestrator.create_daily_session(
-            db, user_id, thread.id, insight_questions
+        # Generate opening message
+        reply = await start_daily_sync(
+            db=db,
+            user_id=user_id,
+            thread_id=thread.id,
+            daily_session=session
         )
         
-        # Get contexts
-        user_ctx = daily_sync_orchestrator.get_daily_user_context(db, user_id)
-        situation_ctx = daily_sync_orchestrator.get_daily_situation_context(db, user_id)
+        # Save messages
+        messages = _save_robin_messages(db, thread.id, reply)
         
-        # Generate greeting (no user message yet)
-        result = await daily_sync_orchestrator.handle_daily_sync_turn(
-            db, session, user_ctx, situation_ctx, None
-        )
-        
-        # Store Robin's messages and collect response data
-        response_messages = []
-        logger.info(f"📝 Daily START - Storing {len(result.messages)} messages")
-        for i, msg in enumerate(result.messages):
-            logger.info(f"  Msg {i}: len={len(msg.text)}, preview: '{msg.text[:100]}'")
-            chat_msg = ChatMessage(
-                thread_id=thread.id,
-                sender="robin",
-                text=msg.text,
-                msg_metadata=msg.metadata or {}
-            )
-            db.add(chat_msg)
-            db.commit()
-            db.refresh(chat_msg)
-            
-            # Save debug data if available
-            if msg.metadata and ('debug_prompt' in msg.metadata or 'full_response' in msg.metadata):
-                debug_data = MessageDebugData(
-                    message_id=chat_msg.id,
-                    full_prompt=msg.metadata.get('debug_prompt', {}),
-                    full_response=msg.metadata.get('full_response', {})
-                )
-                db.add(debug_data)
-                db.commit()
-            
-            # Add to response with message ID
-            response_messages.append({
-                "id": str(chat_msg.id),
-                "sender": "robin",
-                "text": msg.text,
-                "metadata": msg.metadata,
-                "created_at": chat_msg.created_at.isoformat()
-            })
-        
-        # Update session phase
-        session.phase = result.new_phase
-        daily_sync_orchestrator.update_daily_session(db, session)
-        
+        # Move to questions phase after opening
+        session.phase = DailySyncPhase.QUESTIONS
         db.commit()
         
         return DailySyncStartResponse(
-            messages=response_messages,
-            phase=result.new_phase.value,
+            messages=messages,
+            phase="questions",  # Always move to questions after opening
             session_id=str(session.id)
         )
-    
-    except HTTPException:
-        raise
+        
     except Exception as e:
-        logger.error(f"❌ Daily Sync start error: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Daily Sync start failed: {str(e)}")
+        logger.error(f"Error starting Daily Sync: {e}", exc_info=True)
+        # Clean up session
+        session.is_active = False
+        db.commit()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/send", response_model=DailySyncSendResponse)
-async def send_daily_sync_message(
+async def send_daily_message(
     request: DailySyncSendRequest,
     db: Session = Depends(get_db),
     x_user_id: str = Header(...)
 ):
     """
-    Send a message during an active Daily Sync session.
+    Send a message during Daily Sync.
+    
+    Handles the conversation and phase transitions.
     """
-    user_id = UUID(x_user_id)
-    logger.info(f"📨 /daily/send called for user {user_id}, message: '{request.text[:50]}'")
+    try:
+        user_id = UUID(x_user_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail=f"Invalid user ID: {x_user_id}")
+    
+    logger.info(f"📨 /daily/send: '{request.text[:50]}...'")
     
     # Get active session
-    session = daily_sync_orchestrator.get_active_daily_session(db, user_id)
+    session = _get_active_session(db, user_id)
     if not session:
-        logger.error(f"❌ No active Daily Sync session for user {user_id}")
-        raise HTTPException(
-            status_code=404,
-            detail="No active Daily Sync session. Start one with POST /daily/start"
-        )
+        raise HTTPException(status_code=400, detail="No active Daily Sync session")
     
-    logger.info(f"📊 Current session phase: {session.phase}")
+    # Get thread
+    thread = db.query(ChatThread).filter(ChatThread.id == session.thread_id).first()
+    if not thread:
+        raise HTTPException(status_code=500, detail="Thread not found")
     
-    # Store user message
+    # Save user message
     user_msg = ChatMessage(
-        thread_id=session.thread_id,
+        thread_id=thread.id,
         sender="user",
-        text=request.text,
-        msg_metadata={}
+        text=request.text
     )
     db.add(user_msg)
     db.commit()
     
-    # Get contexts
-    user_ctx = daily_sync_orchestrator.get_daily_user_context(db, user_id)
-    situation_ctx = daily_sync_orchestrator.get_daily_situation_context(db, user_id)
-    
-    # Process turn
-    result = await daily_sync_orchestrator.handle_daily_sync_turn(
-        db, session, user_ctx, situation_ctx, request.text
-    )
-    
-    # Store Robin's messages and collect response data
-    response_messages = []
-    for msg in result.messages:
-        chat_msg = ChatMessage(
-            thread_id=session.thread_id,
-            sender="robin",
-            text=msg.text,
-            msg_metadata=msg.metadata or {}
+    try:
+        # Generate reply
+        reply = await continue_daily_sync(
+            db=db,
+            user_id=user_id,
+            thread_id=thread.id,
+            daily_session=session,
+            user_message=request.text
         )
-        db.add(chat_msg)
-        db.commit()
-        db.refresh(chat_msg)
         
-        # Save debug data if available
-        if msg.metadata and ('debug_prompt' in msg.metadata or 'full_response' in msg.metadata):
-            debug_data = MessageDebugData(
-                message_id=chat_msg.id,
-                full_prompt=msg.metadata.get('debug_prompt', {}),
-                full_response=msg.metadata.get('full_response', {})
-            )
-            db.add(debug_data)
-            db.commit()
+        # Update phase based on control signals
+        _update_session_phase(db, session, reply)
         
-        # Add to response with message ID
-        response_messages.append({
-            "id": str(chat_msg.id),
-            "sender": "robin",
-            "text": msg.text,
-            "metadata": msg.metadata,
-            "created_at": chat_msg.created_at.isoformat()
-        })
-    
-    # Apply updates
-    for update in result.updates:
-        # TODO: Apply structured updates to AttributeAnswer
-        logger.info(f"Update: {update}")
-    
-    # Update session phase
-    session.phase = result.new_phase
-    
-    # If done, deactivate session
-    if result.new_phase == DailySyncPhase.DONE:
-        daily_sync_orchestrator.end_daily_session(db, session)
-    else:
-        daily_sync_orchestrator.update_daily_session(db, session)
-    
-    db.commit()
-    
-    return DailySyncSendResponse(
-        messages=response_messages,
-        phase=result.new_phase.value,
-        is_complete=(result.new_phase == DailySyncPhase.DONE)
-    )
-
-
-@router.get("/status")
-async def get_daily_sync_status(
-    db: Session = Depends(get_db),
-    x_user_id: str = Header(...)
-):
-    """Check if user has an active Daily Sync session"""
-    user_id = UUID(x_user_id)
-    session = daily_sync_orchestrator.get_active_daily_session(db, user_id)
-    
-    if session:
-        return {
-            "has_active_session": True,
-            "session_id": str(session.id),
-            "phase": session.phase.value,
-            "created_at": session.created_at.isoformat()
-        }
-    else:
-        return {
-            "has_active_session": False
-        }
+        # Save messages
+        messages = _save_robin_messages(db, thread.id, reply)
+        
+        # Get current phase
+        phase = session.phase
+        if hasattr(phase, 'value'):
+            phase = phase.value
+        
+        return DailySyncSendResponse(
+            messages=messages,
+            phase=phase,
+            is_complete=(phase == "done" or not session.is_active)
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in Daily Sync: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/end")
@@ -266,52 +330,51 @@ async def end_daily_sync(
     db: Session = Depends(get_db),
     x_user_id: str = Header(...)
 ):
-    """Manually end the active Daily Sync session"""
-    user_id = UUID(x_user_id)
+    """
+    Manually end the current Daily Sync session.
+    """
+    try:
+        user_id = UUID(x_user_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail=f"Invalid user ID: {x_user_id}")
     
-    # Get active session
-    session = daily_sync_orchestrator.get_active_daily_session(db, user_id)
+    session = _get_active_session(db, user_id)
     if not session:
-        raise HTTPException(
-            status_code=404,
-            detail="No active Daily Sync session"
-        )
+        return {"ended": False, "message": "No active session"}
     
-    # End the session
-    daily_sync_orchestrator.end_daily_session(db, session)
+    session.is_active = False
+    session.phase = DailySyncPhase.DONE
+    db.commit()
     
-    return {
-        "message": "Daily Sync session ended",
-        "session_id": str(session.id)
-    }
+    logger.info(f"Manually ended Daily Sync session {session.id}")
+    return {"ended": True, "session_id": str(session.id)}
 
 
-@router.get("/cancel-all")
-async def cancel_all_daily_sync_sessions(
+@router.get("/status", response_model=DailySyncStatusResponse)
+async def get_daily_status(
     db: Session = Depends(get_db),
     x_user_id: str = Header(...)
 ):
     """
-    Force cancel ALL active Daily Sync sessions for the user.
-    Use this to clear stuck sessions.
+    Get the current Daily Sync session status.
     """
-    user_id = UUID(x_user_id)
+    try:
+        user_id = UUID(x_user_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail=f"Invalid user ID: {x_user_id}")
     
-    # Find all active sessions for this user
-    from app.models import DailySyncSession
-    active_sessions = db.query(DailySyncSession).filter(
-        DailySyncSession.user_id == user_id,
-        DailySyncSession.is_active == True
-    ).all()
+    session = _get_active_session(db, user_id)
     
-    count = len(active_sessions)
-    for session in active_sessions:
-        session.is_active = False
+    if not session:
+        return DailySyncStatusResponse(has_active_session=False)
     
-    db.commit()
+    phase = session.phase
+    if hasattr(phase, 'value'):
+        phase = phase.value
     
-    return {
-        "message": f"Cancelled {count} active Daily Sync session(s)",
-        "cancelled_count": count
-    }
-
+    return DailySyncStatusResponse(
+        has_active_session=True,
+        session_id=str(session.id),
+        phase=phase,
+        created_at=session.created_at.isoformat()
+    )
