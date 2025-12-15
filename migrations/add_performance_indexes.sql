@@ -62,13 +62,7 @@ CREATE INDEX IF NOT EXISTS idx_users_manager
     ON users(manager_id);
 
 
--- 5. ALIGNMENT_EDGES - For finding who aligns with whom
-
-CREATE INDEX IF NOT EXISTS idx_alignment_edges_source 
-    ON alignment_edges(source_user_id);
-
-CREATE INDEX IF NOT EXISTS idx_alignment_edges_target 
-    ON alignment_edges(target_user_id);
+-- 5. ALIGNMENT_EDGES - REMOVED (table deprecated and dropped)
 
 
 -- 6. TASK_DEPENDENCIES - For dependency graph queries
@@ -103,7 +97,6 @@ ANALYZE attribute_answers;
 ANALYZE similarity_scores;
 ANALYZE tasks;
 ANALYZE users;
-ANALYZE alignment_edges;
 ANALYZE task_dependencies;
 ANALYZE question_logs;
 

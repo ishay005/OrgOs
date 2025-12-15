@@ -101,37 +101,74 @@ async def clear_all_data(db: Session = Depends(get_db)):
 @router.api_route("/update-schema", methods=["GET", "POST"])
 async def update_schema(db: Session = Depends(get_db)):
     """
-    Update database schema:
-    - Add team and role columns to users
-    - Add conversation_id to daily_sync_sessions
-    - Create questions_sessions table
-    - Drop alignment_edges table (deprecated)
+    🔧 Update database schema - adds new columns to existing tables.
+    Safe to run multiple times (idempotent).
+    
+    This adds:
+    - team, role columns to users table
+    - state, created_by_user_id, state_changed_at, state_reason to tasks table
+    - last_response_id to chat_threads and daily_sync_sessions
+    - Creates all new tables if they don't exist
+    - Sets all tasks created by Ishay, DRAFT for others
     """
-    results = {"actions": []}
+    results = {"actions": [], "errors": []}
     
     try:
-        # Add team column to users table if not exists
+        logger.info("🔧 Running comprehensive schema update...")
+        
+        # ============ USERS TABLE ============
         try:
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS team VARCHAR"))
             results["actions"].append("Added 'team' column to users table")
         except Exception as e:
-            results["actions"].append(f"Team column: {str(e)}")
+            results["errors"].append(f"Team column: {str(e)}")
         
-        # Add role column to users table if not exists
         try:
             db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR"))
             results["actions"].append("Added 'role' column to users table")
         except Exception as e:
-            results["actions"].append(f"Role column: {str(e)}")
+            results["errors"].append(f"Role column: {str(e)}")
         
-        # Add last_response_id to daily_sync_sessions (for OpenAI conversation threading)
+        # ============ TASKS TABLE - NEW STATE COLUMNS ============
+        try:
+            db.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS state VARCHAR DEFAULT 'ACTIVE'"))
+            results["actions"].append("Added 'state' column to tasks table")
+        except Exception as e:
+            results["errors"].append(f"state column: {str(e)}")
+        
+        try:
+            db.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by_user_id UUID REFERENCES users(id)"))
+            results["actions"].append("Added 'created_by_user_id' column to tasks table")
+        except Exception as e:
+            results["errors"].append(f"created_by_user_id column: {str(e)}")
+        
+        try:
+            db.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS state_changed_at TIMESTAMP"))
+            results["actions"].append("Added 'state_changed_at' column to tasks table")
+        except Exception as e:
+            results["errors"].append(f"state_changed_at column: {str(e)}")
+        
+        try:
+            db.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS state_reason TEXT"))
+            results["actions"].append("Added 'state_reason' column to tasks table")
+        except Exception as e:
+            results["errors"].append(f"state_reason column: {str(e)}")
+        
+        # ============ CHAT THREADS ============
+        try:
+            db.execute(text("ALTER TABLE chat_threads ADD COLUMN IF NOT EXISTS last_response_id VARCHAR"))
+            results["actions"].append("Added 'last_response_id' column to chat_threads")
+        except Exception as e:
+            results["errors"].append(f"chat_threads last_response_id: {str(e)}")
+        
+        # ============ DAILY SYNC SESSIONS ============
         try:
             db.execute(text("ALTER TABLE daily_sync_sessions ADD COLUMN IF NOT EXISTS last_response_id VARCHAR"))
             results["actions"].append("Added 'last_response_id' column to daily_sync_sessions")
         except Exception as e:
-            results["actions"].append(f"Last response ID column (daily): {str(e)}")
+            results["errors"].append(f"daily_sync last_response_id: {str(e)}")
         
-        # Create questions_sessions table
+        # ============ QUESTIONS SESSIONS TABLE ============
         try:
             db.execute(text("""
                 CREATE TABLE IF NOT EXISTS questions_sessions (
@@ -146,16 +183,8 @@ async def update_schema(db: Session = Depends(get_db)):
             """))
             results["actions"].append("Created 'questions_sessions' table")
         except Exception as e:
-            results["actions"].append(f"Questions sessions table: {str(e)}")
+            results["errors"].append(f"questions_sessions table: {str(e)}")
         
-        # Add last_response_id to questions_sessions if it exists but doesn't have the column
-        try:
-            db.execute(text("ALTER TABLE questions_sessions ADD COLUMN IF NOT EXISTS last_response_id VARCHAR"))
-            results["actions"].append("Added 'last_response_id' column to questions_sessions")
-        except Exception as e:
-            results["actions"].append(f"Last response ID column (questions): {str(e)}")
-        
-        # Create index for questions sessions
         try:
             db.execute(text("""
                 CREATE INDEX IF NOT EXISTS idx_questions_session_active 
@@ -163,23 +192,121 @@ async def update_schema(db: Session = Depends(get_db)):
             """))
             results["actions"].append("Created index on questions_sessions")
         except Exception as e:
-            results["actions"].append(f"Questions sessions index: {str(e)}")
+            results["errors"].append(f"questions_sessions index: {str(e)}")
         
-        # Drop deprecated alignment_edges table
+        # ============ DROP DEPRECATED TABLES ============
         try:
             db.execute(text("DROP TABLE IF EXISTS alignment_edges CASCADE"))
             results["actions"].append("Dropped deprecated 'alignment_edges' table")
         except Exception as e:
-            results["actions"].append(f"Drop alignment_edges: {str(e)}")
+            results["errors"].append(f"Drop alignment_edges: {str(e)}")
+        
+        # ============ CREATE NEW STATE MACHINE TABLES ============
+        from app.database import Base, engine
+        try:
+            Base.metadata.create_all(bind=engine)
+            results["actions"].append("Created all new tables from models")
+        except Exception as e:
+            results["errors"].append(f"create_all: {str(e)}")
+        
+        # ============ DATA MIGRATION: SET ISHAY AS CREATOR ============
+        ishay_result = db.execute(text("SELECT id FROM users WHERE LOWER(name) LIKE '%ishay%' LIMIT 1")).fetchone()
+        
+        if ishay_result:
+            ishay_id = str(ishay_result[0])
+            results["actions"].append(f"Found Ishay with ID: {ishay_id}")
+            
+            # Set ALL tasks to be created by Ishay
+            try:
+                updated = db.execute(text(f"UPDATE tasks SET created_by_user_id = '{ishay_id}' WHERE created_by_user_id IS NULL"))
+                results["actions"].append(f"Set {updated.rowcount} tasks created_by to Ishay")
+            except Exception as e:
+                results["errors"].append(f"set created_by_user_id: {str(e)}")
+            
+            # Set tasks where owner != Ishay to DRAFT state
+            try:
+                updated = db.execute(text(f"""
+                    UPDATE tasks 
+                    SET state = 'DRAFT', state_reason = 'Pending owner acceptance'
+                    WHERE created_by_user_id = '{ishay_id}' 
+                    AND owner_user_id != '{ishay_id}'
+                    AND (state IS NULL OR state = 'ACTIVE')
+                """))
+                results["actions"].append(f"Set {updated.rowcount} tasks to DRAFT (owner != Ishay)")
+            except Exception as e:
+                results["errors"].append(f"set DRAFT state: {str(e)}")
+            
+            # Set tasks where owner == Ishay to ACTIVE
+            try:
+                db.execute(text(f"""
+                    UPDATE tasks 
+                    SET state = 'ACTIVE'
+                    WHERE created_by_user_id = '{ishay_id}' 
+                    AND owner_user_id = '{ishay_id}'
+                    AND state IS NULL
+                """))
+                results["actions"].append("Set Ishay's own tasks to ACTIVE state")
+            except Exception as e:
+                results["errors"].append(f"set ACTIVE for Ishay: {str(e)}")
+            
+            # Create pending decisions for DRAFT tasks
+            try:
+                draft_tasks = db.execute(text(f"""
+                    SELECT t.id, t.title, t.owner_user_id 
+                    FROM tasks t
+                    WHERE t.state = 'DRAFT' 
+                    AND t.created_by_user_id = '{ishay_id}'
+                    AND t.owner_user_id != '{ishay_id}'
+                    AND NOT EXISTS (
+                        SELECT 1 FROM pending_decisions pd 
+                        WHERE pd.entity_id = t.id 
+                        AND pd.entity_type = 'task'
+                        AND pd.decision_type = 'TASK_ACCEPTANCE'
+                    )
+                """)).fetchall()
+                
+                for task_id, title, owner_id in draft_tasks:
+                    # Escape single quotes in title
+                    safe_title = title.replace("'", "''") if title else "Untitled"
+                    db.execute(text(f"""
+                        INSERT INTO pending_decisions (id, user_id, entity_type, entity_id, decision_type, description, created_at)
+                        VALUES (
+                            gen_random_uuid(),
+                            '{owner_id}',
+                            'task',
+                            '{task_id}',
+                            'TASK_ACCEPTANCE',
+                            'Ishay created task "{safe_title}" for you. Accept, reject, or propose merge.',
+                            CURRENT_TIMESTAMP
+                        )
+                    """))
+                
+                results["actions"].append(f"Created {len(draft_tasks)} pending decisions for DRAFT tasks")
+            except Exception as e:
+                results["errors"].append(f"create pending decisions: {str(e)}")
+        else:
+            # Fallback: set created_by = owner if Ishay not found
+            results["actions"].append("⚠ Ishay user not found, using owner as creator")
+            try:
+                db.execute(text("UPDATE tasks SET created_by_user_id = owner_user_id WHERE created_by_user_id IS NULL"))
+                db.execute(text("UPDATE tasks SET state = 'ACTIVE' WHERE state IS NULL"))
+            except Exception as e:
+                results["errors"].append(f"fallback migration: {str(e)}")
         
         db.commit()
         
         return {
-            "message": "Schema updated successfully",
-            "results": results
+            "success": True,
+            "message": "Schema update completed!",
+            "summary": {
+                "actions": len(results["actions"]),
+                "errors": len(results["errors"])
+            },
+            "details": results
         }
     except Exception as e:
         db.rollback()
+        logger.error(f"Schema update failed: {e}")
         raise HTTPException(status_code=500, detail=f"Schema update failed: {str(e)}")
 
 
@@ -491,160 +618,3 @@ async def migrate_state_machines(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Migration failed: {str(e)}")
 
 
-@router.api_route("/update-schema", methods=["GET", "POST"])
-async def update_schema(db: Session = Depends(get_db)):
-    """
-    🔧 Update database schema - adds new columns to existing tables.
-    Safe to run multiple times (idempotent).
-    
-    This adds:
-    - state, created_by_user_id, state_changed_at, state_reason to tasks table
-    - last_response_id to chat_threads table
-    - Creates all new tables if they don't exist
-    """
-    results = {"columns_added": [], "columns_existed": [], "tables_created": [], "errors": []}
-    
-    try:
-        logger.info("🔧 Running schema update...")
-        
-        # List of column migrations: (table, column, sql_type, default)
-        column_migrations = [
-            ("tasks", "state", "VARCHAR", "'ACTIVE'"),
-            ("tasks", "created_by_user_id", "UUID REFERENCES users(id)", None),
-            ("tasks", "state_changed_at", "TIMESTAMP", None),
-            ("tasks", "state_reason", "TEXT", None),
-            ("chat_threads", "last_response_id", "VARCHAR", None),
-        ]
-        
-        for table, column, sql_type, default in column_migrations:
-            try:
-                # Check if column exists
-                check_sql = text("""
-                    SELECT 1 FROM information_schema.columns 
-                    WHERE table_name = :table AND column_name = :column
-                """)
-                exists = db.execute(check_sql, {"table": table, "column": column}).fetchone()
-                
-                if not exists:
-                    # Add column
-                    default_clause = f" DEFAULT {default}" if default else ""
-                    alter_sql = text(f"ALTER TABLE {table} ADD COLUMN {column} {sql_type}{default_clause}")
-                    db.execute(alter_sql)
-                    results["columns_added"].append(f"{table}.{column}")
-                    logger.info(f"  ✓ Added column {table}.{column}")
-                else:
-                    results["columns_existed"].append(f"{table}.{column}")
-            except Exception as e:
-                results["errors"].append(f"{table}.{column}: {str(e)}")
-                logger.warning(f"  ⚠ Error adding {table}.{column}: {e}")
-        
-        # Set default values for existing data
-        # Find Ishay's user ID
-        ishay_result = db.execute(text("SELECT id FROM users WHERE LOWER(name) LIKE '%ishay%' LIMIT 1")).fetchone()
-        
-        if ishay_result:
-            ishay_id = str(ishay_result[0])
-            logger.info(f"  Found Ishay with ID: {ishay_id}")
-            
-            # Set ALL tasks to be created by Ishay
-            try:
-                db.execute(text(f"UPDATE tasks SET created_by_user_id = '{ishay_id}' WHERE created_by_user_id IS NULL"))
-                results["columns_added"].append("Set all tasks created_by to Ishay")
-                logger.info("  ✓ Set created_by_user_id to Ishay for all tasks")
-            except Exception as e:
-                results["errors"].append(f"set created_by_user_id to Ishay: {str(e)}")
-            
-            # Set tasks where owner != Ishay to DRAFT state
-            try:
-                updated = db.execute(text(f"""
-                    UPDATE tasks 
-                    SET state = 'DRAFT', state_reason = 'Pending owner acceptance'
-                    WHERE created_by_user_id = '{ishay_id}' 
-                    AND owner_user_id != '{ishay_id}'
-                    AND (state IS NULL OR state = 'ACTIVE')
-                """))
-                results["columns_added"].append(f"Set {updated.rowcount} tasks to DRAFT (owner != Ishay)")
-                logger.info(f"  ✓ Set {updated.rowcount} tasks to DRAFT state (owner != creator)")
-            except Exception as e:
-                results["errors"].append(f"set DRAFT state: {str(e)}")
-            
-            # Set tasks where owner == Ishay to ACTIVE
-            try:
-                db.execute(text(f"""
-                    UPDATE tasks 
-                    SET state = 'ACTIVE'
-                    WHERE created_by_user_id = '{ishay_id}' 
-                    AND owner_user_id = '{ishay_id}'
-                    AND state IS NULL
-                """))
-                logger.info("  ✓ Set Ishay's own tasks to ACTIVE state")
-            except Exception as e:
-                results["errors"].append(f"set ACTIVE state for Ishay: {str(e)}")
-            
-            # Create pending decisions for DRAFT tasks
-            try:
-                # Get all DRAFT tasks that need decisions
-                draft_tasks = db.execute(text(f"""
-                    SELECT t.id, t.title, t.owner_user_id 
-                    FROM tasks t
-                    WHERE t.state = 'DRAFT' 
-                    AND t.created_by_user_id = '{ishay_id}'
-                    AND t.owner_user_id != '{ishay_id}'
-                    AND NOT EXISTS (
-                        SELECT 1 FROM pending_decisions pd 
-                        WHERE pd.task_id = t.id 
-                        AND pd.decision_type = 'TASK_ACCEPTANCE'
-                    )
-                """)).fetchall()
-                
-                for task_id, title, owner_id in draft_tasks:
-                    db.execute(text(f"""
-                        INSERT INTO pending_decisions (id, user_id, task_id, decision_type, description, created_at)
-                        VALUES (
-                            gen_random_uuid(),
-                            '{owner_id}',
-                            '{task_id}',
-                            'TASK_ACCEPTANCE',
-                            'Ishay created task "{title}" for you. Accept, reject, or propose merge.',
-                            CURRENT_TIMESTAMP
-                        )
-                    """))
-                
-                results["columns_added"].append(f"Created {len(draft_tasks)} pending decisions for DRAFT tasks")
-                logger.info(f"  ✓ Created {len(draft_tasks)} pending decisions")
-            except Exception as e:
-                results["errors"].append(f"create pending decisions: {str(e)}")
-        else:
-            # Fallback: set created_by = owner if Ishay not found
-            logger.warning("  ⚠ Ishay user not found, using owner as creator")
-            try:
-                db.execute(text("UPDATE tasks SET created_by_user_id = owner_user_id WHERE created_by_user_id IS NULL"))
-                db.execute(text("UPDATE tasks SET state = 'ACTIVE' WHERE state IS NULL"))
-            except Exception as e:
-                results["errors"].append(f"fallback migration: {str(e)}")
-        
-        # Create new tables (if they don't exist)
-        from app.database import Base, engine
-        try:
-            Base.metadata.create_all(bind=engine)
-            results["tables_created"].append("All new tables created (if not existing)")
-            logger.info("  ✓ Created new tables")
-        except Exception as e:
-            results["errors"].append(f"create tables: {str(e)}")
-        
-        db.commit()
-        
-        return {
-            "success": True,
-            "message": "Schema update completed!",
-            "summary": {
-                "columns_added": len(results["columns_added"]),
-                "columns_existed": len(results["columns_existed"]),
-                "errors": len(results["errors"])
-            },
-            "details": results
-        }
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Schema update failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Schema update failed: {str(e)}")
