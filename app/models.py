@@ -291,8 +291,9 @@ class DailySyncSession(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = Column(Boolean, nullable=False, default=True)
     
-    # OpenAI conversation ID for multi-turn context (for future Assistants API)
-    conversation_id = Column(String, nullable=True)
+    # OpenAI Responses API: last response ID for conversation threading
+    # When continuing a conversation, pass this as previous_response_id
+    last_response_id = Column(String, nullable=True)
     
     # Store snapshot of insight questions for this session (as JSON)
     # Format: [{"id": "uuid", "text": "...", "value": 10, "reason": "..."}, ...]
@@ -328,8 +329,8 @@ class QuestionsSession(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = Column(Boolean, nullable=False, default=True)
     
-    # OpenAI conversation ID for multi-turn context
-    conversation_id = Column(String, nullable=True)
+    # OpenAI Responses API: last response ID for conversation threading
+    last_response_id = Column(String, nullable=True)
     
     # Relationships
     user = relationship("User", backref="questions_sessions")

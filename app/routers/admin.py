@@ -97,12 +97,12 @@ async def update_schema(db: Session = Depends(get_db)):
         except Exception as e:
             results["actions"].append(f"Role column: {str(e)}")
         
-        # Add conversation_id to daily_sync_sessions
+        # Add last_response_id to daily_sync_sessions (for OpenAI conversation threading)
         try:
-            db.execute(text("ALTER TABLE daily_sync_sessions ADD COLUMN IF NOT EXISTS conversation_id VARCHAR"))
-            results["actions"].append("Added 'conversation_id' column to daily_sync_sessions")
+            db.execute(text("ALTER TABLE daily_sync_sessions ADD COLUMN IF NOT EXISTS last_response_id VARCHAR"))
+            results["actions"].append("Added 'last_response_id' column to daily_sync_sessions")
         except Exception as e:
-            results["actions"].append(f"Conversation ID column: {str(e)}")
+            results["actions"].append(f"Last response ID column (daily): {str(e)}")
         
         # Create questions_sessions table
         try:
@@ -114,12 +114,19 @@ async def update_schema(db: Session = Depends(get_db)):
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-                    conversation_id VARCHAR
+                    last_response_id VARCHAR
                 )
             """))
             results["actions"].append("Created 'questions_sessions' table")
         except Exception as e:
             results["actions"].append(f"Questions sessions table: {str(e)}")
+        
+        # Add last_response_id to questions_sessions if it exists but doesn't have the column
+        try:
+            db.execute(text("ALTER TABLE questions_sessions ADD COLUMN IF NOT EXISTS last_response_id VARCHAR"))
+            results["actions"].append("Added 'last_response_id' column to questions_sessions")
+        except Exception as e:
+            results["actions"].append(f"Last response ID column (questions): {str(e)}")
         
         # Create index for questions sessions
         try:

@@ -159,7 +159,7 @@ async def call_robin(
     user_id: UUID,
     mode: Literal["daily", "morning_brief", "questions"],
     submode: Optional[Literal["opening", "questions", "summary"]] = None,
-    conversation_id: Optional[str] = None,
+    previous_response_id: Optional[str] = None,
     user_message: Optional[str] = None,
     thread_id: Optional[UUID] = None,
     daily_session: Optional[DailySyncSession] = None
@@ -170,20 +170,20 @@ async def call_robin(
     Uses OpenAI Responses API with:
     - text.format for structured output (JSON schema enforcement)
     - Function calling for MCP tools
-    - Conversation history from chat thread
+    - store=True + previous_response_id for conversation state
     
     Args:
         db: Database session
         user_id: Current user's UUID
         mode: "daily", "morning_brief", or "questions"
         submode: For daily mode: "opening", "questions", or "summary"
-        conversation_id: For multi-turn modes, the conversation thread ID
+        previous_response_id: OpenAI response ID from previous call (for multi-turn)
         user_message: The user's message or trigger (e.g., "__start_daily__")
         thread_id: Chat thread ID for storing messages
         daily_session: Daily sync session if in daily mode
     
     Returns:
-        RobinReply with display_messages, updates, and control signals
+        RobinReply with display_messages, updates, control signals, and response_id
     """
     logger.info(f"🤖 call_robin: mode={mode}, submode={submode}, user_message={user_message[:50] if user_message else None}")
     
@@ -195,9 +195,11 @@ async def call_robin(
         {"role": "system", "content": system_prompt}
     ]
     
-    # Add conversation history for multi-turn modes
-    if conversation_id and thread_id and mode in ["daily", "questions"]:
-        history = _get_conversation_history(db, thread_id, limit=10)
+    # Note: When using previous_response_id, OpenAI maintains conversation history
+    # We only need to add history manually if there's no previous_response_id (first message)
+    if not previous_response_id and thread_id and mode in ["daily", "questions"]:
+        # Fallback: load history from DB for first message in a session
+        history = _get_conversation_history(db, thread_id, limit=5)
         input_messages.extend(history)
     
     # Add the user message
@@ -221,13 +223,22 @@ async def call_robin(
         logger.info(f"🔄 API call iteration {iteration + 1}")
         
         try:
-            response = await client.responses.create(
-                model=MODEL,
-                input=input_messages,
-                text={"format": RESPONSE_JSON_SCHEMA},
-                tools=get_responses_api_tools(),
-                tool_choice="auto"
-            )
+            # Build API params
+            api_params = {
+                "model": MODEL,
+                "input": input_messages,
+                "text": {"format": RESPONSE_JSON_SCHEMA},
+                "tools": get_responses_api_tools(),
+                "tool_choice": "auto",
+                "store": True  # Enable OpenAI to store response for conversation threading
+            }
+            
+            # Add previous_response_id for multi-turn conversation state
+            if previous_response_id:
+                api_params["previous_response_id"] = previous_response_id
+                logger.info(f"📎 Using previous_response_id: {previous_response_id[:20]}...")
+            
+            response = await client.responses.create(**api_params)
         except Exception as e:
             logger.error(f"❌ OpenAI API error: {e}", exc_info=True)
             import traceback
@@ -355,6 +366,10 @@ async def call_robin(
             next_phase=control_data.get("next_phase")
         )
         
+        # Get the response ID for conversation threading
+        response_id = getattr(response, 'id', None)
+        logger.info(f"📌 Response ID: {response_id[:20] if response_id else 'None'}...")
+        
         # Build comprehensive debug data
         debug_info = {
             "mode": mode,
@@ -362,7 +377,9 @@ async def call_robin(
             "tool_calls_made": tool_calls_made,
             "full_prompt": input_messages,
             "raw_response": parsed,
-            "raw_content": raw_content
+            "raw_content": raw_content,
+            "response_id": response_id,
+            "previous_response_id": previous_response_id
         }
         
         reply = RobinReply(
@@ -371,7 +388,7 @@ async def call_robin(
             control=control,
             mode=mode,
             submode=submode,
-            conversation_id=conversation_id,
+            response_id=response_id,  # OpenAI response ID for next call
             tool_calls_made=tool_calls_made,
             raw_response=debug_info
         )
@@ -548,13 +565,14 @@ async def start_daily_sync(
 ) -> RobinReply:
     """
     Start a daily sync session (opening phase).
+    No previous_response_id since this is the first message.
     """
     return await call_robin(
         db=db,
         user_id=user_id,
         mode="daily",
         submode="opening",
-        conversation_id=str(daily_session.id),
+        previous_response_id=None,  # First message - no previous response
         user_message="__start_daily__",
         thread_id=thread_id,
         daily_session=daily_session
@@ -570,6 +588,7 @@ async def continue_daily_sync(
 ) -> RobinReply:
     """
     Continue a daily sync conversation.
+    Uses the session's last_response_id for conversation threading.
     """
     phase = daily_session.phase
     if hasattr(phase, 'value'):
@@ -587,7 +606,7 @@ async def continue_daily_sync(
         user_id=user_id,
         mode="daily",
         submode=submode,
-        conversation_id=str(daily_session.id),
+        previous_response_id=daily_session.last_response_id,  # Chain to previous response
         user_message=user_message,
         thread_id=thread_id,
         daily_session=daily_session
@@ -599,16 +618,17 @@ async def send_questions_message(
     user_id: UUID,
     thread_id: UUID,
     user_message: str,
-    conversation_id: Optional[str] = None
+    previous_response_id: Optional[str] = None
 ) -> RobinReply:
     """
     Send a message in Questions mode.
+    Uses previous_response_id for conversation threading.
     """
     return await call_robin(
         db=db,
         user_id=user_id,
         mode="questions",
         user_message=user_message,
-        conversation_id=conversation_id,
+        previous_response_id=previous_response_id,
         thread_id=thread_id
     )

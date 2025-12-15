@@ -238,6 +238,10 @@ async def start_daily(
         # Save messages
         messages = _save_robin_messages(db, thread.id, reply)
         
+        # Store the response ID for conversation threading
+        if reply.response_id:
+            session.last_response_id = reply.response_id
+        
         # Move to questions phase after opening
         session.phase = DailySyncPhase.QUESTIONS
         db.commit()
@@ -302,6 +306,11 @@ async def send_daily_message(
             daily_session=session,
             user_message=request.text
         )
+        
+        # Store the response ID for conversation threading
+        if reply.response_id:
+            session.last_response_id = reply.response_id
+            db.commit()
         
         # Update phase based on control signals
         _update_session_phase(db, session, reply)

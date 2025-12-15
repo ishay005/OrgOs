@@ -243,7 +243,7 @@ async def send_message(
             user_id=current_user.id,
             thread_id=thread.id,
             user_message=request.text,
-            conversation_id=session.conversation_id
+            previous_response_id=session.last_response_id  # Use OpenAI conversation threading
         )
         
         logger.info(f"Robin reply: {len(robin_reply.display_messages)} messages, "
@@ -252,6 +252,11 @@ async def send_message(
         # Save Robin's messages
         robin_messages = _save_robin_messages(db, thread.id, robin_reply)
         response_messages.extend(robin_messages)
+        
+        # Store the response ID for next call (conversation threading)
+        if robin_reply.response_id:
+            session.last_response_id = robin_reply.response_id
+            db.commit()
         
         # Check if session should end
         session_ended = robin_reply.control.conversation_done

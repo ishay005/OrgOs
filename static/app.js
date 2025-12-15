@@ -156,6 +156,8 @@ function showSection(sectionName) {
         displayOntology();
     } else if (sectionName === 'orgchart') {
         loadOrgChart();
+    } else if (sectionName === 'mcp-tools') {
+        loadMcpTools();
     }
 }
 
@@ -4374,6 +4376,311 @@ function showImportExportStatus(message, type) {
             statusDiv.style.display = 'none';
         }, 10000);
     }
+}
+
+// ============================================================================
+// MCP Tools Debugger
+// ============================================================================
+
+let mcpToolsCache = [];
+let mcpLastResult = null;
+
+async function loadMcpTools() {
+    try {
+        const tools = await apiCall('/mcp-tools/list');
+        mcpToolsCache = tools;
+        
+        const select = document.getElementById('mcp-tool-select');
+        if (!select) return;
+        
+        // Clear existing options except the first one
+        select.innerHTML = '<option value="">-- Choose a tool --</option>';
+        
+        // Group tools by category (based on name prefix)
+        const categories = {
+            'Context': [],
+            'Org/People': [],
+            'Tasks': [],
+            'Alignment': [],
+            'Data Collection': [],
+            'Other': []
+        };
+        
+        tools.forEach(tool => {
+            if (tool.name.includes('context') || tool.name.includes('questions')) {
+                categories['Context'].push(tool);
+            } else if (tool.name.includes('org') || tool.name.includes('user') || tool.name.includes('neighbor')) {
+                categories['Org/People'].push(tool);
+            } else if (tool.name.includes('task')) {
+                categories['Tasks'].push(tool);
+            } else if (tool.name.includes('alignment') || tool.name.includes('hotspot')) {
+                categories['Alignment'].push(tool);
+            } else if (tool.name.includes('attribute') || tool.name.includes('upsert') || tool.name.includes('record')) {
+                categories['Data Collection'].push(tool);
+            } else {
+                categories['Other'].push(tool);
+            }
+        });
+        
+        // Add grouped options
+        for (const [category, catTools] of Object.entries(categories)) {
+            if (catTools.length > 0) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = category;
+                catTools.forEach(tool => {
+                    const option = document.createElement('option');
+                    option.value = tool.name;
+                    option.textContent = tool.name;
+                    optgroup.appendChild(option);
+                });
+                select.appendChild(optgroup);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading MCP tools:', error);
+    }
+}
+
+function onMcpToolSelect() {
+    const select = document.getElementById('mcp-tool-select');
+    const toolName = select.value;
+    const descDiv = document.getElementById('mcp-tool-description');
+    const paramsDiv = document.getElementById('mcp-tool-params');
+    const executeBtn = document.getElementById('mcp-execute-btn');
+    
+    if (!toolName) {
+        descDiv.style.display = 'none';
+        paramsDiv.innerHTML = '';
+        executeBtn.disabled = true;
+        return;
+    }
+    
+    const tool = mcpToolsCache.find(t => t.name === toolName);
+    if (!tool) return;
+    
+    // Show description
+    descDiv.textContent = tool.description;
+    descDiv.style.display = 'block';
+    
+    // Build parameter inputs
+    const params = tool.parameters;
+    const properties = params.properties || {};
+    const required = params.required || [];
+    
+    let html = '';
+    
+    if (Object.keys(properties).length === 0) {
+        html = '<p style="color: #888; font-size: 13px;">This tool requires no parameters.</p>';
+    } else {
+        html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+        
+        for (const [name, prop] of Object.entries(properties)) {
+            const isRequired = required.includes(name);
+            const type = prop.type;
+            const desc = prop.description || '';
+            const enumValues = prop.enum;
+            
+            html += `
+                <div class="mcp-param">
+                    <label style="display: block; font-weight: 500; margin-bottom: 4px; font-size: 13px;">
+                        ${name}${isRequired ? ' <span style="color: #ef4444;">*</span>' : ''}
+                        <span style="color: #888; font-weight: normal; font-size: 11px;">(${type})</span>
+                    </label>
+            `;
+            
+            if (enumValues) {
+                html += `<select id="mcp-param-${name}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    <option value="">-- Select --</option>
+                    ${enumValues.map(v => `<option value="${v}">${v}</option>`).join('')}
+                </select>`;
+            } else if (type === 'boolean') {
+                html += `<select id="mcp-param-${name}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    <option value="">-- Select --</option>
+                    <option value="true">true</option>
+                    <option value="false">false</option>
+                </select>`;
+            } else if (type === 'integer') {
+                html += `<input type="number" id="mcp-param-${name}" placeholder="${desc}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;">`;
+            } else {
+                // Default to text input, but check if it might be a user_id
+                const placeholder = name.includes('user_id') ? 'Enter user UUID or leave blank for current user' : desc;
+                html += `<input type="text" id="mcp-param-${name}" placeholder="${placeholder}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; box-sizing: border-box;">`;
+            }
+            
+            if (desc && !enumValues) {
+                html += `<small style="color: #888; font-size: 11px; display: block; margin-top: 2px;">${desc}</small>`;
+            }
+            
+            html += '</div>';
+        }
+        
+        html += '</div>';
+    }
+    
+    paramsDiv.innerHTML = html;
+    executeBtn.disabled = false;
+}
+
+async function executeMcpTool() {
+    const select = document.getElementById('mcp-tool-select');
+    const toolName = select.value;
+    const resultDiv = document.getElementById('mcp-result');
+    
+    if (!toolName) return;
+    
+    const tool = mcpToolsCache.find(t => t.name === toolName);
+    if (!tool) return;
+    
+    // Gather parameter values
+    const args = {};
+    const properties = tool.parameters.properties || {};
+    
+    for (const name of Object.keys(properties)) {
+        const input = document.getElementById(`mcp-param-${name}`);
+        if (input && input.value) {
+            let value = input.value;
+            
+            // Convert types
+            if (properties[name].type === 'integer') {
+                value = parseInt(value, 10);
+            } else if (properties[name].type === 'boolean') {
+                value = value === 'true';
+            }
+            
+            args[name] = value;
+        }
+    }
+    
+    // Auto-fill user_id with current user if needed and not provided
+    if (properties.user_id && !args.user_id && currentUser) {
+        args.user_id = currentUser.id;
+    }
+    
+    // Show loading state
+    resultDiv.innerHTML = '<span style="color: #f0a;">⏳ Executing...</span>';
+    
+    try {
+        const startTime = performance.now();
+        
+        const response = await apiCall('/mcp-tools/execute', {
+            method: 'POST',
+            body: JSON.stringify({
+                tool_name: toolName,
+                args: args
+            })
+        });
+        
+        const duration = (performance.now() - startTime).toFixed(0);
+        
+        mcpLastResult = response;
+        
+        // Format the result with syntax highlighting
+        resultDiv.innerHTML = formatMcpResult(response, toolName, args, duration);
+        
+    } catch (error) {
+        resultDiv.innerHTML = `<span style="color: #f55;">❌ Error: ${error.message}</span>`;
+    }
+}
+
+function formatMcpResult(response, toolName, args, duration) {
+    const success = response.success;
+    const result = response.result || response.error;
+    
+    let html = `
+        <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #444;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: ${success ? '#4ade80' : '#f87171'}; font-weight: 600;">
+                    ${success ? '✅ Success' : '❌ Error'}
+                </span>
+                <span style="color: #888; font-size: 12px;">⏱️ ${duration}ms</span>
+            </div>
+            <div style="color: #60a5fa; font-size: 14px; margin-top: 8px;">
+                🔧 ${toolName}
+            </div>
+            ${Object.keys(args).length > 0 ? `
+                <div style="color: #888; font-size: 12px; margin-top: 4px;">
+                    Args: ${JSON.stringify(args)}
+                </div>
+            ` : ''}
+        </div>
+    `;
+    
+    // Pretty print the result
+    html += syntaxHighlightJson(result);
+    
+    return html;
+}
+
+function syntaxHighlightJson(obj, indent = 0) {
+    if (obj === null) return '<span style="color: #f97316;">null</span>';
+    if (obj === undefined) return '<span style="color: #888;">undefined</span>';
+    
+    const type = typeof obj;
+    
+    if (type === 'string') {
+        // Escape HTML and add quotes
+        const escaped = obj.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<span style="color: #a5d6ff;">"${escaped}"</span>`;
+    }
+    if (type === 'number') {
+        return `<span style="color: #79c0ff;">${obj}</span>`;
+    }
+    if (type === 'boolean') {
+        return `<span style="color: #ff7b72;">${obj}</span>`;
+    }
+    if (Array.isArray(obj)) {
+        if (obj.length === 0) return '<span style="color: #888;">[]</span>';
+        
+        const items = obj.map((item, i) => {
+            const prefix = '  '.repeat(indent + 1);
+            return prefix + syntaxHighlightJson(item, indent + 1);
+        });
+        
+        return `<span style="color: #888;">[</span>\n${items.join(',\n')}\n${'  '.repeat(indent)}<span style="color: #888;">]</span>`;
+    }
+    if (type === 'object') {
+        const keys = Object.keys(obj);
+        if (keys.length === 0) return '<span style="color: #888;">{}</span>';
+        
+        const items = keys.map(key => {
+            const prefix = '  '.repeat(indent + 1);
+            const value = syntaxHighlightJson(obj[key], indent + 1);
+            return `${prefix}<span style="color: #7ee787;">"${key}"</span>: ${value}`;
+        });
+        
+        return `<span style="color: #888;">{</span>\n${items.join(',\n')}\n${'  '.repeat(indent)}<span style="color: #888;">}</span>`;
+    }
+    
+    return String(obj);
+}
+
+function quickMcpTool(toolName) {
+    const select = document.getElementById('mcp-tool-select');
+    if (select) {
+        select.value = toolName;
+        onMcpToolSelect();
+        executeMcpTool();
+    }
+}
+
+function copyMcpResult() {
+    if (mcpLastResult) {
+        const text = JSON.stringify(mcpLastResult, null, 2);
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+        });
+    }
+}
+
+function clearMcpResult() {
+    const resultDiv = document.getElementById('mcp-result');
+    if (resultDiv) {
+        resultDiv.innerHTML = '<span style="color: #888;">Select a tool and click Execute to see results...</span>';
+    }
+    mcpLastResult = null;
 }
 
 

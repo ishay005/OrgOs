@@ -63,6 +63,7 @@
                     Misalignments <span id="misalignment-badge" class="badge">0</span>
                 </button>
                 <button onclick="showSection('ontology')" class="nav-btn" id="ontology-nav">📚 Schema</button>
+                <button onclick="showSection('mcp-tools')" class="nav-btn" id="mcp-tools-nav">🔧 MCP Tools</button>
             </div>
             
             <!-- Robin Chat Section -->
@@ -513,6 +514,61 @@
                     <!-- Will be populated dynamically -->
                 </div>
             </div>
+            
+            <!-- MCP Tools Section -->
+            <div id="mcp-tools-section" class="section">
+                <div class="section-header">
+                    <h3>🔧 MCP Tools Debugger</h3>
+                    <p class="subtitle">Test Cortex MCP tools and see their responses</p>
+                </div>
+                
+                <div class="mcp-tools-container" style="display: flex; gap: 20px; height: calc(100vh - 200px);">
+                    <!-- Left Panel: Tool Selection & Parameters -->
+                    <div class="mcp-tools-panel" style="flex: 0 0 350px; background: #f8f9fa; border-radius: 8px; padding: 16px; overflow-y: auto;">
+                        <div style="margin-bottom: 16px;">
+                            <label style="font-weight: 600; display: block; margin-bottom: 8px;">Select Tool:</label>
+                            <select id="mcp-tool-select" onchange="onMcpToolSelect()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                                <option value="">-- Choose a tool --</option>
+                            </select>
+                        </div>
+                        
+                        <div id="mcp-tool-description" style="margin-bottom: 16px; padding: 12px; background: #e8f4fd; border-radius: 6px; font-size: 13px; color: #1e3a5f; display: none;">
+                        </div>
+                        
+                        <div id="mcp-tool-params" style="margin-bottom: 16px;">
+                            <!-- Parameters will be populated dynamically -->
+                        </div>
+                        
+                        <button onclick="executeMcpTool()" class="primary-btn" style="width: 100%;" id="mcp-execute-btn" disabled>
+                            ▶️ Execute Tool
+                        </button>
+                        
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #ddd;">
+                            <label style="font-weight: 600; display: block; margin-bottom: 8px;">Quick Actions:</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <button onclick="quickMcpTool('get_user_context')" class="secondary-btn" style="font-size: 12px; padding: 6px 10px;">User Context</button>
+                                <button onclick="quickMcpTool('get_daily_task_context')" class="secondary-btn" style="font-size: 12px; padding: 6px 10px;">Task Context</button>
+                                <button onclick="quickMcpTool('get_pending_questions')" class="secondary-btn" style="font-size: 12px; padding: 6px 10px;">Pending Qs</button>
+                                <button onclick="quickMcpTool('get_org_structure')" class="secondary-btn" style="font-size: 12px; padding: 6px 10px;">Org Structure</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Panel: Results -->
+                    <div class="mcp-tools-results" style="flex: 1; display: flex; flex-direction: column;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h4 style="margin: 0;">📋 Result</h4>
+                            <div>
+                                <button onclick="copyMcpResult()" class="secondary-btn" style="font-size: 12px; padding: 6px 10px;">📋 Copy</button>
+                                <button onclick="clearMcpResult()" class="secondary-btn" style="font-size: 12px; padding: 6px 10px;">🗑️ Clear</button>
+                            </div>
+                        </div>
+                        <div id="mcp-result" style="flex: 1; background: #1e1e1e; border-radius: 8px; padding: 16px; overflow: auto; font-family: 'Monaco', 'Menlo', 'Consolas', monospace; font-size: 13px; line-height: 1.5;">
+                            <span style="color: #888;">Select a tool and click Execute to see results...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -554,7 +610,7 @@
         </div>
     </div>
 
-    <script src="/static/app.js?v=2024121127"></script>
+    <script src="/static/app.js?v=2024121128"></script>
 </body>
 </html>
 

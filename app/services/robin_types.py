@@ -54,7 +54,7 @@ class RobinReply(BaseModel):
     # Metadata for debugging/logging
     mode: str
     submode: Optional[str] = None
-    conversation_id: Optional[str] = None
+    response_id: Optional[str] = None  # OpenAI response ID for conversation threading
     tool_calls_made: list[dict] = Field(default_factory=list)  # [{name, args, result}]
     raw_response: Optional[dict] = None
 
