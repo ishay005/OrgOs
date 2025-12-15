@@ -3748,8 +3748,17 @@ async function showMessageDebugData(messageId) {
         
         // Raw output (if different/exists)
         if (rawContent && rawContent.length > 10) {
+            let rawPretty = rawContent;
+            try {
+                // Try to parse and pretty-print if it's valid JSON
+                const parsed = JSON.parse(rawContent);
+                rawPretty = prettyJson(parsed);
+            } catch (e) {
+                // If not valid JSON, just escape it
+                rawPretty = escapeHtml(rawContent);
+            }
             html += `<details class="debug-details"><summary>📄 Raw Output</summary>
-                <pre class="debug-json-pretty">${escapeHtml(rawContent)}</pre></details>`;
+                <pre class="debug-json-pretty">${rawPretty}</pre></details>`;
         }
         
         html += `<div class="debug-footer">⏰ ${data.created_at}</div>`;

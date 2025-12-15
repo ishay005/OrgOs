@@ -17,10 +17,10 @@ class ControlSignals(BaseModel):
     Signals from Robin about session/conversation state.
     
     - conversation_done: True when Questions mode or Daily.summary should end
-    - next_phase: For Daily mode, signals transition (e.g., "summary")
+    - next_phase: For Daily mode, signals transition (e.g., "questions", "summary")
     """
     conversation_done: bool = False
-    next_phase: Optional[Literal["summary"]] = None
+    next_phase: Optional[str] = None  # Allow any phase string from LLM
 
 
 # =============================================================================
