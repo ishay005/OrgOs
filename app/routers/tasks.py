@@ -1,6 +1,7 @@
 """
 Tasks and ontology endpoints
 """
+import html
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -8,6 +9,13 @@ from uuid import UUID
 
 from app.database import get_db
 from app.auth import get_current_user
+
+
+def _sanitize_input(text: str) -> str:
+    """Sanitize user input to prevent XSS attacks."""
+    if not text:
+        return text
+    return html.escape(text)
 from app.models import (
     User, Task, AttributeDefinition, EntityType, TaskDependency, TaskRelevantUser,
     TaskState, TaskAlias, TaskMergeProposal, MergeProposalStatus,
@@ -111,10 +119,14 @@ async def create_task(
     # Set initial state based on ownership
     initial_state = TaskState.DRAFT if is_for_someone_else else TaskState.ACTIVE
     
+    # Sanitize inputs to prevent XSS
+    safe_title = _sanitize_input(task_data.title)
+    safe_description = _sanitize_input(task_data.description) if task_data.description else None
+    
     # Create the main task
     task = Task(
-        title=task_data.title,
-        description=task_data.description,
+        title=safe_title,
+        description=safe_description,
         owner_user_id=owner_user_id,
         created_by_user_id=current_user.id,
         parent_id=task_data.parent_id,

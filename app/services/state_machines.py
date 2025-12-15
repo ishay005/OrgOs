@@ -8,6 +8,7 @@ Implements:
 - Dependency state machine (PROPOSED -> CONFIRMED/REJECTED/REMOVED)
 - Alternative dependency proposals with double consent
 """
+import html
 import logging
 from datetime import datetime, timedelta
 from dataclasses import dataclass
@@ -25,6 +26,13 @@ from app.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _sanitize_input(text: str) -> str:
+    """Sanitize user input to prevent XSS attacks."""
+    if not text:
+        return text
+    return html.escape(text)
 
 
 # =============================================================================
@@ -47,8 +55,33 @@ def set_task_state(
     - ACTIVE -> DONE (completion)
     - ACTIVE -> ARCHIVED (archived)
     - DONE -> ARCHIVED (archived)
+    
+    Raises ValueError for:
+    - Actor is not the owner
+    - Invalid state transition (e.g. DRAFT -> DONE directly)
+    - Trying to reactivate an ARCHIVED task
     """
     old_state = task.state
+    
+    # Same-state transition is a no-op
+    if old_state == new_state:
+        return task
+    
+    # Permission check: only owner can change state
+    if actor.id != task.owner_user_id:
+        raise ValueError("Only the task owner can change a task's state")
+    
+    # Validate state transitions
+    VALID_TRANSITIONS = {
+        TaskState.DRAFT: [TaskState.ACTIVE, TaskState.ARCHIVED],
+        TaskState.ACTIVE: [TaskState.DONE, TaskState.ARCHIVED],
+        TaskState.DONE: [TaskState.ARCHIVED, TaskState.ACTIVE],  # Can reopen
+        TaskState.ARCHIVED: [],  # Cannot leave ARCHIVED
+    }
+    
+    if new_state not in VALID_TRANSITIONS.get(old_state, []):
+        raise ValueError(f"Invalid state transition: {old_state.value} -> {new_state.value}")
+    
     task.state = new_state
     task.state_changed_at = datetime.utcnow()
     task.state_reason = reason
@@ -79,7 +112,22 @@ def create_task_with_state(
     
     - If creator == owner: state = ACTIVE (self-created task)
     - If creator != owner: state = DRAFT (suggested task, needs acceptance)
+    
+    Sanitizes title and description to prevent XSS attacks.
+    Requires both owner and creator to be set.
     """
+    # Validate required fields
+    if not title or not title.strip():
+        raise ValueError("Task title is required")
+    if not owner:
+        raise ValueError("Task owner is required")
+    if not creator:
+        raise ValueError("Task creator is required")
+    
+    # Sanitize inputs
+    safe_title = _sanitize_input(title.strip())
+    safe_description = _sanitize_input(description) if description else None
+    
     # Determine initial state
     if creator.id == owner.id:
         initial_state = TaskState.ACTIVE
@@ -87,8 +135,8 @@ def create_task_with_state(
         initial_state = TaskState.DRAFT
     
     task = Task(
-        title=title,
-        description=description,
+        title=safe_title,
+        description=safe_description,
         owner_user_id=owner.id,
         created_by_user_id=creator.id,
         parent_id=parent_id,
@@ -99,7 +147,7 @@ def create_task_with_state(
     db.commit()
     db.refresh(task)
     
-    logger.info(f"Created task '{title}' owner={owner.name} creator={creator.name} state={initial_state}")
+    logger.info(f"Created task '{safe_title}' owner={owner.name} creator={creator.name} state={initial_state}")
     
     # If DRAFT, create a pending decision for the owner
     if initial_state == TaskState.DRAFT:
@@ -109,7 +157,7 @@ def create_task_with_state(
             decision_type=PendingDecisionType.TASK_ACCEPTANCE,
             entity_type="task",
             entity_id=task.id,
-            description=f"{creator.name} suggested task '{title}' for you. Accept, reject, or propose merge?"
+            description=f"{creator.name} suggested task '{safe_title}' for you. Accept, reject, or propose merge?"
         )
     
     return task
@@ -186,6 +234,8 @@ def propose_task_merge(
     """
     Propose merging from_task into to_task.
     Creates a pending decision for the creator of from_task.
+    
+    Requires both tasks to have the same owner.
     """
     if from_task.id == to_task.id:
         raise ValueError("Cannot merge a task into itself")
@@ -193,6 +243,10 @@ def propose_task_merge(
         raise ValueError("Proposal reason is required")
     if to_task.state == TaskState.ARCHIVED:
         raise ValueError("Cannot merge into an archived task")
+    
+    # Merge requires same owner
+    if from_task.owner_user_id != to_task.owner_user_id:
+        raise ValueError("Cannot merge tasks with different owners")
     
     # Check for existing active proposal
     existing = db.query(TaskMergeProposal).filter(
@@ -296,6 +350,21 @@ def reject_merge_proposal(
     logger.info(f"Merge proposal rejected: {from_task.title} remains separate")
     
     return proposal
+
+
+def cancel_merge_proposal(db: Session, proposal: TaskMergeProposal) -> None:
+    """
+    Cancel a pending merge proposal (by the proposer).
+    This simply removes the proposal without affecting the task state.
+    """
+    if proposal.status != MergeProposalStatus.PROPOSED:
+        raise ValueError("Can only cancel PROPOSED merge proposals")
+    
+    # Delete the proposal
+    db.delete(proposal)
+    db.commit()
+    
+    logger.info(f"Merge proposal {proposal.id} cancelled")
 
 
 def execute_task_merge(db: Session, proposal: TaskMergeProposal) -> None:
@@ -522,6 +591,35 @@ def compute_attribute_consensus(
 # Dependency State Machine
 # =============================================================================
 
+def _would_create_circular_dependency(db: Session, downstream_id: UUID, proposed_upstream_id: UUID) -> bool:
+    """
+    Check if adding proposed_upstream as a dependency of downstream would create a cycle.
+    Uses BFS to traverse existing dependencies.
+    """
+    visited = set()
+    queue = [proposed_upstream_id]
+    
+    while queue:
+        current = queue.pop(0)
+        if current == downstream_id:
+            return True  # Found a cycle
+        if current in visited:
+            continue
+        visited.add(current)
+        
+        # Find all tasks that current depends on (current is downstream, find upstreams)
+        upstreams = db.query(TaskDependencyV2.upstream_task_id).filter(
+            TaskDependencyV2.downstream_task_id == current,
+            TaskDependencyV2.status.in_([DependencyStatus.PROPOSED, DependencyStatus.CONFIRMED])
+        ).all()
+        
+        for (upstream_id,) in upstreams:
+            if upstream_id not in visited:
+                queue.append(upstream_id)
+    
+    return False
+
+
 def propose_dependency(
     db: Session,
     requester: User,
@@ -533,9 +631,25 @@ def propose_dependency(
     
     - If same owner for both tasks: auto-confirm
     - Otherwise: create PROPOSED and pending decision for upstream owner
+    
+    Raises ValueError for:
+    - Self dependency
+    - Archived task dependency
+    - Circular dependency
     """
     if downstream_task.id == upstream_task.id:
         raise ValueError("A task cannot depend on itself")
+    
+    # Cannot depend on an archived task
+    if upstream_task.state == TaskState.ARCHIVED:
+        raise ValueError("Cannot create dependency on an ARCHIVED task")
+    
+    if downstream_task.state == TaskState.ARCHIVED:
+        raise ValueError("Cannot add dependency from an ARCHIVED task")
+    
+    # Check for circular dependency
+    if _would_create_circular_dependency(db, downstream_task.id, upstream_task.id):
+        raise ValueError("Circular dependency detected")
     
     # Check for existing non-REMOVED dependency
     existing = db.query(TaskDependencyV2).filter(
