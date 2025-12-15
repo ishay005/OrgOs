@@ -489,3 +489,90 @@ async def migrate_state_machines(db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Migration failed: {str(e)}")
+
+
+@router.api_route("/update-schema", methods=["GET", "POST"])
+async def update_schema(db: Session = Depends(get_db)):
+    """
+    🔧 Update database schema - adds new columns to existing tables.
+    Safe to run multiple times (idempotent).
+    
+    This adds:
+    - state, created_by_user_id, state_changed_at, state_reason to tasks table
+    - last_response_id to chat_threads table
+    - Creates all new tables if they don't exist
+    """
+    results = {"columns_added": [], "columns_existed": [], "tables_created": [], "errors": []}
+    
+    try:
+        logger.info("🔧 Running schema update...")
+        
+        # List of column migrations: (table, column, sql_type, default)
+        column_migrations = [
+            ("tasks", "state", "VARCHAR", "'ACTIVE'"),
+            ("tasks", "created_by_user_id", "UUID REFERENCES users(id)", None),
+            ("tasks", "state_changed_at", "TIMESTAMP", None),
+            ("tasks", "state_reason", "TEXT", None),
+            ("chat_threads", "last_response_id", "VARCHAR", None),
+        ]
+        
+        for table, column, sql_type, default in column_migrations:
+            try:
+                # Check if column exists
+                check_sql = text("""
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = :table AND column_name = :column
+                """)
+                exists = db.execute(check_sql, {"table": table, "column": column}).fetchone()
+                
+                if not exists:
+                    # Add column
+                    default_clause = f" DEFAULT {default}" if default else ""
+                    alter_sql = text(f"ALTER TABLE {table} ADD COLUMN {column} {sql_type}{default_clause}")
+                    db.execute(alter_sql)
+                    results["columns_added"].append(f"{table}.{column}")
+                    logger.info(f"  ✓ Added column {table}.{column}")
+                else:
+                    results["columns_existed"].append(f"{table}.{column}")
+            except Exception as e:
+                results["errors"].append(f"{table}.{column}: {str(e)}")
+                logger.warning(f"  ⚠ Error adding {table}.{column}: {e}")
+        
+        # Set default values for existing data
+        try:
+            db.execute(text("UPDATE tasks SET state = 'ACTIVE' WHERE state IS NULL"))
+            logger.info("  ✓ Set default state for existing tasks")
+        except Exception as e:
+            results["errors"].append(f"set default state: {str(e)}")
+        
+        try:
+            db.execute(text("UPDATE tasks SET created_by_user_id = owner_user_id WHERE created_by_user_id IS NULL"))
+            logger.info("  ✓ Set default created_by_user_id for existing tasks")
+        except Exception as e:
+            results["errors"].append(f"set created_by_user_id: {str(e)}")
+        
+        # Create new tables (if they don't exist)
+        from app.database import Base, engine
+        try:
+            Base.metadata.create_all(bind=engine)
+            results["tables_created"].append("All new tables created (if not existing)")
+            logger.info("  ✓ Created new tables")
+        except Exception as e:
+            results["errors"].append(f"create tables: {str(e)}")
+        
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "Schema update completed!",
+            "summary": {
+                "columns_added": len(results["columns_added"]),
+                "columns_existed": len(results["columns_existed"]),
+                "errors": len(results["errors"])
+            },
+            "details": results
+        }
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Schema update failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Schema update failed: {str(e)}")
