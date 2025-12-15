@@ -539,17 +539,89 @@ async def update_schema(db: Session = Depends(get_db)):
                 logger.warning(f"  ⚠ Error adding {table}.{column}: {e}")
         
         # Set default values for existing data
-        try:
-            db.execute(text("UPDATE tasks SET state = 'ACTIVE' WHERE state IS NULL"))
-            logger.info("  ✓ Set default state for existing tasks")
-        except Exception as e:
-            results["errors"].append(f"set default state: {str(e)}")
+        # Find Ishay's user ID
+        ishay_result = db.execute(text("SELECT id FROM users WHERE LOWER(name) LIKE '%ishay%' LIMIT 1")).fetchone()
         
-        try:
-            db.execute(text("UPDATE tasks SET created_by_user_id = owner_user_id WHERE created_by_user_id IS NULL"))
-            logger.info("  ✓ Set default created_by_user_id for existing tasks")
-        except Exception as e:
-            results["errors"].append(f"set created_by_user_id: {str(e)}")
+        if ishay_result:
+            ishay_id = str(ishay_result[0])
+            logger.info(f"  Found Ishay with ID: {ishay_id}")
+            
+            # Set ALL tasks to be created by Ishay
+            try:
+                db.execute(text(f"UPDATE tasks SET created_by_user_id = '{ishay_id}' WHERE created_by_user_id IS NULL"))
+                results["columns_added"].append("Set all tasks created_by to Ishay")
+                logger.info("  ✓ Set created_by_user_id to Ishay for all tasks")
+            except Exception as e:
+                results["errors"].append(f"set created_by_user_id to Ishay: {str(e)}")
+            
+            # Set tasks where owner != Ishay to DRAFT state
+            try:
+                updated = db.execute(text(f"""
+                    UPDATE tasks 
+                    SET state = 'DRAFT', state_reason = 'Pending owner acceptance'
+                    WHERE created_by_user_id = '{ishay_id}' 
+                    AND owner_user_id != '{ishay_id}'
+                    AND (state IS NULL OR state = 'ACTIVE')
+                """))
+                results["columns_added"].append(f"Set {updated.rowcount} tasks to DRAFT (owner != Ishay)")
+                logger.info(f"  ✓ Set {updated.rowcount} tasks to DRAFT state (owner != creator)")
+            except Exception as e:
+                results["errors"].append(f"set DRAFT state: {str(e)}")
+            
+            # Set tasks where owner == Ishay to ACTIVE
+            try:
+                db.execute(text(f"""
+                    UPDATE tasks 
+                    SET state = 'ACTIVE'
+                    WHERE created_by_user_id = '{ishay_id}' 
+                    AND owner_user_id = '{ishay_id}'
+                    AND state IS NULL
+                """))
+                logger.info("  ✓ Set Ishay's own tasks to ACTIVE state")
+            except Exception as e:
+                results["errors"].append(f"set ACTIVE state for Ishay: {str(e)}")
+            
+            # Create pending decisions for DRAFT tasks
+            try:
+                # Get all DRAFT tasks that need decisions
+                draft_tasks = db.execute(text(f"""
+                    SELECT t.id, t.title, t.owner_user_id 
+                    FROM tasks t
+                    WHERE t.state = 'DRAFT' 
+                    AND t.created_by_user_id = '{ishay_id}'
+                    AND t.owner_user_id != '{ishay_id}'
+                    AND NOT EXISTS (
+                        SELECT 1 FROM pending_decisions pd 
+                        WHERE pd.task_id = t.id 
+                        AND pd.decision_type = 'TASK_ACCEPTANCE'
+                    )
+                """)).fetchall()
+                
+                for task_id, title, owner_id in draft_tasks:
+                    db.execute(text(f"""
+                        INSERT INTO pending_decisions (id, user_id, task_id, decision_type, description, created_at)
+                        VALUES (
+                            gen_random_uuid(),
+                            '{owner_id}',
+                            '{task_id}',
+                            'TASK_ACCEPTANCE',
+                            'Ishay created task "{title}" for you. Accept, reject, or propose merge.',
+                            CURRENT_TIMESTAMP
+                        )
+                    """))
+                
+                results["columns_added"].append(f"Created {len(draft_tasks)} pending decisions for DRAFT tasks")
+                logger.info(f"  ✓ Created {len(draft_tasks)} pending decisions")
+            except Exception as e:
+                results["errors"].append(f"create pending decisions: {str(e)}")
+        else:
+            # Fallback: set created_by = owner if Ishay not found
+            logger.warning("  ⚠ Ishay user not found, using owner as creator")
+            try:
+                db.execute(text("UPDATE tasks SET created_by_user_id = owner_user_id WHERE created_by_user_id IS NULL"))
+                db.execute(text("UPDATE tasks SET state = 'ACTIVE' WHERE state IS NULL"))
+            except Exception as e:
+                results["errors"].append(f"fallback migration: {str(e)}")
         
         # Create new tables (if they don't exist)
         from app.database import Base, engine
