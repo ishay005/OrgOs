@@ -2,8 +2,8 @@
 Task Lifecycle Integration Tests
 
 Tests full task lifecycle scenarios through the API:
-- Owner-created task: ACTIVE → DONE → ARCHIVED
-- Proxy-created task: Accept flow, Reject flow
+- Owner-created task: ACTIVE → ARCHIVED
+- Proxy-created task: Accept flow (DRAFT → ACTIVE), Reject flow (DRAFT → REJECTED)
 - State transitions with proper authorization
 - API endpoint verification
 
@@ -44,33 +44,12 @@ class TestOwnerCreatedTaskLifecycle:
         task = db_session.query(Task).filter(Task.id == uuid.UUID(data["id"])).first()
         assert task.state == TaskState.ACTIVE
     
-    def test_mark_task_done_via_api(self, test_client, db_session, sample_users, sample_tasks):
-        """Can mark an ACTIVE task as DONE through API."""
+    def test_archive_active_task_via_api(self, test_client, db_session, sample_users, sample_tasks):
+        """Can archive an ACTIVE task through API."""
         task = sample_tasks["task1"]
         owner = sample_users["employee1"]
         
-        response = test_client.post(
-            f"/decisions/task/{task.id}",
-            json={"action": "complete"},
-            headers={"X-User-Id": str(owner.id)}
-        )
-        
-        # Note: This may need adjustment based on actual API design
-        # The endpoint might be different
-        if response.status_code == 200:
-            db_session.refresh(task)
-            assert task.state == TaskState.DONE
-    
-    def test_archive_completed_task(self, test_client, db_session, sample_users, sample_tasks):
-        """Can archive a DONE task."""
-        task = sample_tasks["task1"]
-        owner = sample_users["employee1"]
-        
-        # First mark as done
-        task.state = TaskState.DONE
-        db_session.commit()
-        
-        # Then archive via API (endpoint may vary)
+        # Archive via DELETE endpoint
         response = test_client.delete(
             f"/tasks/{task.id}",
             headers={"X-User-Id": str(owner.id)}
@@ -164,7 +143,7 @@ class TestProxyCreatedTaskLifecycle:
         assert task.state == TaskState.ACTIVE
     
     def test_owner_rejects_proxy_task(self, test_client, db_session, sample_users):
-        """Owner rejecting proxy task archives it with reason."""
+        """Owner rejecting proxy task sets it to REJECTED with reason."""
         manager = sample_users["manager"]
         employee = sample_users["employee1"]
         
@@ -189,8 +168,9 @@ class TestProxyCreatedTaskLifecycle:
         assert response.status_code == 200
         
         db_session.refresh(task)
-        assert task.state == TaskState.ARCHIVED
+        assert task.state == TaskState.REJECTED
         assert task.state_reason == "Not relevant to my work"
+        assert task.is_active == True  # REJECTED tasks stay visible
 
 
 class TestTaskStateAuthorization:

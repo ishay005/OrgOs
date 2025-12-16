@@ -67,9 +67,21 @@ def set_task_state(
     if old_state == new_state:
         return task
     
-    # Permission check: only owner can change state
-    if actor.id != task.owner_user_id:
-        raise ValueError("Only the task owner can change a task's state")
+    # Permission check
+    # Owner can always change their task's state (for valid transitions)
+    # Creator can change REJECTED -> DRAFT (reopen) or REJECTED -> ARCHIVED (archive)
+    is_owner = actor.id == task.owner_user_id
+    is_creator = actor.id == task.created_by_user_id
+    
+    if not is_owner:
+        # Check if creator is allowed for this specific transition
+        creator_allowed = (
+            is_creator and 
+            old_state == TaskState.REJECTED and 
+            new_state in [TaskState.DRAFT, TaskState.ARCHIVED]
+        )
+        if not creator_allowed:
+            raise ValueError("Only the task owner can change a task's state")
     
     # Validate state transitions
     VALID_TRANSITIONS = {
@@ -141,7 +153,7 @@ def create_task_with_state(
         created_by_user_id=creator.id,
         parent_id=parent_id,
         state=initial_state,
-        is_active=(initial_state == TaskState.ACTIVE)
+        is_active=True  # DRAFT/ACTIVE are visible; only ARCHIVED is invisible
     )
     db.add(task)
     db.commit()
@@ -230,7 +242,7 @@ def reopen_rejected_task(db: Session, task: Task, actor: User) -> Task:
         db=db,
         entity_type="task",
         entity_id=task.id,
-        target_user_id=task.owner_user_id,
+        user_id=task.owner_user_id,
         decision_type=PendingDecisionType.TASK_ACCEPTANCE,
         description=f"Task '{task.title}' was resubmitted by {actor.name}. Please review."
     )

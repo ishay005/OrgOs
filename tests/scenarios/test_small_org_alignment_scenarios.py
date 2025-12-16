@@ -304,7 +304,7 @@ class TestManagerProxyTaskWorkflow:
         
         assert suggested_tasks[0].state == TaskState.ACTIVE
         assert suggested_tasks[1].state == TaskState.ACTIVE
-        assert suggested_tasks[2].state == TaskState.ARCHIVED
+        assert suggested_tasks[2].state == TaskState.REJECTED  # Rejected tasks go to REJECTED, not ARCHIVED
         
         # === Step 3: Manager handles merge proposals ===
         

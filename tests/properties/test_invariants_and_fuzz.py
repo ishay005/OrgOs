@@ -140,7 +140,7 @@ class TestInvariants:
         state_machines.set_task_state(
             db=db_session,
             task=task,
-            new_state=TaskState.DONE,
+            new_state=TaskState.ARCHIVED,
             reason="Test",
             actor=owner
         )
@@ -304,12 +304,12 @@ class TestFuzzOperations:
             try:
                 if op == "create_dependency":
                     t1, t2 = random.sample(tasks, 2)
-                    proposer = random.choice(users)
+                    requester = random.choice(users)
                     state_machines.propose_dependency(
                         db=db_session,
                         downstream_task=t1,
                         upstream_task=t2,
-                        proposer=proposer
+                        requester=requester
                     )
                 
                 elif op == "accept_task":
@@ -323,7 +323,7 @@ class TestFuzzOperations:
                 elif op == "change_state":
                     task = random.choice(tasks)
                     actor = random.choice(users)
-                    new_state = random.choice([TaskState.ACTIVE, TaskState.DONE])
+                    new_state = random.choice([TaskState.ACTIVE, TaskState.ARCHIVED])
                     try:
                         state_machines.set_task_state(
                             db=db_session,
@@ -376,12 +376,12 @@ class TestFuzzOperations:
         task = sample_tasks["task1"]
         owner = sample_users["employee1"]
         
+        # Valid state transitions: ACTIVE -> ARCHIVED (can't go back)
+        # So we test multiple archive attempts (should be idempotent)
         states = [
-            TaskState.DONE,
             TaskState.ACTIVE,
-            TaskState.DONE,
-            TaskState.ACTIVE,
-            TaskState.DONE
+            TaskState.ARCHIVED,
+            TaskState.ARCHIVED,  # Should be no-op or error
         ]
         
         for state in states:

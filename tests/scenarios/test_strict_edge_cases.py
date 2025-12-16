@@ -307,7 +307,6 @@ class TestDataConsistency:
         dep = state_machines.propose_dependency(db_session, owner, task_a, task_b)
         
         # Archive task B (don't cascade to dependencies per requirement #40)
-        state_machines.set_task_state(db_session, task_b, TaskState.DONE, owner, reason="Done")
         state_machines.set_task_state(db_session, task_b, TaskState.ARCHIVED, owner, reason="Archived")
         
         # Dependency should remain unchanged (per requirement: don't touch dependencies on archive)
@@ -375,4 +374,257 @@ class TestAuthorizationBypass:
         # Should fail with 403 or 400
         assert response.status_code in [400, 403, 404], \
             f"Other user was able to accept owner's task (status {response.status_code})"
+
+
+# =============================================================================
+# Rejected Task Edge Cases
+# =============================================================================
+
+class TestRejectedTaskEdgeCases:
+    """Edge cases specific to REJECTED task handling."""
+    
+    def test_edit_rejected_with_empty_title_handled(self, test_client, db_session, sample_users):
+        """Editing rejected task with empty title should either fail or preserve original."""
+        creator = sample_users["manager"]
+        owner = sample_users["employee1"]
+        
+        task = Task(
+            id=uuid.uuid4(),
+            title="Original",
+            owner_user_id=owner.id,
+            created_by_user_id=creator.id,
+            state=TaskState.REJECTED,
+            state_reason="Rejected"
+        )
+        db_session.add(task)
+        db_session.commit()
+        
+        response = test_client.patch(
+            f"/tasks/{task.id}",
+            json={"title": ""},
+            headers={"X-User-Id": str(creator.id)}
+        )
+        
+        # Should either reject with 400/422 or accept empty (current behavior)
+        # This is a potential improvement area for validation
+        assert response.status_code in [200, 400, 422]
+    
+    def test_archive_already_archived_task(self, test_client, db_session, sample_users):
+        """Archiving already archived task should be idempotent or error."""
+        owner = sample_users["employee1"]
+        
+        task = Task(
+            id=uuid.uuid4(),
+            title="Already archived",
+            owner_user_id=owner.id,
+            created_by_user_id=owner.id,
+            state=TaskState.ARCHIVED,
+            is_active=False
+        )
+        db_session.add(task)
+        db_session.commit()
+        
+        response = test_client.delete(
+            f"/tasks/{task.id}",
+            headers={"X-User-Id": str(owner.id)}
+        )
+        
+        # Should either succeed (idempotent) or return 400
+        assert response.status_code in [200, 400, 404]
+    
+    def test_reject_without_reason_fails(self, test_client, db_session, sample_users):
+        """Rejecting task without reason should fail."""
+        creator = sample_users["manager"]
+        owner = sample_users["employee1"]
+        
+        task = Task(
+            id=uuid.uuid4(),
+            title="Reject test",
+            owner_user_id=owner.id,
+            created_by_user_id=creator.id,
+            state=TaskState.DRAFT
+        )
+        db_session.add(task)
+        db_session.commit()
+        
+        response = test_client.post(
+            f"/decisions/task/{task.id}",
+            json={"action": "reject"},  # No reason
+            headers={"X-User-Id": str(owner.id)}
+        )
+        
+        assert response.status_code == 400
+    
+    def test_accept_task_twice_idempotent(self, test_client, db_session, sample_users):
+        """Accepting task twice should be idempotent or error gracefully."""
+        creator = sample_users["manager"]
+        owner = sample_users["employee1"]
+        
+        task = Task(
+            id=uuid.uuid4(),
+            title="Double accept",
+            owner_user_id=owner.id,
+            created_by_user_id=creator.id,
+            state=TaskState.DRAFT
+        )
+        db_session.add(task)
+        db_session.commit()
+        
+        # First accept
+        response1 = test_client.post(
+            f"/decisions/task/{task.id}",
+            json={"action": "accept"},
+            headers={"X-User-Id": str(owner.id)}
+        )
+        assert response1.status_code == 200
+        
+        # Second accept (should error or be idempotent)
+        response2 = test_client.post(
+            f"/decisions/task/{task.id}",
+            json={"action": "accept"},
+            headers={"X-User-Id": str(owner.id)}
+        )
+        assert response2.status_code in [200, 400]
+        
+        db_session.refresh(task)
+        assert task.state == TaskState.ACTIVE
+    
+    def test_reject_active_task_fails(self, test_client, db_session, sample_users):
+        """Rejecting an ACTIVE task should fail."""
+        owner = sample_users["employee1"]
+        
+        task = Task(
+            id=uuid.uuid4(),
+            title="Active task",
+            owner_user_id=owner.id,
+            created_by_user_id=owner.id,
+            state=TaskState.ACTIVE
+        )
+        db_session.add(task)
+        db_session.commit()
+        
+        response = test_client.post(
+            f"/decisions/task/{task.id}",
+            json={"action": "reject", "reason": "Trying to reject active"},
+            headers={"X-User-Id": str(owner.id)}
+        )
+        
+        assert response.status_code == 400
+    
+    def test_reopen_non_rejected_task_fails(self, db_session, sample_users):
+        """Reopening non-REJECTED task should fail."""
+        creator = sample_users["manager"]
+        owner = sample_users["employee1"]
+        
+        task = Task(
+            id=uuid.uuid4(),
+            title="Draft task",
+            owner_user_id=owner.id,
+            created_by_user_id=creator.id,
+            state=TaskState.DRAFT
+        )
+        db_session.add(task)
+        db_session.commit()
+        
+        with pytest.raises(ValueError, match="not in REJECTED"):
+            state_machines.reopen_rejected_task(db_session, task, creator)
+    
+    def test_owner_cannot_reopen_rejected_task(self, db_session, sample_users):
+        """Owner (not creator) cannot reopen rejected task."""
+        creator = sample_users["manager"]
+        owner = sample_users["employee1"]
+        
+        task = Task(
+            id=uuid.uuid4(),
+            title="Rejected task",
+            owner_user_id=owner.id,
+            created_by_user_id=creator.id,
+            state=TaskState.REJECTED,
+            state_reason="Rejected"
+        )
+        db_session.add(task)
+        db_session.commit()
+        
+        with pytest.raises(ValueError, match="Only the task creator"):
+            state_machines.reopen_rejected_task(db_session, task, owner)
+
+
+class TestStateTransitionEdgeCases:
+    """Edge cases for state transitions."""
+    
+    def test_same_state_transition_allowed(self, db_session, sample_users):
+        """Setting same state should be no-op or allowed."""
+        owner = sample_users["employee1"]
+        
+        task = Task(
+            id=uuid.uuid4(),
+            title="Same state test",
+            owner_user_id=owner.id,
+            created_by_user_id=owner.id,
+            state=TaskState.ACTIVE
+        )
+        db_session.add(task)
+        db_session.commit()
+        
+        # Should not raise
+        try:
+            state_machines.set_task_state(
+                db=db_session,
+                task=task,
+                new_state=TaskState.ACTIVE,
+                actor=owner,
+                reason="Same state"
+            )
+            assert task.state == TaskState.ACTIVE
+        except ValueError:
+            # Also acceptable if explicitly disallowed
+            pass
+    
+    def test_archived_to_draft_fails(self, db_session, sample_users):
+        """ARCHIVED -> DRAFT should fail."""
+        owner = sample_users["employee1"]
+        
+        task = Task(
+            id=uuid.uuid4(),
+            title="Archived test",
+            owner_user_id=owner.id,
+            created_by_user_id=owner.id,
+            state=TaskState.ARCHIVED,
+            is_active=False
+        )
+        db_session.add(task)
+        db_session.commit()
+        
+        with pytest.raises(ValueError, match="Invalid state transition"):
+            state_machines.set_task_state(
+                db=db_session,
+                task=task,
+                new_state=TaskState.DRAFT,
+                actor=owner,
+                reason="Trying to resurrect"
+            )
+    
+    def test_archived_to_rejected_fails(self, db_session, sample_users):
+        """ARCHIVED -> REJECTED should fail."""
+        owner = sample_users["employee1"]
+        
+        task = Task(
+            id=uuid.uuid4(),
+            title="Archived test",
+            owner_user_id=owner.id,
+            created_by_user_id=owner.id,
+            state=TaskState.ARCHIVED,
+            is_active=False
+        )
+        db_session.add(task)
+        db_session.commit()
+        
+        with pytest.raises(ValueError, match="Invalid state transition"):
+            state_machines.set_task_state(
+                db=db_session,
+                task=task,
+                new_state=TaskState.REJECTED,
+                actor=owner,
+                reason="Trying invalid transition"
+            )
 

@@ -2,6 +2,7 @@
 Tasks and ontology endpoints
 """
 import html
+from datetime import datetime
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -97,8 +98,6 @@ async def create_task(
       - Task state is ACTIVE
     Supports parent-child relationships and dependencies.
     """
-    from datetime import datetime
-    
     # Validate parent exists if provided
     if task_data.parent_id:
         parent_task = db.query(Task).filter(Task.id == task_data.parent_id).first()
@@ -289,8 +288,6 @@ async def update_task(
     
     # Update owner (with validation and double consent)
     if update_data.owner_user_id is not None:
-        from datetime import datetime
-        
         new_owner = db.query(User).filter(User.id == update_data.owner_user_id).first()
         if not new_owner:
             raise HTTPException(status_code=404, detail="New owner not found")

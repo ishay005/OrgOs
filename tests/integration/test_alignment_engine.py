@@ -13,7 +13,7 @@ from datetime import datetime
 
 from app.models import (
     User, Task, TaskState, AttributeAnswer, AttributeDefinition, 
-    EntityType, SimilarityScore
+    EntityType, SimilarityScore, AttributeType
 )
 
 
@@ -277,7 +277,7 @@ class TestMisalignmentFallback:
             name="main_goal",
             label="Main Goal",
             entity_type=EntityType.TASK,
-            type="text"
+            type=AttributeType.STRING
         )
         db_session.add(attr)
         db_session.commit()

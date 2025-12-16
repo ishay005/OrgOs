@@ -137,7 +137,7 @@ class TestGetUserTasks:
         assert str(archived_task.id) not in task_ids
     
     def test_includes_all_active_states(self, db_session, sample_users):
-        """Should include DRAFT, ACTIVE, and DONE tasks."""
+        """Should include DRAFT, ACTIVE, and REJECTED tasks (all visible states)."""
         user = sample_users["employee1"]
         
         # Create tasks in different states
@@ -155,14 +155,14 @@ class TestGetUserTasks:
             created_by_user_id=user.id,
             state=TaskState.ACTIVE
         )
-        done_task = Task(
+        rejected_task = Task(
             id=uuid.uuid4(),
-            title="Done Task",
+            title="Rejected Task",
             owner_user_id=user.id,
-            created_by_user_id=user.id,
-            state=TaskState.DONE
+            created_by_user_id=sample_users["manager"].id,
+            state=TaskState.REJECTED
         )
-        db_session.add_all([draft_task, active_task, done_task])
+        db_session.add_all([draft_task, active_task, rejected_task])
         db_session.commit()
         
         result = get_tasks_for_user(db_session, user.id)
