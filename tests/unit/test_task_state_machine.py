@@ -3,7 +3,7 @@ Task State Machine Unit Tests
 
 Tests the pure task state logic including:
 - Task creation with correct initial states
-- State transitions (DRAFT → ACTIVE → DONE → ARCHIVED)
+- State transitions (DRAFT → ACTIVE/REJECTED → ARCHIVED, REJECTED → DRAFT)
 - Illegal transition prevention
 - State change validation
 
@@ -93,31 +93,12 @@ class TestTaskStateTransitions:
         assert task.state == TaskState.ACTIVE
         assert task.state_changed_at is not None
     
-    def test_active_to_done(self, db_session, sample_users, sample_tasks):
-        """ACTIVE → DONE when task is completed."""
+    def test_active_to_archived(self, db_session, sample_users, sample_tasks):
+        """ACTIVE → ARCHIVED when task is archived/completed."""
         task = sample_tasks["task1"]
         owner = sample_users["employee1"]
         
         assert task.state == TaskState.ACTIVE
-        
-        state_machines.set_task_state(
-            db=db_session,
-            task=task,
-            new_state=TaskState.DONE,
-            reason="Task completed",
-            actor=owner
-        )
-        
-        assert task.state == TaskState.DONE
-    
-    def test_done_to_archived(self, db_session, sample_users, sample_tasks):
-        """DONE → ARCHIVED when task is archived."""
-        task = sample_tasks["task1"]
-        owner = sample_users["employee1"]
-        
-        # First mark as done
-        task.state = TaskState.DONE
-        db_session.commit()
         
         state_machines.set_task_state(
             db=db_session,
@@ -139,7 +120,7 @@ class TestTaskStateTransitions:
         state_machines.set_task_state(
             db=db_session,
             task=task,
-            new_state=TaskState.DONE,
+            new_state=TaskState.ARCHIVED,
             reason="Completed",
             actor=owner
         )
@@ -187,8 +168,8 @@ class TestTaskAcceptReject:
         
         assert result.state == TaskState.ACTIVE
     
-    def test_reject_task_archives_it(self, db_session, sample_users):
-        """Rejecting a DRAFT task should archive it with reason."""
+    def test_reject_task_sets_rejected(self, db_session, sample_users):
+        """Rejecting a DRAFT task should set it to REJECTED with reason."""
         manager = sample_users["manager"]
         employee = sample_users["employee1"]
         
@@ -205,8 +186,27 @@ class TestTaskAcceptReject:
         reason = "Not relevant to my work"
         result = state_machines.reject_task(db_session, task, employee, reason)
         
-        assert result.state == TaskState.ARCHIVED
+        assert result.state == TaskState.REJECTED
         assert result.state_reason == reason
+        assert result.is_active is True
+
+    def test_rejected_can_return_to_draft_by_creator(self, db_session, sample_users):
+        """Creator can reopen a rejected task back to DRAFT."""
+        manager = sample_users["manager"]
+        employee = sample_users["employee1"]
+        
+        task = Task(
+            id=uuid.uuid4(),
+            title="Suggested task",
+            owner_user_id=employee.id,
+            created_by_user_id=manager.id,
+            state=TaskState.REJECTED
+        )
+        db_session.add(task)
+        db_session.commit()
+        
+        result = state_machines.reopen_rejected_task(db_session, task, manager)
+        assert result.state == TaskState.DRAFT
 
 
 class TestTaskStateValidation:

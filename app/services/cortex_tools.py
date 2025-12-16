@@ -454,23 +454,6 @@ CORTEX_TOOLS = [
     {
         "type": "function",
         "function": {
-            "name": "complete_task",
-            "description": "Mark an ACTIVE task as DONE.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "task_id": {
-                        "type": "string",
-                        "description": "The ID of the task to complete"
-                    }
-                },
-                "required": ["task_id"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
             "name": "create_task_for_user",
             "description": "Create a new task for a user. If creator != owner, task starts as DRAFT.",
             "parameters": {
@@ -1104,9 +1087,12 @@ def record_observation(
         db.refresh(new_answer)
         answer_id = new_answer.id
     
-    # Calculate similarity scores
+    # Calculate similarity scores (async function, need to run in sync context)
     try:
-        calculate_and_store_scores_for_answer(db, answer_id)
+        import asyncio
+        asyncio.get_event_loop().run_until_complete(
+            calculate_and_store_scores_for_answer(answer_id, db)
+        )
     except Exception as e:
         logger.warning(f"Could not calculate similarity scores: {e}")
     
@@ -1332,6 +1318,7 @@ def get_tasks_for_user(
         {
           "id": str,
           "title": str,
+          "state": str,  # DRAFT, ACTIVE, ARCHIVED
           "status": str | None,
           "priority": str | None,
           "owner_id": str | None,
@@ -1399,6 +1386,7 @@ def get_tasks_for_user(
         result_tasks.append({
             "id": str(task.id),
             "title": task.title,
+            "state": task.state.value if task.state else "ACTIVE",
             "status": status,
             "priority": priority,
             "owner_id": str(task.owner_user_id) if task.owner_user_id else None,
@@ -1423,7 +1411,7 @@ def get_task_detail(db: Session, task_id: UUID) -> dict:
         "id": str,
         "title": str,
         "description": str | None,
-        "state": str,  # DRAFT, ACTIVE, DONE, ARCHIVED
+        "state": str,  # DRAFT, ACTIVE, ARCHIVED
         "owner_id": str | None,
         "owner_name": str | None,
         "creator_id": str | None,
@@ -1839,9 +1827,12 @@ def upsert_attribute_answer(
         db.refresh(new_answer)
         answer_id = new_answer.id
     
-    # Calculate similarity scores
+    # Calculate similarity scores (async function, need to run in sync context)
     try:
-        calculate_and_store_scores_for_answer(db, answer_id)
+        import asyncio
+        asyncio.get_event_loop().run_until_complete(
+            calculate_and_store_scores_for_answer(answer_id, db)
+        )
     except Exception as e:
         logger.warning(f"Could not calculate similarity scores: {e}")
     
@@ -2037,17 +2028,6 @@ def execute_tool(
         try:
             result = state_machines.reject_merge_proposal(db, proposal, actor, tool_args["reason"])
             return {"status": "ok", "proposal_id": str(result.id)}
-        except ValueError as e:
-            return {"error": str(e)}
-    
-    elif tool_name == "complete_task":
-        task = db.query(Task).filter(Task.id == UUID(tool_args["task_id"])).first()
-        if not task:
-            return {"error": "Task not found"}
-        actor = db.query(User).filter(User.id == user_id).first()
-        try:
-            result = state_machines.complete_task(db, task, actor)
-            return {"status": "ok", "task_id": str(result.id), "new_state": result.state.value}
         except ValueError as e:
             return {"error": str(e)}
     

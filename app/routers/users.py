@@ -158,3 +158,79 @@ async def update_user(
         "manager_id": str(user.manager_id) if user.manager_id else None,
         "message": "User updated successfully"
     }
+
+
+@router.get("/{user_id}/alignment-details")
+async def get_user_alignment_details(user_id: str, db: Session = Depends(get_db)):
+    """
+    Get detailed alignment comparison for a specific user.
+    Shows each attribute comparison with other users who answered about the same tasks.
+    """
+    from app.models import Task, AttributeAnswer, AttributeDefinition
+    from uuid import UUID
+    
+    try:
+        uid = UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid user ID format")
+    
+    user = db.query(User).filter(User.id == uid).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    comparisons = []
+    total_comparisons = 0
+    aligned_count = 0
+    
+    # Get all answers provided by this user
+    user_answers = db.query(AttributeAnswer).filter(
+        AttributeAnswer.answered_by_user_id == uid,
+        AttributeAnswer.refused == False
+    ).all()
+    
+    for user_answer in user_answers:
+        # Get task info
+        task = db.query(Task).filter(Task.id == user_answer.task_id).first()
+        task_title = task.title if task else "Unknown"
+        
+        # Get attribute info
+        attr = db.query(AttributeDefinition).filter(AttributeDefinition.id == user_answer.attribute_id).first()
+        attr_label = attr.label if attr else "Unknown"
+        
+        # Find other users who answered the same task/attribute
+        other_answers = db.query(AttributeAnswer).filter(
+            AttributeAnswer.task_id == user_answer.task_id,
+            AttributeAnswer.attribute_id == user_answer.attribute_id,
+            AttributeAnswer.answered_by_user_id != uid,
+            AttributeAnswer.refused == False
+        ).all()
+        
+        for other_answer in other_answers:
+            other_user = db.query(User).filter(User.id == other_answer.answered_by_user_id).first()
+            other_name = other_user.name if other_user else "Unknown"
+            
+            is_aligned = user_answer.value.strip().lower() == other_answer.value.strip().lower()
+            total_comparisons += 1
+            if is_aligned:
+                aligned_count += 1
+            
+            comparisons.append({
+                "task_id": str(user_answer.task_id),
+                "task_title": task_title,
+                "attribute": attr_label,
+                "user_value": user_answer.value,
+                "other_user": other_name,
+                "other_value": other_answer.value,
+                "is_aligned": is_aligned
+            })
+    
+    overall_alignment = round((aligned_count / total_comparisons * 100)) if total_comparisons > 0 else 100
+    
+    return {
+        "user_id": str(user_id),
+        "user_name": user.name,
+        "overall_alignment": overall_alignment,
+        "total_comparisons": total_comparisons,
+        "aligned_count": aligned_count,
+        "comparisons": comparisons
+    }

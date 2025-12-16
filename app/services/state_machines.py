@@ -2,7 +2,7 @@
 State Machine Services for OrgOs.
 
 Implements:
-- Task state machine (DRAFT -> ACTIVE -> DONE -> ARCHIVED)
+- Task state machine (DRAFT -> ACTIVE -> ARCHIVED, REJECTED -> DRAFT)
 - Task merge with double consent
 - Attribute/Perception consensus computation
 - Dependency state machine (PROPOSED -> CONFIRMED/REJECTED/REMOVED)
@@ -51,14 +51,14 @@ def set_task_state(
     
     Transitions:
     - DRAFT -> ACTIVE (owner accepts)
-    - DRAFT -> ARCHIVED (owner rejects)
-    - ACTIVE -> DONE (completion)
-    - ACTIVE -> ARCHIVED (archived)
-    - DONE -> ARCHIVED (archived)
+    - DRAFT -> REJECTED (owner rejects)
+    - REJECTED -> DRAFT (creator reopens/reassigns)
+    - ACTIVE -> ARCHIVED (archived/completed)
+    - REJECTED -> ARCHIVED (cleanup)
     
     Raises ValueError for:
     - Actor is not the owner
-    - Invalid state transition (e.g. DRAFT -> DONE directly)
+    - Invalid state transition
     - Trying to reactivate an ARCHIVED task
     """
     old_state = task.state
@@ -73,9 +73,9 @@ def set_task_state(
     
     # Validate state transitions
     VALID_TRANSITIONS = {
-        TaskState.DRAFT: [TaskState.ACTIVE, TaskState.ARCHIVED],
-        TaskState.ACTIVE: [TaskState.DONE, TaskState.ARCHIVED],
-        TaskState.DONE: [TaskState.ARCHIVED, TaskState.ACTIVE],  # Can reopen
+        TaskState.DRAFT: [TaskState.ACTIVE, TaskState.REJECTED],
+        TaskState.ACTIVE: [TaskState.ARCHIVED],
+        TaskState.REJECTED: [TaskState.DRAFT, TaskState.ARCHIVED],
         TaskState.ARCHIVED: [],  # Cannot leave ARCHIVED
     }
     
@@ -88,7 +88,7 @@ def set_task_state(
     task.updated_at = datetime.utcnow()
     
     # Update is_active flag based on state
-    if new_state in [TaskState.ACTIVE, TaskState.DONE]:
+    if new_state in [TaskState.ACTIVE, TaskState.REJECTED, TaskState.DRAFT]:
         task.is_active = True
     elif new_state == TaskState.ARCHIVED:
         task.is_active = False
@@ -182,7 +182,7 @@ def accept_task(db: Session, task: Task, actor: User) -> Task:
 
 def reject_task(db: Session, task: Task, actor: User, reason: str) -> Task:
     """
-    Owner rejects a DRAFT task, transitioning it to ARCHIVED.
+    Owner rejects a DRAFT task, transitioning it to REJECTED and notifying the creator.
     Reason is required.
     """
     if task.state != TaskState.DRAFT:
@@ -192,29 +192,57 @@ def reject_task(db: Session, task: Task, actor: User, reason: str) -> Task:
     if not reason or not reason.strip():
         raise ValueError("Rejection reason is required")
     
-    task = set_task_state(db, task, TaskState.ARCHIVED, actor, reason=reason)
+    task = set_task_state(db, task, TaskState.REJECTED, actor, reason=reason)
     
-    # Resolve pending decision
+    # Resolve pending decision for owner (accept/reject)
     resolve_pending_decision(db, "task", task.id, "rejected")
+    
+    # Create pending decision for creator to take next action
+    if task.created_by_user_id and task.created_by_user_id != task.owner_user_id:
+        create_pending_decision(
+            db=db,
+            user_id=task.created_by_user_id,
+            decision_type=PendingDecisionType.TASK_ACCEPTANCE,
+            entity_type="task",
+            entity_id=task.id,
+            description=f"Task '{task.title}' was rejected by {actor.name}. Review or delete."
+        )
     
     return task
 
 
-def complete_task(db: Session, task: Task, actor: User) -> Task:
+def reopen_rejected_task(db: Session, task: Task, actor: User) -> Task:
     """
-    Mark an ACTIVE task as DONE.
+    Creator reopens a REJECTED task back to DRAFT for reassignment/edits.
     """
-    if task.state != TaskState.ACTIVE:
-        raise ValueError(f"Task is not in ACTIVE state (current: {task.state})")
+    if task.state != TaskState.REJECTED:
+        raise ValueError(f"Task is not in REJECTED state (current: {task.state})")
+    if actor.id != task.created_by_user_id:
+        raise ValueError("Only the task creator can reopen a rejected task")
     
-    return set_task_state(db, task, TaskState.DONE, actor)
+    task = set_task_state(db, task, TaskState.DRAFT, actor, reason="Reopened after rejection")
+    
+    # Resolve creator's pending decision (they acted)
+    resolve_pending_decision(db, "task", task.id, "reopened")
+    
+    # Create pending decision for the owner again
+    create_pending_decision(
+        db=db,
+        entity_type="task",
+        entity_id=task.id,
+        target_user_id=task.owner_user_id,
+        decision_type=PendingDecisionType.TASK_ACCEPTANCE,
+        description=f"Task '{task.title}' was resubmitted by {actor.name}. Please review."
+    )
+    
+    return task
 
 
 def archive_task(db: Session, task: Task, actor: User, reason: Optional[str] = None) -> Task:
     """
-    Archive a task (ACTIVE or DONE -> ARCHIVED).
+    Archive an ACTIVE task (ACTIVE -> ARCHIVED).
     """
-    if task.state not in [TaskState.ACTIVE, TaskState.DONE]:
+    if task.state != TaskState.ACTIVE:
         raise ValueError(f"Cannot archive task in {task.state} state")
     
     return set_task_state(db, task, TaskState.ARCHIVED, actor, reason=reason)

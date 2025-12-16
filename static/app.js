@@ -4,6 +4,138 @@ const API_BASE = window.location.origin;
 let currentUser = null;
 
 // ============================================================================
+// Toast Notification System (replaces ugly browser alerts)
+// ============================================================================
+
+function showToast(message, type = 'info', duration = 3000) {
+    // Create toast container if not exists
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        `;
+        document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    const colors = {
+        success: { bg: '#dcfce7', border: '#22c55e', text: '#166534' },
+        error: { bg: '#fee2e2', border: '#ef4444', text: '#991b1b' },
+        warning: { bg: '#fef3c7', border: '#f59e0b', text: '#92400e' },
+        info: { bg: '#e0f2fe', border: '#0284c7', text: '#075985' }
+    };
+    const c = colors[type] || colors.info;
+    
+    toast.innerHTML = `
+        <span style="font-size: 1.1rem; margin-right: 8px;">${icons[type] || icons.info}</span>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" style="margin-left: 12px; background: none; border: none; cursor: pointer; font-size: 1.1rem; opacity: 0.7;">×</button>
+    `;
+    toast.style.cssText = `
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        background: ${c.bg};
+        border: 1px solid ${c.border};
+        border-left: 4px solid ${c.border};
+        border-radius: 8px;
+        color: ${c.text};
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        pointer-events: auto;
+        animation: slideIn 0.3s ease;
+        max-width: 400px;
+    `;
+    
+    container.appendChild(toast);
+    
+    // Auto-remove after duration
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// Add animation styles
+const toastStyles = document.createElement('style');
+toastStyles.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(toastStyles);
+
+// ============================================================================
+// Custom Confirmation Modal (replaces ugly browser confirm)
+// ============================================================================
+
+function showConfirmDialog(message, onConfirm, options = {}) {
+    const title = options.title || 'Confirm';
+    const confirmText = options.confirmText || 'Confirm';
+    const cancelText = options.cancelText || 'Cancel';
+    const type = options.type || 'warning'; // warning, danger, info
+    
+    const colors = {
+        warning: { btn: '#f59e0b', hover: '#d97706' },
+        danger: { btn: '#dc2626', hover: '#b91c1c' },
+        info: { btn: '#3b82f6', hover: '#2563eb' }
+    };
+    const c = colors[type] || colors.warning;
+    
+    const modalHtml = `
+        <div id="confirm-modal" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+            <div class="modal-content" style="background: white; padding: 24px; border-radius: 12px; max-width: 400px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <h3 style="margin: 0 0 16px 0; color: #1e293b;">${title}</h3>
+                <p style="margin: 0 0 20px 0; color: #64748b; line-height: 1.5;">${message}</p>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button onclick="closeConfirmModal(false)" style="padding: 10px 20px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; font-size: 1rem;">${cancelText}</button>
+                    <button onclick="closeConfirmModal(true)" style="padding: 10px 20px; border: none; border-radius: 8px; background: ${c.btn}; color: white; cursor: pointer; font-size: 1rem; font-weight: 600;">${confirmText}</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Store callback
+    window._confirmCallback = onConfirm;
+    
+    // Remove existing modal
+    const existing = document.getElementById('confirm-modal');
+    if (existing) existing.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeConfirmModal(confirmed) {
+    const modal = document.getElementById('confirm-modal');
+    if (modal) modal.remove();
+    
+    if (confirmed && window._confirmCallback) {
+        window._confirmCallback();
+    }
+    window._confirmCallback = null;
+}
+
+// ============================================================================
 // Storage & Auth
 // ============================================================================
 
@@ -211,8 +343,8 @@ async function loadOntology() {
                 name: "state",
                 label: "Task State",
                 type: "enum",
-                description: "Lifecycle state of the task (DRAFT, ACTIVE, DONE, ARCHIVED)",
-                allowed_values: ["DRAFT", "ACTIVE", "DONE", "ARCHIVED"],
+                description: "Lifecycle state of the task (DRAFT, ACTIVE, REJECTED, ARCHIVED)",
+                allowed_values: ["DRAFT", "ACTIVE", "REJECTED", "ARCHIVED"],
                 entity_type: "task"
             },
             {
@@ -856,6 +988,7 @@ function renderOrgChart(users) {
 
 /**
  * Show misalignments for a specific user in a popup
+ * Uses alignment-stats to calculate real misalignment data
  */
 async function showUserMisalignments(userId, userName) {
     console.log('showUserMisalignments called for:', userName, userId);
@@ -865,33 +998,86 @@ async function showUserMisalignments(userId, userName) {
         const modalTitle = document.getElementById('user-misalignment-title');
         const modalContent = document.getElementById('user-misalignment-content');
         
-        console.log('Modal elements:', { modal, modalTitle, modalContent });
-        
         if (!modal || !modalTitle || !modalContent) {
             console.error('Modal elements not found!');
             return;
         }
         
-        modalTitle.textContent = `Misalignments for ${userName}`;
-        modalContent.innerHTML = '<div class="loading">Loading misalignments...</div>';
-        
-        console.log('Removing hidden class...');
-        // Remove hidden class instead of setting display (hidden has !important)
+        modalTitle.textContent = `Alignment Details for ${userName}`;
+        modalContent.innerHTML = '<div class="loading">Loading alignment data...</div>';
         modal.classList.remove('hidden');
-        console.log('Modal classes after remove:', modal.classList.toString());
-        console.log('Modal display style:', window.getComputedStyle(modal).display);
         
-        // Fetch misalignments for this user
-        const misalignments = await apiCall('/misalignments', { 
+        // Fetch all answers for this user's tasks to compare with others
+        const [userTasks, allAnswers] = await Promise.all([
+            apiCall(`/tasks?owner_id=${userId}`).catch(() => []),
+            apiCall(`/users/${userId}/alignment-details`).catch(() => null)
+        ]);
+        
+        // If we have the alignment-details endpoint, use it
+        if (allAnswers && allAnswers.comparisons && allAnswers.comparisons.length > 0) {
+            let html = `
+                <div style="background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                    <strong>Alignment Score:</strong> ${allAnswers.overall_alignment}%
+                    <br><small>Based on ${allAnswers.total_comparisons} attribute comparisons</small>
+                </div>
+            `;
+            
+            // Group by task
+            const byTask = {};
+            allAnswers.comparisons.forEach(c => {
+                if (!byTask[c.task_title]) byTask[c.task_title] = [];
+                byTask[c.task_title].push(c);
+            });
+            
+            for (const [taskTitle, comps] of Object.entries(byTask)) {
+                const taskAligned = comps.filter(c => c.is_aligned).length;
+                const taskTotal = comps.length;
+                const taskPct = Math.round((taskAligned / taskTotal) * 100);
+                
+                html += `
+                    <div style="margin-bottom: 16px; padding: 12px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <h4 style="margin: 0 0 8px 0; display: flex; justify-content: space-between;">
+                            <span>📋 ${escapeHtml(taskTitle)}</span>
+                            <span style="color: ${taskPct >= 70 ? '#22c55e' : taskPct >= 40 ? '#f59e0b' : '#ef4444'};">${taskPct}%</span>
+                        </h4>
+                        <table style="width: 100%; font-size: 0.9rem; border-collapse: collapse;">
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <th style="text-align: left; padding: 4px;">Attribute</th>
+                                <th style="text-align: left; padding: 4px;">${userName}</th>
+                                <th style="text-align: left; padding: 4px;">Other</th>
+                                <th style="text-align: center; padding: 4px;">Match</th>
+                            </tr>
+                            ${comps.map(c => `
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 4px;">${escapeHtml(c.attribute)}</td>
+                                    <td style="padding: 4px; color: #666;">${escapeHtml(c.user_value || 'N/A')}</td>
+                                    <td style="padding: 4px; color: #666;">${escapeHtml(c.other_value || 'N/A')}</td>
+                                    <td style="padding: 4px; text-align: center;">${c.is_aligned ? '✅' : '❌'}</td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                    </div>
+                `;
+            }
+            
+            modalContent.innerHTML = html;
+            return;
+        }
+        
+        // Fallback: try to get misalignments the old way (for backward compatibility)
+        const misalignments = await apiCall('/misalignments?include_all=true', { 
             headers: { 'X-User-Id': userId } 
-        });
+        }).catch(() => []);
         
         if (!misalignments || misalignments.length === 0) {
+            // Show user alignment from stats
+            const alignmentPct = userAlignmentStats[userId];
             modalContent.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">✅</div>
-                    <p>No misalignments found for ${userName}</p>
-                    <p>All perceptions are aligned!</p>
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">${alignmentPct >= 70 ? '✅' : alignmentPct >= 40 ? '⚠️' : '❌'}</div>
+                    <h3 style="margin: 0 0 8px 0;">Alignment: ${alignmentPct !== undefined ? Math.round(alignmentPct) + '%' : 'N/A'}</h3>
+                    <p style="color: #666;">No detailed comparison data available.</p>
+                    <p style="color: #999; font-size: 0.9rem;">This may mean no other users have answered about the same tasks/attributes.</p>
                 </div>
             `;
             return;
@@ -1486,7 +1672,7 @@ function resetGraphView() {
 }
 
 // ============================================================================
-// Task Details Popup
+// Task Details Popup (Compact Tabs Layout)
 // ============================================================================
 
 async function showTaskDetails(taskId) {
@@ -1499,7 +1685,7 @@ async function showTaskDetails(taskId) {
     modal.classList.remove('hidden');
     
     try {
-        // Fetch all data in parallel (including new full-details endpoint)
+        // Fetch all data in parallel
         const [data, relevantUsers, permissions, allUsers, taskAttributes, dependencies, allTasks, fullDetails] = await Promise.all([
             apiCall(`/tasks/${taskId}/answers`, { skipAuth: true }),
             apiCall(`/tasks/${taskId}/relevant-users`).catch(() => []),
@@ -1525,401 +1711,348 @@ async function showTaskDetails(taskId) {
             answers: data.answers_by_attribute
         };
         
-        // Update title with state badge
         const taskState = fullDetails.state || 'ACTIVE';
-        const stateBadgeClass = {
-            'DRAFT': 'state-draft',
-            'ACTIVE': 'state-active',
-            'DONE': 'state-done',
-            'ARCHIVED': 'state-archived'
-        }[taskState] || 'state-active';
+        const stateColors = {
+            'DRAFT': '#6b7280',
+            'ACTIVE': '#3b82f6',
+            'REJECTED': '#ef4444',
+            'ARCHIVED': '#9ca3af'
+        };
+        const stateColor = stateColors[taskState] || stateColors.ACTIVE;
         
-        title.innerHTML = `${escapeHtml(data.task_title)} <span class="task-state-badge ${stateBadgeClass}">${taskState}</span>`;
+        // Compact title with state badge
+        title.innerHTML = `
+            <span style="display: flex; align-items: center; gap: 8px;">
+                ${escapeHtml(data.task_title)}
+                <span style="background: ${stateColor}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">${taskState}</span>
+            </span>
+        `;
         
-        // Build content
-        let html = '';
+        // Build tabbed content
+        const hasPendingProposals = (fullDetails.merge_proposals?.length > 0) || (fullDetails.alt_dependency_proposals?.length > 0);
+        const hasAliases = fullDetails.aliases?.length > 0;
         
-        // === Task State & Meta Section (NEW) ===
-        html += '<div class="task-state-section" style="background: #f0f9ff; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #3b82f6;">';
-        html += `<div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;">`;
-        html += `<div><strong>State:</strong> <span class="task-state-badge ${stateBadgeClass}">${taskState}</span></div>`;
-        html += `<div><strong>Owner:</strong> ${escapeHtml(fullDetails.owner?.name || data.owner_name)}</div>`;
-        if (fullDetails.creator && fullDetails.creator.name && fullDetails.creator.id !== fullDetails.owner?.id) {
-            html += `<div><strong>Created by:</strong> ${escapeHtml(fullDetails.creator.name)}</div>`;
+        let html = `
+        <style>
+            .task-tabs { display: flex; gap: 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 12px; }
+            .task-tab { padding: 8px 16px; cursor: pointer; border: none; background: none; font-size: 13px; font-weight: 500; color: #64748b; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+            .task-tab:hover { color: #3b82f6; background: #f8fafc; }
+            .task-tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+            .task-tab-content { display: none; }
+            .task-tab-content.active { display: block; }
+            .task-row { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+            .task-row:last-child { border-bottom: none; }
+            .task-label { color: #64748b; min-width: 80px; flex-shrink: 0; }
+            .task-value { flex: 1; color: #1e293b; }
+            .task-input { padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; width: 100%; }
+            .task-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+            .task-section { margin-bottom: 12px; }
+            .task-section-title { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
+            .compact-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: #f1f5f9; border-radius: 4px; font-size: 12px; margin: 2px; }
+            .compact-tag .remove-btn { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 14px; padding: 0 2px; }
+            .compact-tag .remove-btn:hover { color: #ef4444; }
+            .compact-btn { padding: 6px 12px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 500; }
+            .compact-btn-primary { background: #3b82f6; color: white; }
+            .compact-btn-primary:hover { background: #2563eb; }
+            .compact-btn-danger { background: #fee2e2; color: #dc2626; }
+            .compact-btn-danger:hover { background: #fecaca; }
+            .compact-select { padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; flex: 1; }
+            .status-badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+            .status-confirmed { background: #dcfce7; color: #166534; }
+            .status-proposed { background: #fef3c7; color: #92400e; }
+            .dep-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
+            .perception-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            .perception-table th, .perception-table td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+            .perception-table th { background: #f8fafc; font-weight: 600; color: #64748b; }
+            .perception-table input, .perception-table select { padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; width: 100%; }
+            .proposal-card { background: #fef2f2; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; border-left: 3px solid #ef4444; }
+            .alias-card { background: #fef3c7; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; border-left: 3px solid #f59e0b; }
+        </style>
+        
+        <!-- Compact Header Info -->
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; padding: 8px 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; font-size: 13px;">
+            <span><strong>Owner:</strong> ${escapeHtml(fullDetails.owner?.name || data.owner_name)}</span>
+            ${fullDetails.creator && fullDetails.creator.id !== fullDetails.owner?.id ? 
+                `<span><strong>Created by:</strong> ${escapeHtml(fullDetails.creator.name)}</span>` : ''}
+            ${fullDetails.state_reason ? `<span style="color: #64748b;"><strong>Reason:</strong> ${escapeHtml(fullDetails.state_reason)}</span>` : ''}
+        </div>
+        
+        <!-- Tabs -->
+        <div class="task-tabs">
+            <button class="task-tab active" onclick="switchTaskTab(event, 'info')">📋 Info</button>
+            <button class="task-tab" onclick="switchTaskTab(event, 'deps')">🔗 Dependencies</button>
+            <button class="task-tab" onclick="switchTaskTab(event, 'perceptions')">💭 Perceptions</button>
+            <button class="task-tab" onclick="switchTaskTab(event, 'team')">👥 Team</button>
+            ${hasPendingProposals || hasAliases ? `<button class="task-tab" onclick="switchTaskTab(event, 'more')" style="color: #f59e0b;">⚡ More</button>` : ''}
+        </div>
+        `;
+        
+        // === TAB: Info ===
+        html += `<div id="task-tab-info" class="task-tab-content active">`;
+        
+        if (permissions.can_edit_task) {
+            const childIds = (data.children || []).map(c => c.id);
+            const availableParents = allTasks.filter(t => t.id !== taskId && !childIds.includes(t.id));
+            const availableChildren = allTasks.filter(t => t.id !== taskId && !childIds.includes(t.id) && t.id !== data.parent?.id);
+            
+            html += `
+                <div class="task-section">
+                    <div class="task-row">
+                        <span class="task-label">Title</span>
+                        <input type="text" id="edit-task-title" value="${escapeHtml(data.task_title)}" class="task-input">
+                    </div>
+                    <div class="task-row">
+                        <span class="task-label">Description</span>
+                        <textarea id="edit-task-description" class="task-input" rows="2">${escapeHtml(data.task_description || '')}</textarea>
+                    </div>
+                    <div class="task-row">
+                        <span class="task-label">Owner</span>
+                        <select id="edit-task-owner" class="task-input">
+                            ${allUsers.map(u => `<option value="${u.id}" ${u.id === data.owner_id ? 'selected' : ''}>${u.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="task-row">
+                        <span class="task-label">Parent</span>
+                        <select id="edit-task-parent" class="task-input">
+                            <option value="">None (Top Level)</option>
+                            ${availableParents.map(t => `<option value="${t.id}" ${data.parent?.id === t.id ? 'selected' : ''}>${t.title}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <button onclick="saveTaskInfo('${taskId}')" class="compact-btn compact-btn-primary">💾 Save Changes</button>
+                    </div>
+                </div>
+                
+                <div class="task-section">
+                    <div class="task-section-title">Children Tasks</div>
+                    ${data.children?.length > 0 ? 
+                        `<div style="margin-bottom: 8px;">${data.children.map(c => `
+                            <span class="compact-tag">${escapeHtml(c.title)} <button class="remove-btn" onclick="removeChildTask('${taskId}', '${c.id}')">×</button></span>
+                        `).join('')}</div>` : 
+                        `<div style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">No children</div>`}
+                    <div style="display: flex; gap: 8px;">
+                        <select id="add-child-select" class="compact-select">
+                            <option value="">Add child task...</option>
+                            ${availableChildren.map(t => `<option value="${t.id}">${t.title}</option>`).join('')}
+                        </select>
+                        <button onclick="addChildTask('${taskId}')" class="compact-btn compact-btn-primary">➕</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="task-section">
+                    <div class="task-row"><span class="task-label">Owner</span><span class="task-value">${escapeHtml(data.owner_name)}</span></div>
+                    ${data.task_description ? `<div class="task-row"><span class="task-label">Description</span><span class="task-value">${escapeHtml(data.task_description)}</span></div>` : ''}
+                    ${data.parent ? `<div class="task-row"><span class="task-label">Parent</span><span class="task-value">${escapeHtml(data.parent.title)}</span></div>` : ''}
+                    ${data.children?.length > 0 ? `<div class="task-row"><span class="task-label">Children</span><span class="task-value">${data.children.map(c => c.title).join(', ')}</span></div>` : ''}
+                </div>
+            `;
+        }
+        
+        // Delete button
+        if (permissions.can_delete) {
+            html += `<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #fee2e2;">
+                <button onclick="deleteTask('${taskId}', '${escapeHtml(data.task_title)}')" class="compact-btn compact-btn-danger">🗑️ Delete Task</button>
+            </div>`;
         }
         html += `</div>`;
         
-        // Show state reason if exists
-        if (fullDetails.state_reason) {
-            html += `<div style="margin-top: 8px; color: #666;"><strong>Reason:</strong> ${escapeHtml(fullDetails.state_reason)}</div>`;
-        }
-        html += '</div>';
+        // === TAB: Dependencies ===
+        html += `<div id="task-tab-deps" class="task-tab-content">`;
         
-        // === Aliases Section (if any) ===
-        if (fullDetails.aliases && fullDetails.aliases.length > 0) {
-            html += '<div class="task-aliases-section" style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #f59e0b;">';
-            html += '<h4 style="margin: 0 0 8px 0;">🔀 Merged Task Aliases</h4>';
-            html += '<ul style="margin: 0; padding-left: 20px;">';
-            for (const alias of fullDetails.aliases) {
-                html += `<li>"${escapeHtml(alias.title)}" (created by ${escapeHtml(alias.creator_name)})</li>`;
-            }
-            html += '</ul></div>';
-        }
+        // Dependencies V2 (with status)
+        const depsV2 = fullDetails.dependencies_v2 || [];
+        const outgoing = depsV2.filter(d => d.direction === 'outgoing');
+        const incoming = depsV2.filter(d => d.direction === 'incoming');
         
-        // === Dependencies V2 Section (with status) ===
-        if (fullDetails.dependencies_v2 && fullDetails.dependencies_v2.length > 0) {
-            html += '<div class="task-deps-v2-section" style="background: #f0fdf4; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #22c55e;">';
-            html += '<h4 style="margin: 0 0 8px 0;">🔗 Dependencies (with approval status)</h4>';
-            
-            const outgoing = fullDetails.dependencies_v2.filter(d => d.direction === 'outgoing');
-            const incoming = fullDetails.dependencies_v2.filter(d => d.direction === 'incoming');
-            
-            if (outgoing.length > 0) {
-                html += '<div style="margin-bottom: 8px;"><strong>This task depends on:</strong></div>';
-                html += '<ul style="margin: 0 0 12px 20px; padding: 0;">';
-                for (const dep of outgoing) {
-                    const statusBadge = dep.status === 'CONFIRMED' 
-                        ? '<span style="background:#22c55e;color:white;padding:2px 6px;border-radius:4px;font-size:11px;">✓ CONFIRMED</span>'
-                        : '<span style="background:#f59e0b;color:white;padding:2px 6px;border-radius:4px;font-size:11px;">⏳ PROPOSED</span>';
-                    html += `<li>${escapeHtml(dep.task_title)} (${escapeHtml(dep.task_owner)}) ${statusBadge}</li>`;
-                }
-                html += '</ul>';
-            }
-            
-            if (incoming.length > 0) {
-                html += '<div style="margin-bottom: 8px;"><strong>Tasks depending on this:</strong></div>';
-                html += '<ul style="margin: 0 0 0 20px; padding: 0;">';
-                for (const dep of incoming) {
-                    const statusBadge = dep.status === 'CONFIRMED' 
-                        ? '<span style="background:#22c55e;color:white;padding:2px 6px;border-radius:4px;font-size:11px;">✓ CONFIRMED</span>'
-                        : '<span style="background:#f59e0b;color:white;padding:2px 6px;border-radius:4px;font-size:11px;">⏳ PROPOSED</span>';
-                    html += `<li>${escapeHtml(dep.task_title)} (${escapeHtml(dep.task_owner)}) ${statusBadge}</li>`;
-                }
-                html += '</ul>';
-            }
-            html += '</div>';
-        }
-        
-        // === Pending Proposals (if any) ===
-        if ((fullDetails.merge_proposals && fullDetails.merge_proposals.length > 0) || 
-            (fullDetails.alt_dependency_proposals && fullDetails.alt_dependency_proposals.length > 0)) {
-            html += '<div class="task-proposals-section" style="background: #fef2f2; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ef4444;">';
-            html += '<h4 style="margin: 0 0 8px 0;">⏳ Pending Proposals</h4>';
-            
-            if (fullDetails.merge_proposals && fullDetails.merge_proposals.length > 0) {
-                for (const p of fullDetails.merge_proposals) {
-                    html += `<div style="padding: 8px; background: white; border-radius: 4px; margin-bottom: 8px;">
-                        <strong>🔀 Merge Proposal:</strong> "${escapeHtml(p.from_task_title)}" → "${escapeHtml(p.to_task_title)}"<br>
-                        <small>Proposed by: ${escapeHtml(p.proposed_by)}</small><br>
-                        <small>Reason: ${escapeHtml(p.reason)}</small>
-                    </div>`;
-                }
-            }
-            
-            if (fullDetails.alt_dependency_proposals && fullDetails.alt_dependency_proposals.length > 0) {
-                for (const p of fullDetails.alt_dependency_proposals) {
-                    html += `<div style="padding: 8px; background: white; border-radius: 4px; margin-bottom: 8px;">
-                        <strong>↔️ Alternative Dependency:</strong> Instead of "${escapeHtml(p.original_upstream)}", use "${escapeHtml(p.suggested_upstream)}"<br>
-                        <small>Proposed by: ${escapeHtml(p.proposed_by)}</small><br>
-                        <small>Reason: ${escapeHtml(p.reason)}</small>
-                    </div>`;
-                }
-            }
-            html += '</div>';
-        }
-        
-        // === Task Info Section (Editable if permitted) ===
-        html += '<div class="task-info-section">';
-        html += '<h4>📋 Task Information</h4>';
-        
-        if (permissions.can_edit_task) {
-            // Get available tasks for parent selection (exclude self and children)
-            const childIds = (data.children || []).map(c => c.id);
-            const availableParents = allTasks.filter(t => 
-                t.id !== taskId && !childIds.includes(t.id)
-            );
-            
-            // Editable fields
-            html += `
-                <div class="task-info-row">
-                    <span class="task-info-label">Title:</span>
-                    <input type="text" id="edit-task-title" value="${escapeHtml(data.task_title)}" class="edit-input" style="flex:1;">
-                </div>
-                <div class="task-info-row">
-                    <span class="task-info-label">Description:</span>
-                    <textarea id="edit-task-description" class="edit-input" style="flex:1; min-height:50px;">${escapeHtml(data.task_description || '')}</textarea>
-                </div>
-                <div class="task-info-row">
-                    <span class="task-info-label">Owner:</span>
-                    <select id="edit-task-owner" class="edit-input" style="flex:1;">
-                        ${allUsers.map(u => `<option value="${u.id}" ${u.id === data.owner_id ? 'selected' : ''}>${u.name}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="task-info-row">
-                    <span class="task-info-label">Parent Task:</span>
-                    <select id="edit-task-parent" class="edit-input" style="flex:1;">
-                        <option value="">None (Top Level)</option>
-                        ${availableParents.map(t => 
-                            `<option value="${t.id}" ${data.parent?.id === t.id ? 'selected' : ''}>${t.title} (${t.owner_name})</option>`
-                        ).join('')}
-                    </select>
-                </div>
-                <button onclick="saveTaskInfo('${taskId}')" class="save-btn" style="margin-top:10px;">💾 Save Task Info</button>
-            `;
-            
-            // Show children section with add/remove capabilities
-            html += `<div class="task-info-row" style="margin-top:10px;">
-                <span class="task-info-label">Children:</span>
-                <div style="flex:1;">`;
-            
-            if (data.children && data.children.length > 0) {
-                html += `<div class="children-list">
-                    ${data.children.map(c => `
-                        <div class="child-item">
-                            <span class="child-title">${c.title}</span>
-                            <span class="child-owner">(${c.owner_name})</span>
-                            <button onclick="removeChildTask('${taskId}', '${c.id}')" class="remove-btn" title="Remove child">×</button>
-                        </div>
-                    `).join('')}
+        if (outgoing.length > 0) {
+            html += `<div class="task-section"><div class="task-section-title">This task depends on</div>`;
+            outgoing.forEach(dep => {
+                const statusClass = dep.status === 'CONFIRMED' ? 'status-confirmed' : 'status-proposed';
+                const statusText = dep.status === 'CONFIRMED' ? '✓ Confirmed' : '⏳ Proposed';
+                html += `<div class="dep-item">
+                    <span>${escapeHtml(dep.task_title)}</span>
+                    <span style="color: #94a3b8;">(${escapeHtml(dep.task_owner)})</span>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
                 </div>`;
-            } else {
-                html += `<div class="no-answers" style="margin-bottom:8px;">No children</div>`;
-            }
-            
-            // Add child dropdown - show tasks that don't have a parent and aren't this task or an ancestor
-            // (reusing childIds from above)
-            const availableChildren = allTasks.filter(t => 
-                t.id !== taskId && 
-                !childIds.includes(t.id) &&
-                t.id !== data.parent?.id  // Don't allow parent to be a child
-            );
-            
-            html += `
-                <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
-                    <select id="add-child-select" class="edit-input" style="flex:1;">
-                        <option value="">Select task to add as child...</option>
-                        ${availableChildren.map(t => 
-                            `<option value="${t.id}">${t.title} (${t.owner_name})</option>`
-                        ).join('')}
-                    </select>
-                    <button onclick="addChildTask('${taskId}')" class="add-btn">➕ Add Child</button>
-                </div>
-            </div>
-            </div>`;
-        } else {
-            // Read-only display
-            html += `
-                <div class="task-info-row">
-                    <span class="task-info-label">Owner:</span>
-                    <span class="task-info-value">${data.owner_name}</span>
-                </div>
-                ${data.task_description ? `
-                    <div class="task-info-row">
-                        <span class="task-info-label">Description:</span>
-                        <span class="task-info-value">${data.task_description}</span>
-                    </div>
-                ` : ''}
-                ${data.parent ? `
-                    <div class="task-info-row">
-                        <span class="task-info-label">Parent:</span>
-                        <span class="task-info-value">${data.parent.title} (${data.parent.owner_name})</span>
-                    </div>
-                ` : ''}
-                ${data.children && data.children.length > 0 ? `
-                    <div class="task-info-row">
-                        <span class="task-info-label">Children:</span>
-                        <span class="task-info-value">${data.children.map(c => c.title).join(', ')}</span>
-                    </div>
-                ` : ''}
-            `;
-        }
-        html += '</div>';
-        
-        // === Relevant Users Section ===
-        html += '<div class="task-info-section">';
-        html += '<h4>👥 Relevant Users</h4>';
-        
-        if (relevantUsers.length > 0) {
-            html += '<div class="relevant-users-list">';
-            relevantUsers.forEach(ru => {
-                const canRemove = permissions.can_manage_all_relevant || 
-                    (permissions.can_manage_self_relevant && ru.user_id === currentUser?.id);
-                html += `
-                    <span class="relevant-user-tag">
-                        ${ru.user_name}
-                        ${canRemove ? `<button onclick="removeRelevantUser('${taskId}', '${ru.user_id}')" class="remove-btn" title="Remove">×</button>` : ''}
-                    </span>
-                `;
             });
-            html += '</div>';
-        } else {
-            html += '<div class="no-answers">No relevant users assigned yet.</div>';
+            html += `</div>`;
         }
         
-        // Add relevant user controls
-        const currentUserInList = relevantUsers.some(ru => ru.user_id === currentUser?.id);
-        
-        if (permissions.can_manage_self_relevant && !currentUserInList) {
-            html += `<button onclick="addRelevantUser('${taskId}', '${currentUser?.id}')" class="add-btn" style="margin-top:10px;">➕ Add Myself</button>`;
+        if (incoming.length > 0) {
+            html += `<div class="task-section"><div class="task-section-title">Tasks depending on this</div>`;
+            incoming.forEach(dep => {
+                const statusClass = dep.status === 'CONFIRMED' ? 'status-confirmed' : 'status-proposed';
+                const statusText = dep.status === 'CONFIRMED' ? '✓ Confirmed' : '⏳ Proposed';
+                html += `<div class="dep-item">
+                    <span>${escapeHtml(dep.task_title)}</span>
+                    <span style="color: #94a3b8;">(${escapeHtml(dep.task_owner)})</span>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>`;
+            });
+            html += `</div>`;
         }
         
-        if (permissions.can_manage_all_relevant) {
-            html += `
-                <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
-                    <select id="add-relevant-user-select" class="edit-input" style="flex:1;">
-                        <option value="">Select user to add...</option>
-                        ${allUsers.filter(u => !relevantUsers.some(ru => ru.user_id === u.id)).map(u => 
-                            `<option value="${u.id}">${u.name}</option>`
-                        ).join('')}
-                    </select>
-                    <button onclick="addSelectedRelevantUser('${taskId}')" class="add-btn">➕ Add</button>
-                </div>
-            `;
-        }
-        html += '</div>';
-        
-        // === Dependencies Section ===
-        html += '<div class="task-info-section">';
-        html += '<h4>🔗 Dependencies</h4>';
-        
-        if (dependencies.length > 0) {
-            html += '<div class="dependencies-list">';
+        // Legacy dependencies
+        if (dependencies.length > 0 && depsV2.length === 0) {
+            html += `<div class="task-section"><div class="task-section-title">Dependencies</div>`;
             dependencies.forEach(dep => {
-                html += `
-                    <div class="dependency-item">
-                        <span class="dependency-title">${dep.task_title}</span>
-                        <span class="dependency-owner">(${dep.owner_name})</span>
-                        ${permissions.can_manage_dependencies ? 
-                            `<button onclick="removeDependency('${taskId}', '${dep.task_id}')" class="remove-btn" title="Remove">×</button>` 
-                            : ''}
-                    </div>
-                `;
+                html += `<div class="dep-item">
+                    <span>${escapeHtml(dep.task_title)}</span>
+                    <span style="color: #94a3b8;">(${escapeHtml(dep.owner_name)})</span>
+                    ${permissions.can_manage_dependencies ? `<button class="compact-tag remove-btn" onclick="removeDependency('${taskId}', '${dep.task_id}')">×</button>` : ''}
+                </div>`;
             });
-            html += '</div>';
-        } else {
-            html += '<div class="no-answers">No dependencies.</div>';
+            html += `</div>`;
         }
         
-        // Add dependency controls
+        if (outgoing.length === 0 && incoming.length === 0 && dependencies.length === 0) {
+            html += `<div style="color: #94a3b8; font-size: 13px; text-align: center; padding: 20px;">No dependencies</div>`;
+        }
+        
+        // Add dependency
         if (permissions.can_manage_dependencies) {
-            const availableTasks = allTasks.filter(t => 
-                t.id !== taskId && 
-                !dependencies.some(d => d.task_id === t.id)
-            );
-            
-            html += `
-                <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
-                    <select id="add-dependency-select" class="edit-input" style="flex:1;">
-                        <option value="">Select task to add as dependency...</option>
-                        ${availableTasks.map(t => 
-                            `<option value="${t.id}">${t.title} (${t.owner_name})</option>`
-                        ).join('')}
-                    </select>
-                    <button onclick="addDependency('${taskId}')" class="add-btn">➕ Add</button>
-                </div>
-            `;
+            const availableTasks = allTasks.filter(t => t.id !== taskId && !dependencies.some(d => d.task_id === t.id));
+            html += `<div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+                <select id="add-dependency-select" class="compact-select">
+                    <option value="">Add dependency...</option>
+                    ${availableTasks.map(t => `<option value="${t.id}">${t.title}</option>`).join('')}
+                </select>
+                <button onclick="addDependency('${taskId}')" class="compact-btn compact-btn-primary">➕</button>
+            </div>`;
         }
-        html += '</div>';
+        html += `</div>`;
         
-        // === Perceptions Section (with edit capabilities) ===
-        html += '<div class="task-info-section"><h4>💭 Perceptions</h4>';
+        // === TAB: Perceptions ===
+        html += `<div id="task-tab-perceptions" class="task-tab-content">`;
         
         const attributeKeys = Object.keys(data.answers_by_attribute);
-        
-        // Get all unique users who answered
         const answeringUsers = new Set();
         attributeKeys.forEach(attrKey => {
             const attr = data.answers_by_attribute[attrKey];
             if (attr.answers) {
                 attr.answers.forEach(answer => {
-                    answeringUsers.add(JSON.stringify({
-                        id: answer.user_id,
-                        name: answer.user_name,
-                        is_owner: answer.is_owner
-                    }));
+                    answeringUsers.add(JSON.stringify({ id: answer.user_id, name: answer.user_name, is_owner: answer.is_owner }));
                 });
             }
         });
         
         const users = Array.from(answeringUsers).map(u => JSON.parse(u));
-        // Sort so owner is first
         users.sort((a, b) => b.is_owner - a.is_owner);
-        
-        // Ensure current user is in the list for editing their own perception
         if (currentUser && !users.find(u => u.id === currentUser.id)) {
             users.push({ id: currentUser.id, name: currentUser.name, is_owner: false, is_current: true });
         }
         
         if (taskAttributes.length > 0) {
-            html += '<table class="answers-table editable-table">';
-            
-            // Header row
-            html += '<thead><tr><th>Attribute</th>';
+            html += `<table class="perception-table"><thead><tr><th>Attribute</th>`;
             users.forEach(user => {
                 const ownerLabel = user.is_owner ? ' 👑' : '';
-                const isCurrentUser = user.id === currentUser?.id;
-                html += `<th class="${user.is_owner ? 'owner-column' : ''} ${isCurrentUser ? 'current-user-column' : ''}">${user.name}${ownerLabel}</th>`;
+                html += `<th>${escapeHtml(user.name)}${ownerLabel}</th>`;
             });
-            html += '</tr></thead>';
+            html += `</tr></thead><tbody>`;
             
-            // Data rows - for each attribute
-            html += '<tbody>';
             taskAttributes.forEach(attr => {
                 const existingData = data.answers_by_attribute[attr.name];
-                html += `<tr><td class="attr-label">${attr.label}</td>`;
+                html += `<tr><td style="font-weight: 500;">${escapeHtml(attr.label)}</td>`;
                 
                 users.forEach(user => {
                     const existingAnswer = existingData?.answers?.find(a => a.user_id === user.id);
                     const currentValue = existingAnswer?.value || '';
-                    const cellClass = user.is_owner ? 'owner-column' : '';
                     const isCurrentUser = user.id === currentUser?.id;
                     
                     if (isCurrentUser && permissions.can_edit_own_perception) {
-                        // Editable cell for current user
                         const inputId = `perception-${attr.name}-${user.id}`;
                         if (attr.type === 'enum' && attr.allowed_values) {
-                            html += `<td class="${cellClass} current-user-column editable-cell">
-                                <select id="${inputId}" class="perception-input" data-attr="${attr.name}" data-target="${data.owner_id}">
-                                    <option value="">-</option>
-                                    ${attr.allowed_values.map(v => 
-                                        `<option value="${v}" ${currentValue === v ? 'selected' : ''}>${v}</option>`
-                                    ).join('')}
-                                </select>
-                            </td>`;
+                            html += `<td><select id="${inputId}" class="perception-input" data-attr="${attr.name}" data-target="${data.owner_id}">
+                                <option value="">-</option>
+                                ${attr.allowed_values.map(v => `<option value="${v}" ${currentValue === v ? 'selected' : ''}>${v}</option>`).join('')}
+                            </select></td>`;
                         } else {
-                            html += `<td class="${cellClass} current-user-column editable-cell">
-                                <input type="text" id="${inputId}" class="perception-input" value="${escapeHtml(currentValue)}" 
-                                       data-attr="${attr.name}" data-target="${data.owner_id}" placeholder="-">
-                            </td>`;
+                            html += `<td><input type="text" id="${inputId}" class="perception-input" value="${escapeHtml(currentValue)}" data-attr="${attr.name}" data-target="${data.owner_id}" placeholder="-"></td>`;
                         }
                     } else {
-                        // Read-only cell
-                        html += `<td class="${cellClass}">${currentValue || '-'}</td>`;
+                        html += `<td>${escapeHtml(currentValue) || '-'}</td>`;
                     }
                 });
-                
-                html += '</tr>';
+                html += `</tr>`;
             });
-            html += '</tbody></table>';
+            html += `</tbody></table>`;
             
-            // Save button for perceptions
             if (permissions.can_edit_own_perception) {
-                html += `<button onclick="savePerceptions('${taskId}', '${data.owner_id}')" class="save-btn" style="margin-top:10px;">💾 Save My Perceptions</button>`;
+                html += `<div style="margin-top: 12px;"><button onclick="savePerceptions('${taskId}', '${data.owner_id}')" class="compact-btn compact-btn-primary">💾 Save My Perceptions</button></div>`;
             }
         } else {
-            html += '<div class="no-answers">No attributes defined for tasks.</div>';
+            html += `<div style="color: #94a3b8; font-size: 13px; text-align: center; padding: 20px;">No attributes defined</div>`;
+        }
+        html += `</div>`;
+        
+        // === TAB: Team ===
+        html += `<div id="task-tab-team" class="task-tab-content">`;
+        html += `<div class="task-section"><div class="task-section-title">Relevant Users</div>`;
+        
+        if (relevantUsers.length > 0) {
+            html += `<div style="margin-bottom: 8px;">`;
+            relevantUsers.forEach(ru => {
+                const canRemove = permissions.can_manage_all_relevant || (permissions.can_manage_self_relevant && ru.user_id === currentUser?.id);
+                html += `<span class="compact-tag">${escapeHtml(ru.user_name)}${canRemove ? `<button class="remove-btn" onclick="removeRelevantUser('${taskId}', '${ru.user_id}')">×</button>` : ''}</span>`;
+            });
+            html += `</div>`;
+        } else {
+            html += `<div style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">No relevant users assigned</div>`;
         }
         
-        html += '</div>';
+        const currentUserInList = relevantUsers.some(ru => ru.user_id === currentUser?.id);
+        if (permissions.can_manage_self_relevant && !currentUserInList) {
+            html += `<button onclick="addRelevantUser('${taskId}', '${currentUser?.id}')" class="compact-btn compact-btn-primary" style="margin-bottom: 8px;">➕ Add Myself</button>`;
+        }
         
-        // === Delete Task Section ===
-        if (permissions.can_delete) {
-            html += `
-                <div class="task-info-section delete-section">
-                    <h4>⚠️ Danger Zone</h4>
-                    <button onclick="deleteTask('${taskId}', '${escapeHtml(data.task_title)}')" class="danger-btn">🗑️ Delete Task</button>
-                </div>
-            `;
+        if (permissions.can_manage_all_relevant) {
+            html += `<div style="display: flex; gap: 8px;">
+                <select id="add-relevant-user-select" class="compact-select">
+                    <option value="">Add user...</option>
+                    ${allUsers.filter(u => !relevantUsers.some(ru => ru.user_id === u.id)).map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
+                </select>
+                <button onclick="addSelectedRelevantUser('${taskId}')" class="compact-btn compact-btn-primary">➕</button>
+            </div>`;
+        }
+        html += `</div></div>`;
+        
+        // === TAB: More (Proposals & Aliases) ===
+        if (hasPendingProposals || hasAliases) {
+            html += `<div id="task-tab-more" class="task-tab-content">`;
+            
+            if (hasAliases) {
+                html += `<div class="task-section"><div class="task-section-title">🔀 Merged Task Aliases</div>`;
+                fullDetails.aliases.forEach(alias => {
+                    html += `<div class="alias-card">"${escapeHtml(alias.title)}" <span style="color: #92400e;">by ${escapeHtml(alias.creator_name)}</span></div>`;
+                });
+                html += `</div>`;
+            }
+            
+            if (hasPendingProposals) {
+                html += `<div class="task-section"><div class="task-section-title">⏳ Pending Proposals</div>`;
+                
+                if (fullDetails.merge_proposals?.length > 0) {
+                    fullDetails.merge_proposals.forEach(p => {
+                        html += `<div class="proposal-card">
+                            <strong>🔀 Merge:</strong> "${escapeHtml(p.from_task_title)}" → "${escapeHtml(p.to_task_title)}"<br>
+                            <span style="color: #991b1b;">By ${escapeHtml(p.proposed_by)}: ${escapeHtml(p.reason)}</span>
+                        </div>`;
+                    });
+                }
+                
+                if (fullDetails.alt_dependency_proposals?.length > 0) {
+                    fullDetails.alt_dependency_proposals.forEach(p => {
+                        html += `<div class="proposal-card">
+                            <strong>↔️ Alt Dependency:</strong> Replace "${escapeHtml(p.original_upstream)}" with "${escapeHtml(p.suggested_upstream)}"<br>
+                            <span style="color: #991b1b;">By ${escapeHtml(p.proposed_by)}: ${escapeHtml(p.reason)}</span>
+                        </div>`;
+                    });
+                }
+                html += `</div>`;
+            }
+            html += `</div>`;
         }
         
         content.innerHTML = html;
@@ -1928,6 +2061,17 @@ async function showTaskDetails(taskId) {
         console.error('Error loading task details:', error);
         content.innerHTML = `<div class="message error">Failed to load task details: ${error.message}</div>`;
     }
+}
+
+// Tab switching function
+function switchTaskTab(event, tabId) {
+    // Update tab buttons
+    document.querySelectorAll('.task-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Update tab content
+    document.querySelectorAll('.task-tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById(`task-tab-${tabId}`).classList.add('active');
 }
 
 // Helper function to escape HTML
@@ -2328,7 +2472,7 @@ function getStateLabel(state) {
     const stateLabels = {
         'DRAFT': '📝 Draft',
         'ACTIVE': '✅ Active',
-        'DONE': '✓ Done',
+        'REJECTED': '❌ Rejected',
         'ARCHIVED': '📦 Archived'
     };
     return stateLabels[state] || state;
@@ -3361,6 +3505,11 @@ function formatTimestamp(isoString) {
     
     // For older messages, show the actual date in local time
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+// Alias for formatTimestamp
+function formatRelativeTime(isoString) {
+    return formatTimestamp(isoString);
 }
 
 function escapeHtml(text) {
@@ -4893,7 +5042,7 @@ async function loadPendingDecisions() {
     const container = document.getElementById('decisions-container');
     const badge = document.getElementById('decisions-badge');
     
-    container.innerHTML = '<div class="loading">Loading pending decisions...</div>';
+    container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Loading pending decisions...</p>';
     
     try {
         const data = await apiCall('/decisions/pending');
@@ -4907,22 +5056,69 @@ async function loadPendingDecisions() {
         
         if (decisions.length === 0) {
             container.innerHTML = `
-                <div style="text-align: center; padding: 60px; color: #666;">
+                <div style="text-align: center; padding: 60px 20px;">
                     <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
-                    <h3>All caught up!</h3>
-                    <p>No pending decisions require your attention.</p>
+                    <h3 style="color: #2c5f2d; margin-bottom: 8px;">All Caught Up!</h3>
+                    <p style="color: #666;">No pending decisions require your attention.</p>
                 </div>
             `;
             return;
         }
         
-        let html = '<div class="decisions-list">';
+        // Group by type
+        const grouped = {
+            task: decisions.filter(d => d.type === 'TASK_ACCEPTANCE'),
+            merge: decisions.filter(d => d.type === 'MERGE_CONSENT'),
+            dependency: decisions.filter(d => d.type === 'DEPENDENCY_ACCEPTANCE'),
+            alternative: decisions.filter(d => d.type === 'ALTERNATIVE_DEP_ACCEPTANCE')
+        };
+        
+        let html = `
+            <div style="margin-bottom: 20px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
+                <h4 style="margin: 0 0 8px 0; color: #333;">Summary</h4>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="padding: 8px 16px; background: #e0f2fe; border-radius: 6px; border-left: 3px solid #0284c7;">
+                        <strong>${grouped.task.length}</strong> Tasks
+                    </div>
+                    <div style="padding: 8px 16px; background: #ede9fe; border-radius: 6px; border-left: 3px solid #7c3aed;">
+                        <strong>${grouped.merge.length}</strong> Merges
+                    </div>
+                    <div style="padding: 8px 16px; background: #fef3c7; border-radius: 6px; border-left: 3px solid #d97706;">
+                        <strong>${grouped.dependency.length}</strong> Dependencies
+                    </div>
+                    <div style="padding: 8px 16px; background: #fce7f3; border-radius: 6px; border-left: 3px solid #db2777;">
+                        <strong>${grouped.alternative.length}</strong> Alternatives
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Display as compact table
+        html += `
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <thead>
+                        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Type</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Description</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">From</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Time</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600; color: #495057;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
         
         for (const decision of decisions) {
-            html += renderDecisionCard(decision);
+            html += renderDecisionRow(decision);
         }
         
-        html += '</div>';
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
         container.innerHTML = html;
         
     } catch (error) {
@@ -4931,107 +5127,117 @@ async function loadPendingDecisions() {
     }
 }
 
-function renderDecisionCard(decision) {
-    const typeLabels = {
-        'TASK_ACCEPTANCE': '📝 Task Suggested',
-        'MERGE_CONSENT': '🔀 Merge Proposal',
-        'DEPENDENCY_ACCEPTANCE': '🔗 Dependency Request',
-        'ALTERNATIVE_DEP_ACCEPTANCE': '↔️ Alternative Dependency'
+function renderDecisionRow(decision) {
+    const typeConfig = {
+        'TASK_ACCEPTANCE': { label: '📝 Task', color: '#0284c7', bg: '#e0f2fe' },
+        'MERGE_CONSENT': { label: '🔀 Merge', color: '#7c3aed', bg: '#ede9fe' },
+        'DEPENDENCY_ACCEPTANCE': { label: '🔗 Dep', color: '#d97706', bg: '#fef3c7' },
+        'ALTERNATIVE_DEP_ACCEPTANCE': { label: '↔️ Alt', color: '#db2777', bg: '#fce7f3' }
     };
     
-    const typeLabel = typeLabels[decision.type] || decision.type;
+    const config = typeConfig[decision.type] || { label: decision.type, color: '#666', bg: '#f3f4f6' };
     const context = decision.context || {};
     
-    let actionsHtml = '';
-    let detailsHtml = '';
+    // Build description
+    let desc = '';
+    let from = '';
+    
+    const isRejectedTask = decision.type === 'TASK_ACCEPTANCE' && context.task_state === 'REJECTED';
     
     if (decision.type === 'TASK_ACCEPTANCE') {
-        // Check if user has already proposed a merge for this task
-        const hasPendingMerge = context.has_pending_merge === true;
-        
-        detailsHtml = `
-            <div class="decision-details">
-                <p><strong>Task:</strong> ${escapeHtml(context.task_title || 'Unknown')}</p>
-                <p><strong>Created by:</strong> ${escapeHtml(context.creator_name || 'Unknown')}</p>
-                ${context.task_description ? `<p><strong>Description:</strong> ${escapeHtml(context.task_description)}</p>` : ''}
-                ${hasPendingMerge ? `<p style="color: #6366f1; font-weight: 600;">🔀 You proposed to merge this into "${escapeHtml(context.pending_merge_target)}"</p>` : ''}
-            </div>
-        `;
-        
-        if (hasPendingMerge) {
-            // User has proposed a merge - show option to cancel it
-            actionsHtml = `
-                <div class="decision-actions">
-                    <button onclick="cancelMergeProposal('${context.pending_merge_id}')" class="cancel-merge-btn" style="background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                        ↩️ Cancel Merge Suggestion
-                    </button>
-                    <p style="margin: 8px 0 0 0; color: #64748b; font-size: 0.85rem;">Waiting for the task creator to accept your merge proposal...</p>
-                </div>
+        desc = escapeHtml(context.task_title || 'Unknown task');
+        from = escapeHtml(context.creator_name || 'Unknown');
+    } else if (decision.type === 'MERGE_CONSENT') {
+        desc = `"${escapeHtml(context.from_task_title)}" → "${escapeHtml(context.to_task_title)}"`;
+        from = escapeHtml(context.proposer_name || 'Unknown');
+    } else if (decision.type === 'DEPENDENCY_ACCEPTANCE') {
+        desc = `"${escapeHtml(context.downstream_task)}" → "${escapeHtml(context.upstream_task)}"`;
+        from = 'Dependency';
+    } else if (decision.type === 'ALTERNATIVE_DEP_ACCEPTANCE') {
+        desc = `Instead: "${escapeHtml(context.suggested_upstream)}"`;
+        from = escapeHtml(context.proposer_name || 'Unknown');
+    }
+    
+    // Build action buttons
+    let actions = '';
+    const hasPendingMerge = context.has_pending_merge === true;
+    
+    if (decision.type === 'TASK_ACCEPTANCE') {
+        if (isRejectedTask) {
+            actions = `
+                <button onclick="archiveRejectedTask('${context.task_id}')" 
+                    style="padding: 4px 8px; font-size: 0.8rem; background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; cursor: pointer; color: #991b1b;" 
+                    title="Archive">📦</button>
+                <button onclick="showEditRejectedTaskDialog('${context.task_id}')" 
+                    style="padding: 4px 8px; font-size: 0.8rem; background: #e0f2fe; border: 1px solid #bfdbfe; border-radius: 4px; cursor: pointer; color: #1d4ed8;" 
+                    title="Edit & Reassign">✏️</button>
+            `;
+        } else if (hasPendingMerge) {
+            actions = `
+                <button onclick="cancelMergeProposal('${context.pending_merge_id}')" 
+                    style="padding: 4px 8px; font-size: 0.8rem; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 4px; cursor: pointer; color: #92400e;" 
+                    title="Cancel merge suggestion">↩️</button>
             `;
         } else {
-            // Normal state - show accept/reject/merge options
-            actionsHtml = `
-                <div class="decision-actions">
-                    <button onclick="decideOnTask('${context.task_id}', 'accept')" class="accept-btn">✅ Accept</button>
-                    <button onclick="showRejectTaskDialog('${context.task_id}')" class="reject-btn">❌ Reject</button>
-                    <button onclick="showMergeTaskDialog('${context.task_id}')" class="merge-btn">🔀 Propose Merge</button>
-                </div>
+            actions = `
+                <button onclick="decideOnTask('${context.task_id}', 'accept')" 
+                    style="padding: 4px 8px; font-size: 0.8rem; background: #dcfce7; border: 1px solid #86efac; border-radius: 4px; cursor: pointer; color: #166534;" 
+                    title="Accept">✅</button>
+                <button onclick="showRejectDialog('task', '${context.task_id}')" 
+                    style="padding: 4px 8px; font-size: 0.8rem; background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; cursor: pointer; color: #991b1b;" 
+                    title="Reject">❌</button>
+                <button onclick="showMergeTaskDialog('${context.task_id}')" 
+                    style="padding: 4px 8px; font-size: 0.8rem; background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 4px; cursor: pointer; color: #5b21b6;" 
+                    title="Merge">🔀</button>
             `;
         }
     } else if (decision.type === 'MERGE_CONSENT') {
-        detailsHtml = `
-            <div class="decision-details">
-                <p><strong>Merge:</strong> "${escapeHtml(context.from_task_title)}" → "${escapeHtml(context.to_task_title)}"</p>
-                <p><strong>Proposed by:</strong> ${escapeHtml(context.proposer_name || 'Unknown')}</p>
-                <p><strong>Reason:</strong> ${escapeHtml(context.reason || 'No reason provided')}</p>
-            </div>
-        `;
-        actionsHtml = `
-            <div class="decision-actions">
-                <button onclick="decideOnMerge('${context.proposal_id}', 'accept')" class="accept-btn">✅ Accept Merge</button>
-                <button onclick="showRejectMergeDialog('${context.proposal_id}')" class="reject-btn">❌ Reject</button>
-            </div>
+        actions = `
+            <button onclick="decideOnMerge('${context.proposal_id}', 'accept')" 
+                style="padding: 4px 8px; font-size: 0.8rem; background: #dcfce7; border: 1px solid #86efac; border-radius: 4px; cursor: pointer; color: #166534;" 
+                title="Accept">✅</button>
+            <button onclick="showRejectDialog('merge', '${context.proposal_id}')" 
+                style="padding: 4px 8px; font-size: 0.8rem; background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; cursor: pointer; color: #991b1b;" 
+                title="Reject">❌</button>
         `;
     } else if (decision.type === 'DEPENDENCY_ACCEPTANCE') {
-        detailsHtml = `
-            <div class="decision-details">
-                <p><strong>"${escapeHtml(context.downstream_task)}"</strong> wants to depend on your task <strong>"${escapeHtml(context.upstream_task)}"</strong></p>
-            </div>
-        `;
-        actionsHtml = `
-            <div class="decision-actions">
-                <button onclick="decideOnDependency('${context.dependency_id}', 'accept')" class="accept-btn">✅ Accept</button>
-                <button onclick="showRejectDependencyDialog('${context.dependency_id}')" class="reject-btn">❌ Reject</button>
-                <button onclick="showAlternativeDialog('${context.dependency_id}')" class="alt-btn">↔️ Suggest Alternative</button>
-            </div>
+        actions = `
+            <button onclick="decideOnDependency('${context.dependency_id}', 'accept')" 
+                style="padding: 4px 8px; font-size: 0.8rem; background: #dcfce7; border: 1px solid #86efac; border-radius: 4px; cursor: pointer; color: #166534;" 
+                title="Accept">✅</button>
+            <button onclick="showRejectDialog('dependency', '${context.dependency_id}')" 
+                style="padding: 4px 8px; font-size: 0.8rem; background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; cursor: pointer; color: #991b1b;" 
+                title="Reject">❌</button>
+            <button onclick="showAlternativeDialog('${context.dependency_id}')" 
+                style="padding: 4px 8px; font-size: 0.8rem; background: #fce7f3; border: 1px solid #f9a8d4; border-radius: 4px; cursor: pointer; color: #9d174d;" 
+                title="Suggest Alternative">↔️</button>
         `;
     } else if (decision.type === 'ALTERNATIVE_DEP_ACCEPTANCE') {
-        detailsHtml = `
-            <div class="decision-details">
-                <p><strong>Instead of:</strong> ${escapeHtml(context.original_upstream)}</p>
-                <p><strong>Suggested:</strong> ${escapeHtml(context.suggested_upstream)}</p>
-                <p><strong>Proposed by:</strong> ${escapeHtml(context.proposer_name || 'Unknown')}</p>
-                <p><strong>Reason:</strong> ${escapeHtml(context.reason || 'No reason provided')}</p>
-            </div>
-        `;
-        actionsHtml = `
-            <div class="decision-actions">
-                <button onclick="decideOnAlternative('${context.proposal_id}', 'accept')" class="accept-btn">✅ Accept Alternative</button>
-                <button onclick="showRejectAlternativeDialog('${context.proposal_id}')" class="reject-btn">❌ Reject</button>
-            </div>
+        actions = `
+            <button onclick="decideOnAlternative('${context.proposal_id}', 'accept')" 
+                style="padding: 4px 8px; font-size: 0.8rem; background: #dcfce7; border: 1px solid #86efac; border-radius: 4px; cursor: pointer; color: #166534;" 
+                title="Accept">✅</button>
+            <button onclick="showRejectDialog('alternative', '${context.proposal_id}')" 
+                style="padding: 4px 8px; font-size: 0.8rem; background: #fee2e2; border: 1px solid #fecaca; border-radius: 4px; cursor: pointer; color: #991b1b;" 
+                title="Reject">❌</button>
         `;
     }
     
+    const rejectedBadge = isRejectedTask ? `<span style="margin-left:6px; padding:2px 6px; background:#fee2e2; color:#b91c1c; border-radius:4px; font-size:0.75rem; font-weight:700;">Rejected</span>` : '';
+    const typeBadge = `<span style="display: inline-flex; align-items:center; padding: 4px 8px; background: ${config.bg}; color: ${config.color}; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">${config.label}${rejectedBadge}</span>`;
+    
     return `
-        <div class="decision-card" data-type="${decision.type}">
-            <div class="decision-header">
-                <span class="decision-type">${typeLabel}</span>
-                <span class="decision-date">${formatTimestamp(decision.created_at)}</span>
-            </div>
-            <div class="decision-description">${escapeHtml(decision.description)}</div>
-            ${detailsHtml}
-            ${actionsHtml}
-        </div>
+        <tr style="border-bottom: 1px solid #dee2e6;">
+            <td style="padding: 12px;">${typeBadge}</td>
+            <td style="padding: 12px; font-weight: 500; color: #333; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${desc}</td>
+            <td style="padding: 12px; color: #666;">${from}</td>
+            <td style="padding: 12px; color: #999; font-size: 0.85rem;">${formatRelativeTime(decision.created_at)}</td>
+            <td style="padding: 8px; text-align: center;">
+                <div style="display: flex; gap: 4px; justify-content: center;">
+                    ${actions}
+                </div>
+            </td>
+        </tr>
     `;
 }
 
@@ -5046,11 +5252,93 @@ async function decideOnTask(taskId, action, reason = null, mergeIntoTaskId = nul
             body: JSON.stringify(body)
         });
         
-        alert(`Task ${action}ed successfully!`);
+        showToast(`Task ${action}ed successfully!`, 'success');
         loadPendingDecisions();
+        loadTaskGraph();  // refresh graph in case state changed
         
     } catch (error) {
-        alert('Error: ' + error.message);
+        showToast('Error: ' + error.message, 'error');
+    }
+}
+
+async function archiveRejectedTask(taskId) {
+    try {
+        await apiCall(`/tasks/${taskId}`, { method: 'DELETE' });
+        showToast('Task archived', 'success');
+        loadPendingDecisions();
+        loadTaskGraph();
+    } catch (error) {
+        showToast('Failed to archive task: ' + error.message, 'error');
+    }
+}
+
+async function showEditRejectedTaskDialog(taskId) {
+    try {
+        const details = await apiCall(`/tasks/${taskId}/full-details`);
+        const task = details.task || details || {};
+        const owners = details.all_users || (details.users || []);
+        const currentOwnerId = task.owner_id || task.owner_user_id || (task.owner && task.owner.id);
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top:0; left:0; right:0; bottom:0;
+            background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10000;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white; padding: 20px; border-radius: 10px;
+            width: 420px; max-width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        `;
+        
+        content.innerHTML = `
+            <h3 style="margin-top:0; margin-bottom:12px;">Edit Rejected Task</h3>
+            <label style="display:block; margin-bottom:8px; font-weight:600;">Title</label>
+            <input id="rej-title" type="text" value="${escapeHtml(task.title || '')}" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; margin-bottom:12px;">
+            <label style="display:block; margin-bottom:8px; font-weight:600;">Description</label>
+            <textarea id="rej-desc" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; margin-bottom:12px; min-height:80px;">${escapeHtml(task.description || '')}</textarea>
+            <label style="display:block; margin-bottom:8px; font-weight:600;">Owner</label>
+            <select id="rej-owner" style="width:100%; padding:8px; border:1px solid #e2e8f0; border-radius:6px; margin-bottom:16px;">
+                ${(owners || []).map(u => `<option value="${u.id}" ${u.id === currentOwnerId ? 'selected' : ''}>${escapeHtml(u.name)}</option>`).join('')}
+            </select>
+            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
+                <button id="rej-cancel" style="padding:8px 12px; border:1px solid #e2e8f0; background:white; border-radius:6px; cursor:pointer;">Cancel</button>
+                <button id="rej-save" style="padding:8px 12px; border:none; background:#3b82f6; color:white; border-radius:6px; cursor:pointer; font-weight:600;">Save</button>
+            </div>
+            <p style="margin-top:10px; color:#64748b; font-size:12px;">If owner = creator → task becomes ACTIVE. Otherwise it returns to DRAFT for the new owner's acceptance.</p>
+        `;
+        
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        document.getElementById('rej-cancel').onclick = () => modal.remove();
+        document.getElementById('rej-save').onclick = async () => {
+            const title = document.getElementById('rej-title').value.trim();
+            const desc = document.getElementById('rej-desc').value.trim();
+            const owner = document.getElementById('rej-owner').value;
+            try {
+                await apiCall(`/tasks/${taskId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        description: desc,
+                        owner_user_id: owner
+                    })
+                });
+                showToast('Task updated', 'success');
+                modal.remove();
+                loadPendingDecisions();
+                loadTaskGraph();
+            } catch (error) {
+                showToast('Failed to update task: ' + error.message, 'error');
+            }
+        };
+        
+    } catch (error) {
+        showToast('Failed to load task details: ' + error.message, 'error');
     }
 }
 
@@ -5064,7 +5352,7 @@ async function decideOnMerge(proposalId, action, reason = null) {
             body: JSON.stringify(body)
         });
         
-        alert(`Merge ${action}ed successfully!`);
+        showToast(`Merge ${action}ed successfully!`, 'success');
         loadPendingDecisions();
         
     } catch (error) {
@@ -5073,20 +5361,27 @@ async function decideOnMerge(proposalId, action, reason = null) {
 }
 
 async function cancelMergeProposal(proposalId) {
-    if (!confirm('Are you sure you want to cancel your merge suggestion?')) {
-        return;
-    }
+    showConfirmDialog(
+        'Are you sure you want to cancel your merge suggestion?',
+        async () => {
+            await doCancelMergeProposal(proposalId);
+        },
+        { title: 'Cancel Merge Suggestion', confirmText: 'Yes, Cancel', type: 'warning' }
+    );
+}
+
+async function doCancelMergeProposal(proposalId) {
     
     try {
         await apiCall(`/decisions/merge/${proposalId}`, {
             method: 'DELETE'
         });
         
-        alert('Merge suggestion cancelled. You can now accept, reject, or propose a different merge.');
+        showToast('Merge suggestion cancelled', 'success');
         loadPendingDecisions();
         
     } catch (error) {
-        alert('Error cancelling merge: ' + error.message);
+        showToast('Error cancelling merge: ' + error.message, 'error');
     }
 }
 
@@ -5101,11 +5396,11 @@ async function decideOnDependency(dependencyId, action, reason = null, alternati
             body: JSON.stringify(body)
         });
         
-        alert(`Dependency ${action}ed successfully!`);
+        showToast(`Dependency ${action}ed successfully!`, 'success');
         loadPendingDecisions();
         
     } catch (error) {
-        alert('Error: ' + error.message);
+        showToast('Error: ' + error.message, 'error');
     }
 }
 
@@ -5119,7 +5414,7 @@ async function decideOnAlternative(proposalId, action, reason = null) {
             body: JSON.stringify(body)
         });
         
-        alert(`Alternative ${action}ed successfully!`);
+        showToast(`Alternative ${action}ed successfully!`, 'success');
         loadPendingDecisions();
         
     } catch (error) {
@@ -5127,11 +5422,75 @@ async function decideOnAlternative(proposalId, action, reason = null) {
     }
 }
 
-function showRejectTaskDialog(taskId) {
-    const reason = prompt('Please provide a reason for rejection:');
-    if (reason && reason.trim()) {
-        decideOnTask(taskId, 'reject', reason.trim());
+function showRejectDialog(type, entityId) {
+    const titles = {
+        'task': 'Reject Task',
+        'merge': 'Reject Merge Proposal',
+        'dependency': 'Reject Dependency',
+        'alternative': 'Reject Alternative'
+    };
+    
+    const placeholders = {
+        'task': 'Why are you rejecting this task?',
+        'merge': 'Why are you rejecting this merge proposal?',
+        'dependency': 'Why are you rejecting this dependency?',
+        'alternative': 'Why are you rejecting this alternative?'
+    };
+    
+    const modalHtml = `
+        <div id="reject-modal" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+            <div class="modal-content" style="background: white; padding: 24px; border-radius: 12px; max-width: 450px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <h3 style="margin: 0 0 16px 0; color: #991b1b;">❌ ${titles[type] || 'Reject'}</h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #374151;">Reason for rejection:</label>
+                    <textarea id="reject-reason" placeholder="${placeholders[type] || 'Provide a reason...'}" 
+                        style="width: 100%; padding: 12px; border: 2px solid #fecaca; border-radius: 8px; font-size: 1rem; min-height: 80px; resize: vertical; box-sizing: border-box;"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button onclick="closeRejectModal()" style="padding: 10px 20px; border: 2px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; font-size: 1rem;">Cancel</button>
+                    <button onclick="submitRejection('${type}', '${entityId}')" style="padding: 10px 20px; border: none; border-radius: 8px; background: #dc2626; color: white; cursor: pointer; font-size: 1rem; font-weight: 600;">❌ Reject</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    closeRejectModal();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    setTimeout(() => document.getElementById('reject-reason')?.focus(), 100);
+}
+
+function closeRejectModal() {
+    const modal = document.getElementById('reject-modal');
+    if (modal) modal.remove();
+}
+
+function submitRejection(type, entityId) {
+    const reasonInput = document.getElementById('reject-reason');
+    const reason = reasonInput?.value?.trim();
+    
+    if (!reason) {
+        alert('Please provide a reason for rejection.');
+        return;
     }
+    
+    closeRejectModal();
+    
+    if (type === 'task') {
+        decideOnTask(entityId, 'reject', reason);
+    } else if (type === 'merge') {
+        decideOnMerge(entityId, 'reject', reason);
+    } else if (type === 'dependency') {
+        decideOnDependency(entityId, 'reject', reason);
+    } else if (type === 'alternative') {
+        decideOnAlternative(entityId, 'reject', reason);
+    }
+}
+
+// Legacy function kept for compatibility
+function showRejectTaskDialog(taskId) {
+    showRejectDialog('task', taskId);
 }
 
 async function showMergeTaskDialog(taskId) {
@@ -5215,17 +5574,11 @@ function submitMergeProposal(taskId) {
 }
 
 function showRejectMergeDialog(proposalId) {
-    const reason = prompt('Please provide a reason for rejecting the merge:');
-    if (reason && reason.trim()) {
-        decideOnMerge(proposalId, 'reject', reason.trim());
-    }
+    showRejectDialog('merge', proposalId);
 }
 
 function showRejectDependencyDialog(dependencyId) {
-    const reason = prompt('Please provide a reason for rejecting the dependency:');
-    if (reason && reason.trim()) {
-        decideOnDependency(dependencyId, 'reject', reason.trim());
-    }
+    showRejectDialog('dependency', dependencyId);
 }
 
 async function showAlternativeDialog(dependencyId) {
@@ -5305,10 +5658,7 @@ function submitAltDependency(dependencyId) {
 
 
 function showRejectAlternativeDialog(proposalId) {
-    const reason = prompt('Please provide a reason for rejecting the alternative:');
-    if (reason && reason.trim()) {
-        decideOnAlternative(proposalId, 'reject', reason.trim());
-    }
+    showRejectDialog('alternative', proposalId);
 }
 
 

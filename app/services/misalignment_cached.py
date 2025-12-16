@@ -226,11 +226,30 @@ async def compute_misalignments_for_user_cached(
                             f"score={similarity_score:.3f}"
                         )
             else:
-                logger.warning(
-                    f"No cached similarity score found for answers "
-                    f"{my_answer.id} and {their_answer.id}. "
-                    f"This should have been calculated when the answer was saved!"
-                )
+                # Fallback: simple string comparison when no cached score exists
+                if my_answer.value.strip().lower() == their_answer.value.strip().lower():
+                    similarity_score = 1.0
+                elif my_answer.value.strip().lower() in their_answer.value.strip().lower() or \
+                     their_answer.value.strip().lower() in my_answer.value.strip().lower():
+                    similarity_score = 0.7
+                else:
+                    similarity_score = 0.0
+                
+                # Include if below threshold (or if include_all is True)
+                if include_all or similarity_score < threshold:
+                    misalignment = MisalignmentDTO(
+                        other_user_id=other_user.id,
+                        other_user_name=other_user.name,
+                        task_id=task.id,
+                        task_title=task.title,
+                        attribute_id=attribute.id,
+                        attribute_name=attribute.name,
+                        attribute_label=attribute.label,
+                        your_value=my_answer.value,
+                        their_value=their_answer.value,
+                        similarity_score=similarity_score
+                    )
+                    misalignments.append(misalignment)
     
     # REVERSE DIRECTION: Check how OTHERS perceive MY tasks
     # This shows if my manager or teammates understand my work
@@ -298,30 +317,39 @@ async def compute_misalignments_for_user_cached(
                 
                 if similarity_score_record:
                     similarity_score = similarity_score_record.similarity_score
+                else:
+                    # Fallback: simple string comparison when no cached score exists
+                    if my_self_answer.value.strip().lower() == other_answer.value.strip().lower():
+                        similarity_score = 1.0
+                    elif my_self_answer.value.strip().lower() in other_answer.value.strip().lower() or \
+                         other_answer.value.strip().lower() in my_self_answer.value.strip().lower():
+                        similarity_score = 0.7
+                    else:
+                        similarity_score = 0.0
+                
+                # Include if below threshold (or if include_all is True)
+                if include_all or similarity_score < threshold:
+                    misalignment = MisalignmentDTO(
+                        other_user_id=other_user.id,
+                        other_user_name=other_user.name,
+                        task_id=task.id,
+                        task_title=task.title,
+                        attribute_id=attribute.id,
+                        attribute_name=attribute.name,
+                        attribute_label=attribute.label,
+                        your_value=my_self_answer.value,
+                        their_value=other_answer.value,
+                        similarity_score=similarity_score
+                    )
                     
-                    # Include if below threshold (or if include_all is True)
-                    if include_all or similarity_score < threshold:
-                        misalignment = MisalignmentDTO(
-                            other_user_id=other_user.id,
-                            other_user_name=other_user.name,
-                            task_id=task.id,
-                            task_title=task.title,
-                            attribute_id=attribute.id,
-                            attribute_name=attribute.name,
-                            attribute_label=attribute.label,
-                            your_value=my_self_answer.value,
-                            their_value=other_answer.value,
-                            similarity_score=similarity_score
+                    misalignments.append(misalignment)
+                    
+                    if similarity_score < threshold:
+                        logger.debug(
+                            f"Reverse misalignment found: {other_user.name} vs {user.name} "
+                            f"on {task.title}/{attribute.label}: "
+                            f"score={similarity_score:.3f}"
                         )
-                        
-                        misalignments.append(misalignment)
-                        
-                        if similarity_score < threshold:
-                            logger.debug(
-                                f"Reverse misalignment found: {other_user.name} vs {user.name} "
-                                f"on {task.title}/{attribute.label}: "
-                                f"score={similarity_score:.3f}"
-                            )
     
     logger.info(
         f"Found {len(misalignments)} total comparison(s) (cached) for {user.name} "

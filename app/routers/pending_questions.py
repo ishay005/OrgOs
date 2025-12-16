@@ -175,7 +175,7 @@ async def submit_direct_answer(
     
     # Calculate and store similarity scores (don't fail the request if this fails)
     try:
-        await calculate_and_store_scores_for_answer(db, existing_answer.id)
+        await calculate_and_store_scores_for_answer(existing_answer.id, db)
     except Exception as e:
         # Log the error but don't fail the request
         import logging

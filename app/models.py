@@ -41,12 +41,12 @@ class TaskState(str, enum.Enum):
     
     DRAFT: Task exists but owner has not acknowledged yet (created by someone else).
     ACTIVE: Owner has acknowledged/accepted the task. It's in the live OrgMap.
-    DONE: Task completed.
+    REJECTED: Owner rejected the suggested task; sent back to creator for action.
     ARCHIVED: Old/irrelevant; kept only for history or after merge.
     """
     DRAFT = "DRAFT"
     ACTIVE = "ACTIVE"
-    DONE = "DONE"
+    REJECTED = "REJECTED"
     ARCHIVED = "ARCHIVED"
 
 

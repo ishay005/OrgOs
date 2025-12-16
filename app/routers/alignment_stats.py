@@ -1,13 +1,12 @@
 """
-Alignment statistics endpoints
+Alignment statistics endpoints - reads from pre-computed similarity_scores cache
 """
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import or_
 from app.database import get_db
-from app.models import User, Task, AttributeAnswer, AttributeDefinition
+from app.models import User, Task, AttributeAnswer, SimilarityScore
 from typing import Dict
-from uuid import UUID
 
 router = APIRouter(prefix="/alignment-stats", tags=["alignment-stats"])
 
@@ -15,92 +14,66 @@ router = APIRouter(prefix="/alignment-stats", tags=["alignment-stats"])
 @router.get("/users")
 async def get_user_alignment_stats(db: Session = Depends(get_db)) -> Dict[str, float]:
     """
-    Get alignment percentage for each user based on ALL tasks connected to them.
-    For managers/team leads: includes alignment with their employees on employees' tasks.
+    Get alignment percentage for each user from pre-computed similarity scores.
+    
     Returns: { "user_id": alignment_percentage (0-100) }
     
-    For each user, calculate:
-    - Find all tasks they've answered about (any task where they provided answers)
-    - For each of their answers, compare with other users' answers about the same task/attribute
-    - If user is a manager: ALSO compare their answers about employees' tasks with employees' self-answers
-    - Calculate percentage of aligned vs total comparisons
+    Reads from the similarity_scores table which is updated whenever answers change.
     """
     users = db.query(User).all()
     stats = {}
     
     for user in users:
-        # Get all answers provided by this user
-        user_answers = db.query(AttributeAnswer).filter(
-            AttributeAnswer.answered_by_user_id == user.id,
-            AttributeAnswer.refused == False
-        ).all()
+        # Get all answer IDs for this user
+        user_answer_ids = [
+            a.id for a in db.query(AttributeAnswer).filter(
+                AttributeAnswer.answered_by_user_id == user.id,
+                AttributeAnswer.refused == False
+            ).all()
+        ]
         
-        if not user_answers:
-            stats[str(user.id)] = 100.0  # No data
+        if not user_answer_ids:
+            stats[str(user.id)] = 100.0  # No data = assume aligned
             continue
         
-        total_comparisons = 0
-        aligned_comparisons = 0
+        # Get all pre-computed similarity scores involving this user's answers
+        scores = db.query(SimilarityScore).filter(
+            or_(
+                SimilarityScore.answer_a_id.in_(user_answer_ids),
+                SimilarityScore.answer_b_id.in_(user_answer_ids)
+            )
+        ).all()
         
-        # For each answer by this user, compare with others' answers
-        for user_answer in user_answers:
-            # Find all other users who answered the same attribute for the same task
-            other_answers = db.query(AttributeAnswer).filter(
-                AttributeAnswer.task_id == user_answer.task_id,
-                AttributeAnswer.attribute_id == user_answer.attribute_id,
-                AttributeAnswer.answered_by_user_id != user.id,  # Different user
+        if scores:
+            # Average similarity score as alignment percentage
+            avg_similarity = sum(s.similarity_score for s in scores) / len(scores)
+            stats[str(user.id)] = round(avg_similarity * 100, 1)
+        else:
+            # Fallback: simple comparison if no cached scores
+            user_answers = db.query(AttributeAnswer).filter(
+                AttributeAnswer.answered_by_user_id == user.id,
                 AttributeAnswer.refused == False
             ).all()
             
-            # Compare with each other user's answer
-            for other_answer in other_answers:
-                total_comparisons += 1
-                # Check if answers match
-                if user_answer.value.strip().lower() == other_answer.value.strip().lower():
-                    aligned_comparisons += 1
-        
-        # If user is a manager/team lead, ALSO include alignment with employees on THEIR tasks
-        if hasattr(user, 'employees') and user.employees:
-            for employee in user.employees:
-                # Get all tasks owned by this employee
-                employee_tasks = db.query(Task).filter(Task.owner_user_id == employee.id).all()
-                
-                for task in employee_tasks:
-                    # Get all attributes
-                    attributes = db.query(AttributeDefinition).filter(
-                        AttributeDefinition.entity_type == "task"
-                    ).all()
-                    
-                    for attr in attributes:
-                        # Employee's self-answer
-                        employee_answer = db.query(AttributeAnswer).filter(
-                            AttributeAnswer.answered_by_user_id == employee.id,
-                            AttributeAnswer.target_user_id == employee.id,
-                            AttributeAnswer.task_id == task.id,
-                            AttributeAnswer.attribute_id == attr.id,
-                            AttributeAnswer.refused == False
-                        ).first()
-                        
-                        # Manager's answer about this employee's task
-                        manager_answer = db.query(AttributeAnswer).filter(
-                            AttributeAnswer.answered_by_user_id == user.id,
-                            AttributeAnswer.target_user_id == employee.id,
-                            AttributeAnswer.task_id == task.id,
-                            AttributeAnswer.attribute_id == attr.id,
-                            AttributeAnswer.refused == False
-                        ).first()
-                        
-                        if employee_answer and manager_answer:
-                            total_comparisons += 1
-                            if employee_answer.value.strip().lower() == manager_answer.value.strip().lower():
-                                aligned_comparisons += 1
-        
-        if total_comparisons > 0:
-            alignment_pct = (aligned_comparisons / total_comparisons) * 100
-            stats[str(user.id)] = round(alignment_pct, 1)
-        else:
-            # No comparisons available (no one else answered the same tasks)
-            stats[str(user.id)] = 100.0  # Neutral/no data
+            if not user_answers:
+                stats[str(user.id)] = 100.0
+                continue
+            
+            total = 0
+            aligned = 0
+            for ua in user_answers:
+                # Compare against other users' answers on same task/attribute
+                others = db.query(AttributeAnswer).filter(
+                    AttributeAnswer.task_id == ua.task_id,
+                    AttributeAnswer.attribute_id == ua.attribute_id,
+                    AttributeAnswer.answered_by_user_id != user.id,
+                    AttributeAnswer.refused == False
+                ).all()
+                for ob in others:
+                    total += 1
+                    if ua.value and ob.value and ua.value.strip().lower() == ob.value.strip().lower():
+                        aligned += 1
+            stats[str(user.id)] = round((aligned / total) * 100, 1) if total > 0 else 100.0
     
     return stats
 
@@ -108,60 +81,55 @@ async def get_user_alignment_stats(db: Session = Depends(get_db)) -> Dict[str, f
 @router.get("/tasks")
 async def get_task_alignment_stats(db: Session = Depends(get_db)) -> Dict[str, float]:
     """
-    Get alignment percentage for each task.
+    Get alignment percentage for each task from pre-computed similarity scores.
+    
     Returns: { "task_id": alignment_percentage (0-100) }
     
-    For each task, calculate:
-    - How many answers about this task are aligned between different users
-    - Return as percentage
+    Reads from the similarity_scores table which is updated whenever answers change.
     """
-    tasks = db.query(Task).all()
+    tasks = db.query(Task).filter(Task.is_active == True).all()
     stats = {}
     
     for task in tasks:
-        # Get task owner
-        owner = db.query(User).filter(User.id == task.owner_user_id).first()
-        if not owner or not owner.manager_id:
-            stats[str(task.id)] = 100.0
+        # Get all answer IDs for this task
+        task_answer_ids = [
+            a.id for a in db.query(AttributeAnswer).filter(
+                AttributeAnswer.task_id == task.id,
+                AttributeAnswer.refused == False
+            ).all()
+        ]
+        
+        if not task_answer_ids:
+            stats[str(task.id)] = 100.0  # No data = assume aligned
             continue
         
-        # Get all attribute definitions
-        attributes = db.query(AttributeDefinition).filter(
-            AttributeDefinition.entity_type == "task"
+        # Get all pre-computed similarity scores for answers about this task
+        scores = db.query(SimilarityScore).filter(
+            or_(
+                SimilarityScore.answer_a_id.in_(task_answer_ids),
+                SimilarityScore.answer_b_id.in_(task_answer_ids)
+            )
         ).all()
         
-        total_comparisons = 0
-        aligned_comparisons = 0
-        
-        for attr in attributes:
-            # Owner's answer
-            owner_answer = db.query(AttributeAnswer).filter(
-                AttributeAnswer.answered_by_user_id == owner.id,
-                AttributeAnswer.target_user_id == owner.id,
-                AttributeAnswer.task_id == task.id,
-                AttributeAnswer.attribute_id == attr.id,
-                AttributeAnswer.refused == False
-            ).first()
-            
-            # Manager's answer
-            manager_answer = db.query(AttributeAnswer).filter(
-                AttributeAnswer.answered_by_user_id == owner.manager_id,
-                AttributeAnswer.target_user_id == owner.id,
-                AttributeAnswer.task_id == task.id,
-                AttributeAnswer.attribute_id == attr.id,
-                AttributeAnswer.refused == False
-            ).first()
-            
-            if owner_answer and manager_answer:
-                total_comparisons += 1
-                if owner_answer.value.strip().lower() == manager_answer.value.strip().lower():
-                    aligned_comparisons += 1
-        
-        if total_comparisons > 0:
-            alignment_pct = (aligned_comparisons / total_comparisons) * 100
-            stats[str(task.id)] = round(alignment_pct, 1)
+        if scores:
+            # Average similarity score as alignment percentage
+            avg_similarity = sum(s.similarity_score for s in scores) / len(scores)
+            stats[str(task.id)] = round(avg_similarity * 100, 1)
         else:
-            stats[str(task.id)] = 100.0  # Neutral/no data
+            # Fallback: compare all answers on this task
+            answers = db.query(AttributeAnswer).filter(
+                AttributeAnswer.task_id == task.id,
+                AttributeAnswer.refused == False
+            ).all()
+            total = 0
+            aligned = 0
+            for i, a in enumerate(answers):
+                for b in answers[i+1:]:
+                    if a.value is None or b.value is None:
+                        continue
+                    total += 1
+                    if a.value.strip().lower() == b.value.strip().lower():
+                        aligned += 1
+            stats[str(task.id)] = round((aligned / total) * 100, 1) if total > 0 else 100.0
     
     return stats
-

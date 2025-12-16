@@ -84,7 +84,11 @@ async def get_pending_decisions(
                     "task_id": str(task.id),
                     "task_title": task.title,
                     "task_description": task.description,
+                    "task_state": task.state.value if task.state else None,
+                    "task_state_reason": task.state_reason,
                     "creator_name": creator.name if creator else "Unknown",
+                    "creator_id": str(task.created_by_user_id) if task.created_by_user_id else None,
+                    "owner_id": str(task.owner_user_id) if task.owner_user_id else None,
                     "has_pending_merge": pending_merge is not None,
                     "pending_merge_id": str(pending_merge.id) if pending_merge else None,
                     "pending_merge_target": None
@@ -166,38 +170,46 @@ async def decide_on_task(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    if task.owner_user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Only the task owner can make this decision")
-    
-    if task.state != TaskState.DRAFT:
-        raise HTTPException(status_code=400, detail=f"Task is not in DRAFT state (current: {task.state.value})")
+    # Owner can act on DRAFT; creator can reopen REJECTED
+    if task.state == TaskState.DRAFT:
+        if task.owner_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only the task owner can make this decision")
+    elif task.state == TaskState.REJECTED:
+        if task.created_by_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only the task creator can reopen a rejected task")
+    else:
+        raise HTTPException(status_code=400, detail=f"Task is not actionable in state {task.state.value}")
     
     try:
-        if request.action == "accept":
-            result = state_machines.accept_task(db, task, current_user)
-            return {"success": True, "message": "Task accepted", "new_state": result.state.value}
-        
-        elif request.action == "reject":
-            if not request.reason:
-                raise HTTPException(status_code=400, detail="Reason is required for rejection")
-            result = state_machines.reject_task(db, task, current_user, request.reason)
-            return {"success": True, "message": "Task rejected", "new_state": result.state.value}
-        
-        elif request.action == "propose_merge":
-            if not request.merge_into_task_id:
-                raise HTTPException(status_code=400, detail="merge_into_task_id is required")
-            if not request.reason:
-                raise HTTPException(status_code=400, detail="Reason is required for merge proposal")
+        if task.state == TaskState.DRAFT:
+            if request.action == "accept":
+                result = state_machines.accept_task(db, task, current_user)
+                return {"success": True, "message": "Task accepted", "new_state": result.state.value}
             
-            to_task = db.query(Task).filter(Task.id == UUID(request.merge_into_task_id)).first()
-            if not to_task:
-                raise HTTPException(status_code=404, detail="Target task not found")
+            elif request.action == "reject":
+                if not request.reason:
+                    raise HTTPException(status_code=400, detail="Reason is required for rejection")
+                result = state_machines.reject_task(db, task, current_user, request.reason)
+                return {"success": True, "message": "Task rejected", "new_state": result.state.value}
             
-            proposal = state_machines.propose_task_merge(db, task, to_task, current_user, request.reason)
-            return {"success": True, "message": "Merge proposed", "proposal_id": str(proposal.id)}
+            elif request.action == "propose_merge":
+                if not request.merge_into_task_id:
+                    raise HTTPException(status_code=400, detail="merge_into_task_id is required")
+                if not request.reason:
+                    raise HTTPException(status_code=400, detail="Reason is required for merge proposal")
+                
+                to_task = db.query(Task).filter(Task.id == UUID(request.merge_into_task_id)).first()
+                if not to_task:
+                    raise HTTPException(status_code=404, detail="Target task not found")
+                
+                proposal = state_machines.propose_task_merge(db, task, to_task, current_user, request.reason)
+                return {"success": True, "message": "Merge proposed", "proposal_id": str(proposal.id)}
+        elif task.state == TaskState.REJECTED:
+            if request.action == "reopen":
+                result = state_machines.reopen_rejected_task(db, task, current_user)
+                return {"success": True, "message": "Task reopened to DRAFT", "new_state": result.state.value}
         
-        else:
-            raise HTTPException(status_code=400, detail=f"Invalid action: {request.action}")
+        raise HTTPException(status_code=400, detail=f"Invalid action: {request.action}")
     
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

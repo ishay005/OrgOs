@@ -506,9 +506,12 @@ def _apply_updates(db: Session, user_id: UUID, updates: list[StructuredUpdate]):
             
             logger.info(f"✅ Applied update: {update.attribute_name} = {update.value}")
             
-            # Calculate similarity
+            # Calculate similarity (async function, need to run in sync context)
             try:
-                calculate_and_store_scores_for_answer(db, answer_id)
+                import asyncio
+                asyncio.get_event_loop().run_until_complete(
+                    calculate_and_store_scores_for_answer(answer_id, db)
+                )
             except Exception as e:
                 logger.warning(f"Could not calculate similarity: {e}")
                 

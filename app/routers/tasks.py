@@ -255,6 +255,10 @@ async def update_task(
     if current_user.id == task.owner_user_id:
         can_edit = True
     
+    # Creator can edit when task is REJECTED (to resubmit)
+    if task.state == TaskState.REJECTED and current_user.id == task.created_by_user_id:
+        can_edit = True
+    
     # Manager of owner can edit
     owner = db.query(User).filter(User.id == task.owner_user_id).first()
     if owner and owner.manager_id == current_user.id:
@@ -299,25 +303,63 @@ async def update_task(
             # Update the owner
             task.owner_user_id = new_owner_id
             
-            # Move task to DRAFT state and create PendingDecision for new owner
-            task.state = TaskState.DRAFT
-            task.state_changed_at = datetime.utcnow()
-            task.state_reason = f"Ownership transferred from {current_user.name}"
-            
-            # Clear any existing pending decisions for this task
+            # State logic:
+            # - If creator becomes owner => ACTIVE
+            # - Else => DRAFT pending new owner's acceptance
             db.query(PendingDecision).filter(
                 PendingDecision.entity_type == "task",
                 PendingDecision.entity_id == task.id,
                 PendingDecision.is_resolved == False
             ).delete()
             
-            # Create new pending decision for the new owner
+            if task.created_by_user_id == new_owner_id:
+                task.state = TaskState.ACTIVE
+                task.state_changed_at = datetime.utcnow()
+                task.state_reason = f"Creator reassigned to self"
+                task.is_active = True
+            else:
+                task.state = TaskState.DRAFT
+                task.state_changed_at = datetime.utcnow()
+                task.state_reason = f"Ownership transferred from {current_user.name}"
+                task.is_active = True
+                
+                # Create new pending decision for the new owner
+                pending_decision = PendingDecision(
+                    user_id=new_owner_id,
+                    decision_type=PendingDecisionType.TASK_ACCEPTANCE,
+                    entity_type="task",
+                    entity_id=task.id,
+                    description=f"{current_user.name} transferred task '{task.title}' to you. Accept or reject?"
+                )
+                db.add(pending_decision)
+
+    # If the task was REJECTED and the creator edits (reopens), ensure state aligns with owner
+    if task.state == TaskState.REJECTED and current_user.id == task.created_by_user_id:
+        # Clear existing pending decisions for creator (they acted)
+        db.query(PendingDecision).filter(
+            PendingDecision.entity_type == "task",
+            PendingDecision.entity_id == task.id,
+            PendingDecision.is_resolved == False
+        ).delete()
+        
+        if task.owner_user_id == task.created_by_user_id:
+            task.state = TaskState.ACTIVE
+            task.state_changed_at = datetime.utcnow()
+            task.state_reason = "Creator reassigned to self"
+            task.is_active = True
+        else:
+            task.state = TaskState.DRAFT
+            task.state_changed_at = datetime.utcnow()
+            task.state_reason = "Resubmitted after rejection"
+            task.is_active = True
+            
+            # Create pending decision for the (new) owner
             pending_decision = PendingDecision(
-                user_id=new_owner_id,
+                user_id=task.owner_user_id,
                 decision_type=PendingDecisionType.TASK_ACCEPTANCE,
                 entity_type="task",
                 entity_id=task.id,
-                description=f"{current_user.name} transferred task '{task.title}' to you. Accept or reject?"
+                description=f"Task '{task.title}' was resubmitted. Accept or reject?"
             )
             db.add(pending_decision)
             
@@ -369,11 +411,12 @@ async def delete_task(
     db: Session = Depends(get_db)
 ):
     """
-    Delete a task (soft delete - marks as inactive).
+    Delete/archive a task.
     
     Permissions:
     - Task owner can delete their own task
     - Manager can delete tasks owned by their employees (direct or indirect)
+    - Task creator can archive a REJECTED task they created
     """
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
@@ -384,6 +427,10 @@ async def delete_task(
     
     # Owner can delete
     if current_user.id == task.owner_user_id:
+        can_delete = True
+    
+    # Creator can archive rejected task
+    if task.state == TaskState.REJECTED and current_user.id == task.created_by_user_id:
         can_delete = True
     
     # Check if current user is a manager of the task owner
@@ -400,8 +447,15 @@ async def delete_task(
     if not can_delete:
         raise HTTPException(status_code=403, detail="You don't have permission to delete this task")
     
-    # Soft delete - mark as inactive
+    # Archive instead of raw is_active toggle
+    task.state = TaskState.ARCHIVED
+    task.state_changed_at = datetime.utcnow()
+    task.state_reason = "Archived"
     task.is_active = False
+    
+    # Resolve pending decisions for this task
+    from app.services.state_machines import resolve_pending_decision
+    resolve_pending_decision(db, "task", task.id, "archived")
     
     # Also remove from relevant users, dependencies, etc.
     db.query(TaskRelevantUser).filter(TaskRelevantUser.task_id == task_id).delete()
@@ -422,7 +476,7 @@ async def get_task_full_details(
 ):
     """
     Get comprehensive task details including:
-    - Task state (DRAFT, ACTIVE, DONE, ARCHIVED)
+    - Task state (DRAFT, ACTIVE, ARCHIVED)
     - Owner and Creator info
     - Aliases (from merged tasks)
     - Dependencies with state machine status (PROPOSED, CONFIRMED, REJECTED)
@@ -433,13 +487,10 @@ async def get_task_full_details(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    # Get owner
+    # Get owner / creator / all users for edit dialogs
     owner = db.query(User).filter(User.id == task.owner_user_id).first()
-    
-    # Get creator
-    creator = None
-    if task.created_by_user_id:
-        creator = db.query(User).filter(User.id == task.created_by_user_id).first()
+    creator = db.query(User).filter(User.id == task.created_by_user_id).first() if task.created_by_user_id else None
+    all_users = db.query(User).all()
     
     # Get task state
     task_state = task.state.value if hasattr(task, 'state') and task.state else "ACTIVE"
@@ -588,6 +639,8 @@ async def get_task_full_details(
             "id": str(owner.id) if owner else None,
             "name": owner.name if owner else "Unknown"
         },
+        "owner_id": str(task.owner_user_id) if task.owner_user_id else None,
+        "owner_user_id": str(task.owner_user_id) if task.owner_user_id else None,
         "creator": {
             "id": str(creator.id) if creator else None,
             "name": creator.name if creator else None
@@ -599,7 +652,11 @@ async def get_task_full_details(
         "aliases": aliases,
         "dependencies_v2": dependencies_v2,
         "merge_proposals": merge_proposals,
-        "alt_dependency_proposals": alt_dep_proposals
+        "alt_dependency_proposals": alt_dep_proposals,
+        "all_users": [
+            {"id": str(u.id), "name": u.name}
+            for u in all_users
+        ]
     }
 
 
