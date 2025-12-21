@@ -2989,3 +2989,25 @@ input:checked + .slider:before {
     display: none;
 }
 
+/* Clickable Task Links - used in Pending Questions, Pending Decisions, and future integrations */
+.task-link {
+    color: var(--primary);
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    padding: 2px 4px;
+    border-radius: 4px;
+    background: transparent;
+}
+
+.task-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+    background: rgba(99, 102, 241, 0.08);
+}
+
+.task-link:active {
+    transform: scale(0.98);
+}
+

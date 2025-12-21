@@ -3627,11 +3627,16 @@ async function loadPendingQuestions() {
                 inputHtml = `<input type="text" id="input-${p.id}" style="width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 4px;" placeholder="Type your answer">`;
             }
             
+            // Make task title clickable if task_id exists
+            const taskCell = p.task_id 
+                ? `<span class="task-link" onclick="showTaskDetails('${p.task_id}')">${escapeHtml(p.task_title)}</span>`
+                : 'User-level';
+            
             html += `
                 <tr style="border-bottom: 1px solid #dee2e6;" id="row-${p.id}">
                     <td style="padding: 12px; color: #666;">#${p.priority}</td>
                     <td style="padding: 12px;">${reasonBadge}</td>
-                    <td style="padding: 12px; font-weight: 500; color: #333;">${p.task_title || 'User-level'}</td>
+                    <td style="padding: 12px; font-weight: 500; color: #333;">${taskCell}</td>
                     <td style="padding: 12px; color: #0066cc; font-weight: 500;">${p.attribute_label}</td>
                     <td style="padding: 12px;">${inputHtml}</td>
                     <td style="padding: 12px; color: #666;">${p.target_user_name}</td>
@@ -5138,23 +5143,28 @@ function renderDecisionRow(decision) {
     const config = typeConfig[decision.type] || { label: decision.type, color: '#666', bg: '#f3f4f6' };
     const context = decision.context || {};
     
-    // Build description
+    // Build description with clickable task names
     let desc = '';
     let from = '';
     
     const isRejectedTask = decision.type === 'TASK_ACCEPTANCE' && context.task_state === 'REJECTED';
     
+    // Helper to create clickable task link
+    const taskLink = (taskId, title) => taskId 
+        ? `<span class="task-link" onclick="showTaskDetails('${taskId}')">${escapeHtml(title || 'Unknown task')}</span>`
+        : escapeHtml(title || 'Unknown task');
+    
     if (decision.type === 'TASK_ACCEPTANCE') {
-        desc = escapeHtml(context.task_title || 'Unknown task');
+        desc = taskLink(context.task_id, context.task_title);
         from = escapeHtml(context.creator_name || 'Unknown');
     } else if (decision.type === 'MERGE_CONSENT') {
-        desc = `"${escapeHtml(context.from_task_title)}" → "${escapeHtml(context.to_task_title)}"`;
+        desc = `${taskLink(context.from_task_id, context.from_task_title)} → ${taskLink(context.to_task_id, context.to_task_title)}`;
         from = escapeHtml(context.proposer_name || 'Unknown');
     } else if (decision.type === 'DEPENDENCY_ACCEPTANCE') {
-        desc = `"${escapeHtml(context.downstream_task)}" → "${escapeHtml(context.upstream_task)}"`;
+        desc = `${taskLink(context.downstream_task_id, context.downstream_task)} → ${taskLink(context.upstream_task_id, context.upstream_task)}`;
         from = 'Dependency';
     } else if (decision.type === 'ALTERNATIVE_DEP_ACCEPTANCE') {
-        desc = `Instead: "${escapeHtml(context.suggested_upstream)}"`;
+        desc = `${taskLink(context.downstream_task_id, context.downstream_task)}: Instead of ${taskLink(context.original_upstream_id, context.original_upstream)} → ${taskLink(context.suggested_upstream_id, context.suggested_upstream)}`;
         from = escapeHtml(context.proposer_name || 'Unknown');
     }
     

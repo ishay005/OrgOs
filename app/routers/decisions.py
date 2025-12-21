@@ -107,7 +107,9 @@ async def get_pending_decisions(
                 proposer = db.query(User).filter(User.id == proposal.proposed_by_user_id).first()
                 context = {
                     "proposal_id": str(proposal.id),
+                    "from_task_id": str(proposal.from_task_id),
                     "from_task_title": from_task.title if from_task else "Unknown",
+                    "to_task_id": str(proposal.to_task_id),
                     "to_task_title": to_task.title if to_task else "Unknown",
                     "proposer_name": proposer.name if proposer else "Unknown",
                     "reason": proposal.proposal_reason
@@ -120,7 +122,9 @@ async def get_pending_decisions(
                 upstream = db.query(Task).filter(Task.id == dep.upstream_task_id).first()
                 context = {
                     "dependency_id": str(dep.id),
+                    "downstream_task_id": str(dep.downstream_task_id),
                     "downstream_task": downstream.title if downstream else "Unknown",
+                    "upstream_task_id": str(dep.upstream_task_id),
                     "upstream_task": upstream.title if upstream else "Unknown"
                 }
         
@@ -135,8 +139,11 @@ async def get_pending_decisions(
                 proposer = db.query(User).filter(User.id == alt.proposed_by_user_id).first()
                 context = {
                     "proposal_id": str(alt.id),
+                    "downstream_task_id": str(alt.downstream_task_id),
                     "downstream_task": downstream.title if downstream else "Unknown",
+                    "original_upstream_id": str(alt.original_upstream_task_id),
                     "original_upstream": orig.title if orig else "Unknown",
+                    "suggested_upstream_id": str(alt.suggested_upstream_task_id),
                     "suggested_upstream": suggested.title if suggested else "Unknown",
                     "proposer_name": proposer.name if proposer else "Unknown",
                     "reason": alt.proposal_reason
