@@ -10,9 +10,30 @@ from typing import Literal, Optional
 # Response Schema - Now enforced via API (text.format)
 # =============================================================================
 # The JSON schema is enforced by the Responses API using text.format.
-# No need to include format instructions in prompts anymore.
+# Additional instructions for segments (rich task references).
 
-RESPONSE_SCHEMA_INSTRUCTION = ""  # Empty - schema enforced by API
+RESPONSE_SCHEMA_INSTRUCTION = """
+SEGMENTS (Rich Task References):
+When mentioning tasks in your response, populate the `segments` array for clickable rendering.
+Each segment is an object with these fields (ALL fields are required, use null for unused ones):
+- type: "text", "task_ref", or "attribute_ref"
+- text: The plain text content (for type="text", null otherwise)
+- task_id: Task UUID (for type="task_ref" or "attribute_ref", null otherwise)
+- label: Display text for the link (for type="task_ref" or "attribute_ref", null otherwise)
+- attribute_name: Attribute name (for type="attribute_ref" only, null otherwise)
+
+Example segments for "Your task Build Dashboard is blocked":
+[
+  {"type": "text", "text": "Your task ", "task_id": null, "label": null, "attribute_name": null},
+  {"type": "task_ref", "text": null, "task_id": "abc-123-uuid", "label": "Build Dashboard", "attribute_name": null},
+  {"type": "text", "text": " is blocked", "task_id": null, "label": null, "attribute_name": null}
+]
+
+IMPORTANT:
+- `display_messages` must STILL contain the full plain-text version
+- If no tasks are mentioned, set segments to null
+- ALWAYS include all 5 fields in each segment object
+"""
 
 
 # =============================================================================

@@ -3,9 +3,38 @@ Robin Types - Pydantic models for the new Robin architecture.
 Used across call_robin(), MCP tools, and endpoints.
 """
 from pydantic import BaseModel, Field
-from typing import Optional, Literal
+from typing import Optional, Literal, Union
 from uuid import UUID
 from datetime import datetime
+
+
+# =============================================================================
+# Segment Types - For rich/clickable task references in chat
+# =============================================================================
+
+class RobinSegmentText(BaseModel):
+    """Plain text segment"""
+    type: Literal["text"] = "text"
+    text: str
+
+
+class RobinSegmentTaskRef(BaseModel):
+    """Clickable task reference segment"""
+    type: Literal["task_ref"] = "task_ref"
+    task_id: str
+    label: str
+
+
+class RobinSegmentAttributeRef(BaseModel):
+    """Clickable attribute reference segment"""
+    type: Literal["attribute_ref"] = "attribute_ref"
+    task_id: str
+    attribute_name: str
+    label: str
+
+
+# Union type for all segment types
+RobinSegment = Union[RobinSegmentText, RobinSegmentTaskRef, RobinSegmentAttributeRef]
 
 
 # =============================================================================
@@ -50,6 +79,7 @@ class RobinReply(BaseModel):
     display_messages: list[str] = Field(default_factory=list)
     updates: list[StructuredUpdate] = Field(default_factory=list)
     control: ControlSignals = Field(default_factory=ControlSignals)
+    segments: Optional[list[dict]] = None  # Rich segments for clickable task references
     
     # Metadata for debugging/logging
     mode: str
@@ -78,6 +108,10 @@ class LLMResponseSchema(BaseModel):
     control: ControlSignals = Field(
         default_factory=ControlSignals,
         description="Control signals for session/mode transitions"
+    )
+    segments: Optional[list[dict]] = Field(
+        default=None,
+        description="Structured segments for rich/clickable task references"
     )
 
 

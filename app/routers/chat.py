@@ -107,16 +107,22 @@ def _save_robin_messages(
         if not msg_text:
             continue
             
+        # Build metadata including segments for rich rendering
+        metadata = {
+            "mode": reply.mode,
+            "submode": reply.submode,
+            "tool_calls": reply.tool_calls_made,
+            "has_debug": True  # Flag to show debug button
+        }
+        # Include segments for clickable task references (if provided)
+        if reply.segments:
+            metadata["segments"] = reply.segments
+        
         chat_message = ChatMessage(
             thread_id=thread_id,
             sender=MessageSender.ROBIN.value,
             text=msg_text,
-            msg_metadata={
-                "mode": reply.mode,
-                "submode": reply.submode,
-                "tool_calls": reply.tool_calls_made,
-                "has_debug": True  # Flag to show debug button
-            }
+            msg_metadata=metadata
         )
         db.add(chat_message)
         db.commit()

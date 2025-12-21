@@ -74,9 +74,25 @@ RESPONSE_JSON_SCHEMA = {
                 },
                 "required": ["conversation_done", "next_phase"],
                 "additionalProperties": False
+            },
+            "segments": {
+                "type": ["array", "null"],
+                "description": "Structured segments for rich/clickable rendering. Each segment has 'type' (text/task_ref/attribute_ref) and relevant fields. Use null if not providing segments.",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "type": {"type": "string", "description": "Segment type: 'text', 'task_ref', or 'attribute_ref'"},
+                        "text": {"type": ["string", "null"], "description": "For type='text': the plain text content"},
+                        "task_id": {"type": ["string", "null"], "description": "For type='task_ref' or 'attribute_ref': the task UUID"},
+                        "label": {"type": ["string", "null"], "description": "For type='task_ref' or 'attribute_ref': the display label"},
+                        "attribute_name": {"type": ["string", "null"], "description": "For type='attribute_ref': the attribute name"}
+                    },
+                    "required": ["type", "text", "task_id", "label", "attribute_name"],
+                    "additionalProperties": False
+                }
             }
         },
-        "required": ["display_messages", "updates", "control"],
+        "required": ["display_messages", "updates", "control", "segments"],
         "additionalProperties": False
     }
 }
@@ -189,6 +205,10 @@ async def call_robin(
     
     # Get the appropriate system prompt from DB
     system_prompt = get_prompt_from_db(db, mode, submode)
+    
+    # Append segment instructions for rich rendering
+    from app.services.robin_prompts import RESPONSE_SCHEMA_INSTRUCTION
+    system_prompt = system_prompt + "\n\n" + RESPONSE_SCHEMA_INSTRUCTION
     
     # Build input messages for the API call
     input_messages = [
@@ -366,6 +386,11 @@ async def call_robin(
             next_phase=control_data.get("next_phase")
         )
         
+        # Extract segments for rich/clickable rendering (optional, may be null)
+        segments = parsed.get("segments")
+        if segments:
+            logger.info(f"📎 Segments extracted: {len(segments)} items")
+        
         # Get the response ID for conversation threading
         response_id = getattr(response, 'id', None)
         logger.info(f"📌 Response ID: {response_id[:20] if response_id else 'None'}...")
@@ -386,6 +411,7 @@ async def call_robin(
             display_messages=display_messages,
             updates=updates,
             control=control,
+            segments=segments,  # Rich segments for clickable task references
             mode=mode,
             submode=submode,
             response_id=response_id,  # OpenAI response ID for next call

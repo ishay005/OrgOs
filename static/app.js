@@ -3001,11 +3001,23 @@ function appendMessageToUI(message) {
         metadataHTML = `<div class="message-metadata">✓ Applied ${message.metadata.updates_applied} update(s)</div>`;
     }
     
+    // Check for segments in metadata for rich/clickable rendering
+    const segments = message.metadata?.segments;
+    let contentHTML;
+    
+    if (segments && Array.isArray(segments) && segments.length > 0) {
+        // Render segments with clickable task links
+        contentHTML = `<p>${renderSegments(segments)}</p>`;
+    } else {
+        // Fallback to plain text rendering
+        contentHTML = `<p>${escapeHtml(message.text).replace(/\n/g, '<br>')}</p>`;
+    }
+    
     messageDiv.innerHTML = `
         <div class="message-avatar">${avatar}</div>
         <div>
             <div class="message-content">
-                <p>${escapeHtml(message.text).replace(/\n/g, '<br>')}</p>
+                ${contentHTML}
             </div>
             ${metadataHTML}
             <div class="message-timestamp">${formatTimestamp(message.created_at)}</div>
@@ -3022,6 +3034,187 @@ function appendMessageToUI(message) {
     
     container.appendChild(messageDiv);
     scrollToBottom();
+}
+
+/**
+ * Render segments array into HTML with clickable task links.
+ * Falls back to text display if segment parsing fails.
+ */
+function renderSegments(segments) {
+    try {
+        return segments.map(seg => {
+            if (seg.type === 'text') {
+                return escapeHtml(seg.text || '').replace(/\n/g, '<br>');
+            } else if (seg.type === 'task_ref') {
+                // Clickable task reference - opens task details popup
+                return `<span class="task-link" onclick="event.stopPropagation(); showTaskDetails('${escapeHtml(seg.task_id)}')">${escapeHtml(seg.label || 'Task')}</span>`;
+            } else if (seg.type === 'attribute_ref') {
+                // Clickable attribute reference - opens small attribute edit popover
+                const taskId = escapeHtml(seg.task_id || '');
+                const attrName = escapeHtml(seg.attribute_name || '');
+                return `<span class="attribute-link" onclick="event.stopPropagation(); showAttributeEditPopup('${taskId}', '${attrName}', event)">${escapeHtml(seg.label || 'Attribute')}</span>`;
+            }
+            return '';
+        }).join('');
+    } catch (error) {
+        console.error('Error rendering segments:', error);
+        return '';
+    }
+}
+
+/**
+ * Show a small popover to edit a specific attribute value for a task.
+ * Positioned near the clicked element, doesn't block the rest of the screen.
+ */
+async function showAttributeEditPopup(taskId, attributeName, event) {
+    // Remove any existing attribute popover
+    const existing = document.getElementById('attr-edit-popover');
+    if (existing) existing.remove();
+    
+    try {
+        // Fetch task details and attribute definitions in parallel
+        const [task, taskAttributes] = await Promise.all([
+            apiCall(`/tasks/${taskId}/full-details`),
+            apiCall('/task-attributes')
+        ]);
+        
+        // Find the attribute definition
+        const attrDef = taskAttributes.find(a => a.name === attributeName);
+        const allowedValues = attrDef?.allowed_values || [];
+        const displayName = attrDef?.label || attributeName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        
+        // Find current value for this attribute (from current user's answers)
+        let currentValue = '';
+        // Check if we have answers in the task details
+        if (task.answers_by_attribute && task.answers_by_attribute[attributeName]) {
+            const answers = task.answers_by_attribute[attributeName].answers || [];
+            const myAnswer = answers.find(a => a.user_id === currentUser?.id);
+            if (myAnswer) {
+                currentValue = myAnswer.value || '';
+            }
+        }
+        
+        // Calculate position near the click
+        const clickX = event?.clientX || window.innerWidth / 2;
+        const clickY = event?.clientY || window.innerHeight / 2;
+        
+        // Create popover
+        const popover = document.createElement('div');
+        popover.id = 'attr-edit-popover';
+        popover.style.cssText = `
+            position: fixed;
+            left: ${Math.min(clickX + 10, window.innerWidth - 280)}px;
+            top: ${Math.min(clickY - 20, window.innerHeight - 200)}px;
+            background: var(--color-bg-secondary, #1e1e2e);
+            border-radius: 10px;
+            padding: 12px 14px;
+            width: 250px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+            border: 1px solid var(--color-border, #333);
+            z-index: 10000;
+        `;
+        
+        // Build input HTML based on attribute type
+        let inputHTML;
+        if (allowedValues && allowedValues.length > 0) {
+            // Dropdown for attributes with allowed values
+            const optionsHTML = allowedValues.map(v => 
+                `<option value="${escapeHtml(v)}" ${v === currentValue ? 'selected' : ''}>${escapeHtml(v)}</option>`
+            ).join('');
+            inputHTML = `
+                <select id="attr-edit-value" style="width:100%;padding:8px;border:1px solid var(--color-border, #333);border-radius:6px;background:var(--color-bg-primary, #12121a);color:var(--color-text-primary, #e0e0e0);font-size:13px;box-sizing:border-box;">
+                    <option value="">-- Select --</option>
+                    ${optionsHTML}
+                </select>
+            `;
+        } else {
+            // Text input for free-form attributes
+            inputHTML = `
+                <input type="text" id="attr-edit-value" value="${escapeHtml(currentValue)}" 
+                    style="width:100%;padding:8px;border:1px solid var(--color-border, #333);border-radius:6px;background:var(--color-bg-primary, #12121a);color:var(--color-text-primary, #e0e0e0);font-size:13px;box-sizing:border-box;"
+                    placeholder="Enter value..."
+                />
+            `;
+        }
+        
+        popover.innerHTML = `
+            <div style="font-size:11px;color:var(--color-text-tertiary, #666);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(task.title || '')}">
+                ${escapeHtml(task.title || 'Task')}
+            </div>
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--color-text-primary, #e0e0e0);">
+                ${displayName}
+            </div>
+            ${inputHTML}
+            <div style="display:flex;gap:6px;margin-top:10px;justify-content:flex-end;">
+                <button id="attr-cancel-btn" style="padding:6px 12px;border:none;border-radius:5px;background:var(--color-bg-tertiary, #2a2a3a);color:var(--color-text-primary, #e0e0e0);cursor:pointer;font-size:12px;">Cancel</button>
+                <button id="attr-save-btn" style="padding:6px 12px;border:none;border-radius:5px;background:var(--color-accent, #7c3aed);color:white;cursor:pointer;font-size:12px;font-weight:500;">Save</button>
+            </div>
+        `;
+        
+        document.body.appendChild(popover);
+        
+        // Focus input
+        const input = document.getElementById('attr-edit-value');
+        input.focus();
+        if (input.tagName === 'INPUT') input.select();
+        
+        // Handle save
+        const saveValue = async () => {
+            const newValue = input.value.trim();
+            if (!newValue) {
+                showToast('Please select or enter a value', 'error');
+                return;
+            }
+            try {
+                await apiCall('/pending-questions/answer', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        task_id: taskId,
+                        target_user_id: task.owner_user_id || task.owner?.id,
+                        attribute_name: attributeName,
+                        value: newValue,
+                        refused: false
+                    })
+                });
+                showToast('Saved!', 'success');
+                popover.remove();
+            } catch (error) {
+                showToast('Failed: ' + error.message, 'error');
+            }
+        };
+        
+        document.getElementById('attr-save-btn').onclick = saveValue;
+        document.getElementById('attr-cancel-btn').onclick = () => popover.remove();
+        
+        // Close on Escape
+        const escHandler = (e) => { 
+            if (e.key === 'Escape') { 
+                popover.remove(); 
+                document.removeEventListener('keydown', escHandler); 
+            } 
+        };
+        document.addEventListener('keydown', escHandler);
+        
+        // Submit on Enter (for text input)
+        if (input.tagName === 'INPUT') {
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveValue(); });
+        }
+        
+        // Close when clicking outside (after a small delay to avoid immediate close)
+        setTimeout(() => {
+            const outsideClickHandler = (e) => {
+                if (!popover.contains(e.target)) {
+                    popover.remove();
+                    document.removeEventListener('click', outsideClickHandler);
+                }
+            };
+            document.addEventListener('click', outsideClickHandler);
+        }, 100);
+        
+    } catch (error) {
+        console.error('Error loading attribute:', error);
+        showToast('Failed to load: ' + error.message, 'error');
+    }
 }
 
 function showTypingIndicator() {
