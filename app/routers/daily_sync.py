@@ -112,17 +112,23 @@ def _save_robin_messages(
     for msg_text in reply.display_messages:
         if not msg_text:
             continue
+        
+        # Build metadata including segments for rich rendering
+        msg_metadata = {
+            "mode": reply.mode,
+            "submode": reply.submode,
+            "tool_calls": reply.tool_calls_made,
+            "has_debug": True
+        }
+        # Include segments for clickable task references (if provided)
+        if reply.segments:
+            msg_metadata["segments"] = reply.segments
             
         chat_msg = ChatMessage(
             thread_id=thread_id,
             sender="robin",
             text=msg_text,
-            msg_metadata={
-                "mode": reply.mode,
-                "submode": reply.submode,
-                "tool_calls": reply.tool_calls_made,
-                "has_debug": True
-            }
+            msg_metadata=msg_metadata
         )
         db.add(chat_msg)
         db.commit()
@@ -146,12 +152,15 @@ def _save_robin_messages(
             db.add(debug)
             db.commit()
         
-        messages.append({
+        # Build response dict including metadata with segments
+        response_dict = {
             "id": str(chat_msg.id),
             "text": chat_msg.text,
             "sender": "robin",
-            "created_at": chat_msg.created_at.isoformat()
-        })
+            "created_at": chat_msg.created_at.isoformat(),
+            "metadata": msg_metadata  # Include metadata for frontend rendering
+        }
+        messages.append(response_dict)
     
     return messages
 

@@ -595,6 +595,602 @@ button {
     background: #fafafa;
 }
 
+/* Top Navigation Header */
+.top-nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    min-height: 48px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+}
+
+.top-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.top-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.top-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.top-nav-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+}
+
+.top-nav-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.top-nav-btn .badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    margin-left: 2px;
+}
+
+.top-nav-btn:not(.active) .badge {
+    background: #ef4444;
+    color: white;
+}
+
+.top-nav-header .user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Graph Toolbar - Clean horizontal bar */
+.graph-toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
+
+.toolbar-filters {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.toolbar-attr-filters {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.toolbar-attr-filters .attribute-filter {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.toolbar-attr-filters .attribute-filter label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+}
+
+.toolbar-attr-filters .filter-button {
+    padding: 2px 5px;
+    font-size: 0.65rem;
+    min-width: 35px;
+}
+
+.toolbar-options {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    flex-shrink: 0;
+}
+
+.toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.toolbar-label {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.toolbar-dropdown-btn {
+    padding: 3px 6px;
+    font-size: 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    cursor: pointer;
+    min-width: 40px;
+    text-align: left;
+}
+
+.toolbar-dropdown-btn:hover {
+    border-color: var(--primary);
+}
+
+.toolbar-select {
+    padding: 3px 6px;
+    font-size: 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    max-width: 80px;
+}
+
+.toolbar-attributes {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/* Style dynamically added attribute filters in toolbar */
+.toolbar-attributes .attribute-filter {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.toolbar-attributes .attribute-filter label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.toolbar-attributes .filter-button {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    min-width: 50px;
+}
+
+.toolbar-attributes .filter-dropdown,
+.toolbar-attributes select {
+    font-size: 0.75rem;
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 2px;
+}
+
+.toolbar-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.7rem;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 3px 5px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+}
+
+.toolbar-checkbox:hover {
+    background: var(--surface-hover);
+    border-color: var(--border);
+}
+
+.toolbar-checkbox input[type="checkbox"] {
+    width: 11px;
+    height: 11px;
+    margin: 0;
+    accent-color: var(--primary);
+}
+
+.toolbar-btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.toolbar-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--primary);
+}
+
+.toolbar-btn.primary {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.toolbar-btn.primary:hover {
+    background: var(--primary-dark);
+}
+
+/* Org Chart Overlay Controls */
+.orgchart-overlay-controls {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 100;
+}
+
+.overlay-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.15s ease;
+}
+
+.overlay-checkbox:hover {
+    background: white;
+    border-color: var(--primary);
+}
+
+.overlay-checkbox input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--primary);
+}
+
+#orgchart-section {
+    position: relative;
+}
+
+/* Task Toolbar - Collapsible Filters */
+.task-toolbar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    /* Note: overflow not set to hidden - allows filter dropdowns to escape */
+}
+
+.toolbar-main-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+}
+
+.filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text);
+    transition: all 0.15s ease;
+}
+
+.filter-toggle-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--primary);
+}
+
+#filter-toggle-icon {
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+}
+
+.filter-toggle-btn.collapsed #filter-toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.toolbar-quick-options {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+}
+
+.toolbar-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    font-size: 0.8rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.toolbar-chip:hover {
+    border-color: var(--primary);
+}
+
+.toolbar-chip:has(input:checked) {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.toolbar-chip input[type="checkbox"] {
+    display: none;
+}
+
+.toolbar-text-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.15s ease;
+}
+
+.toolbar-text-btn:hover {
+    background: var(--surface-hover);
+}
+
+.toolbar-text-btn.primary {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.toolbar-text-btn.primary:hover {
+    background: var(--primary-dark);
+}
+
+.toolbar-filters-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    background: var(--surface-hover);
+    border-top: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.toolbar-filters-row.hidden {
+    display: none;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.filter-btn {
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 0.85rem;
+    min-width: 60px;
+}
+
+.filter-btn:hover {
+    border-color: var(--primary);
+}
+
+.filter-select {
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    font-size: 0.85rem;
+    min-width: 100px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+.filter-select:hover {
+    border-color: var(--primary);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.filter-attributes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.filter-attributes .attribute-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-attributes .attribute-filter label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Resizable Table Columns */
+.resizable-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    table-layout: fixed;
+}
+
+.resizable-table th,
+.resizable-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: relative;
+}
+
+.resizable-table thead th {
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+    user-select: none;
+}
+
+.resizable-table th.resizable {
+    cursor: col-resize;
+}
+
+.resizable-table th .resize-handle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    background: transparent;
+    transition: background 0.15s ease;
+}
+
+.resizable-table th .resize-handle:hover,
+.resizable-table th .resize-handle.active {
+    background: var(--primary);
+}
+
+.resizable-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* Default column widths */
+.col-priority { width: 50px; }
+.col-reason { width: 80px; }
+.col-task { width: 180px; }
+.col-attribute { width: 110px; }
+.col-answer { width: 160px; }
+.col-about { width: 90px; }
+.col-action { width: 70px; }
+
+/* Table cell styles */
+.resizable-table .task-cell {
+    font-weight: 500;
+    color: #333;
+}
+
+.resizable-table .attr-cell {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.resizable-table .secondary-text {
+    color: #666;
+}
+
+.resizable-table .action-cell {
+    display: flex;
+    gap: 4px;
+}
+
+.table-action-btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    background: var(--surface);
+    transition: all 0.15s ease;
+}
+
+.table-action-btn.primary {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.table-action-btn.primary:hover {
+    background: var(--primary-dark);
+}
+
+.table-action-btn.danger {
+    background: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+.table-action-btn.danger:hover {
+    background: #f5c6cb;
+}
+
+/* Input styling in table */
+.resizable-table input,
+.resizable-table select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
 .sidebar-resize-handle {
     width: 4px;
     height: 100%;

@@ -263,8 +263,9 @@ function showDashboard() {
     initSidebarResize();
     loadRobinChat();
     
-    // Load default section (Pending Questions)
-    showSection('pending');
+    // Restore saved tab or default to Pending Questions
+    const savedTab = localStorage.getItem('currentTab') || 'pending';
+    showSection(savedTab);
     
     // Load other dashboard data in background
     loadMisalignments();
@@ -382,6 +383,108 @@ function updateChatTheme(theme) {
 }
 
 /**
+ * Initialize resizable table columns.
+ */
+function initResizableColumns(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    
+    const handles = table.querySelectorAll('.resize-handle');
+    
+    handles.forEach(handle => {
+        let startX, startWidth, th;
+        
+        const onMouseDown = (e) => {
+            th = handle.parentElement;
+            startX = e.pageX;
+            startWidth = th.offsetWidth;
+            handle.classList.add('active');
+            
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            e.preventDefault();
+        };
+        
+        const onMouseMove = (e) => {
+            const diff = e.pageX - startX;
+            const newWidth = Math.max(40, startWidth + diff);
+            th.style.width = `${newWidth}px`;
+        };
+        
+        const onMouseUp = () => {
+            handle.classList.remove('active');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            
+            // Save column widths to localStorage
+            saveColumnWidths(tableId);
+        };
+        
+        handle.addEventListener('mousedown', onMouseDown);
+    });
+    
+    // Restore saved widths
+    restoreColumnWidths(tableId);
+}
+
+function saveColumnWidths(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    
+    const ths = table.querySelectorAll('thead th');
+    const widths = Array.from(ths).map(th => th.offsetWidth);
+    localStorage.setItem(`colWidths_${tableId}`, JSON.stringify(widths));
+}
+
+function restoreColumnWidths(tableId) {
+    const saved = localStorage.getItem(`colWidths_${tableId}`);
+    if (!saved) return;
+    
+    try {
+        const widths = JSON.parse(saved);
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        
+        const ths = table.querySelectorAll('thead th');
+        ths.forEach((th, i) => {
+            if (widths[i]) {
+                th.style.width = `${widths[i]}px`;
+            }
+        });
+    } catch (e) {
+        console.warn('Failed to restore column widths:', e);
+    }
+}
+
+/**
+ * Toggle task graph filters visibility.
+ */
+function toggleTaskFilters() {
+    const filtersRow = document.getElementById('task-filters-row');
+    const toggleBtn = document.getElementById('filter-toggle-btn');
+    
+    if (filtersRow && toggleBtn) {
+        const isHidden = filtersRow.classList.toggle('hidden');
+        toggleBtn.classList.toggle('collapsed', isHidden);
+        localStorage.setItem('taskFiltersHidden', isHidden ? 'true' : 'false');
+    }
+}
+
+/**
+ * Initialize task filters visibility state.
+ */
+function initTaskFiltersState() {
+    const wasHidden = localStorage.getItem('taskFiltersHidden') === 'true';
+    const filtersRow = document.getElementById('task-filters-row');
+    const toggleBtn = document.getElementById('filter-toggle-btn');
+    
+    if (wasHidden && filtersRow && toggleBtn) {
+        filtersRow.classList.add('hidden');
+        toggleBtn.classList.add('collapsed');
+    }
+}
+
+/**
  * Load saved chat settings.
  */
 function loadChatSettings() {
@@ -401,13 +504,6 @@ function loadChatSettings() {
         updateChatSpacing(savedSpacing);
     }
     
-    // Theme
-    const savedTheme = localStorage.getItem('robinChatTheme');
-    if (savedTheme) {
-        const themeSelect = document.getElementById('chat-theme');
-        if (themeSelect) themeSelect.value = savedTheme;
-        updateChatTheme(savedTheme);
-    }
 }
 
 /**
@@ -579,10 +675,13 @@ function initSidebarResize() {
 
 function showSection(sectionName) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.top-nav-btn').forEach(b => b.classList.remove('active'));
     
     document.getElementById(`${sectionName}-section`).classList.add('active');
     document.getElementById(`${sectionName}-nav`).classList.add('active');
+    
+    // Save current tab to persist across refresh
+    localStorage.setItem('currentTab', sectionName);
     
     // Load data for specific sections
     if (sectionName === 'pending') {
@@ -1096,6 +1195,24 @@ function zoomOrgChart(factor) {
     updateOrgChartTransform();
 }
 
+/**
+ * Center the org chart view on the current user's node.
+ */
+function centerOnCurrentUser() {
+    const container = document.getElementById('org-chart-container');
+    if (!container || !orgChartView.currentUserPosition) return;
+    
+    const containerRect = container.getBoundingClientRect();
+    const centerX = containerRect.width / 2;
+    const centerY = containerRect.height / 3; // A bit above center
+    
+    // Calculate translation to center the user
+    orgChartView.translateX = centerX - orgChartView.currentUserPosition.x * orgChartView.scale;
+    orgChartView.translateY = centerY - orgChartView.currentUserPosition.y * orgChartView.scale;
+    
+    updateOrgChartTransform();
+}
+
 function renderOrgChart(users) {
     const svg = document.getElementById('org-chart-svg');
     svg.innerHTML = ''; // Clear existing content
@@ -1186,6 +1303,14 @@ function renderOrgChart(users) {
         group.setAttribute('class', `org-node ${node.employee_count > 0 ? 'org-node-manager' : ''} ${isCurrentUser ? 'current-user' : ''}`);
         group.setAttribute('transform', `translate(${node.x}, ${node.y})`);
         
+        // Store current user position for centering
+        if (isCurrentUser) {
+            orgChartView.currentUserPosition = { 
+                x: node.x + NODE_WIDTH / 2, 
+                y: node.y + NODE_HEIGHT / 2 
+            };
+        }
+        
         // Node rectangle
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.setAttribute('class', 'org-node-rect');
@@ -1250,7 +1375,7 @@ function renderOrgChart(users) {
             group.appendChild(teamLine);
         }
         
-        // Info line 1 - show alignment % if enabled, or task count
+        // Info line 1 - task count (always shown)
         const info1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         info1.setAttribute('class', 'org-node-info');
         info1.setAttribute('x', NODE_WIDTH / 2);
@@ -1258,8 +1383,10 @@ function renderOrgChart(users) {
         info1.setAttribute('text-anchor', 'middle');
         info1.setAttribute('fill', '#000000');
         info1.setAttribute('font-size', '10');
+        
+        // Show both task count and alignment if enabled
         if (showAlignment && userAlignmentStats[node.id] !== undefined) {
-            info1.textContent = `Alignment: ${Math.round(userAlignmentStats[node.id])}%`;
+            info1.textContent = `${node.task_count} tasks • ${Math.round(userAlignmentStats[node.id])}% aligned`;
         } else {
             info1.textContent = `${node.task_count} task${node.task_count !== 1 ? 's' : ''}`;
         }
@@ -1292,6 +1419,12 @@ function renderOrgChart(users) {
     
     // Add main group to SVG
     svg.appendChild(mainGroup);
+    
+    // Center view on current user (first time only)
+    if (!orgChartView.initialCenterDone) {
+        orgChartView.initialCenterDone = true;
+        setTimeout(() => centerOnCurrentUser(), 100);
+    }
 }
 
 
@@ -1826,6 +1959,9 @@ let graphView = {
 async function loadTaskGraph() {
     const canvas = document.getElementById('graph-canvas');
     canvas.innerHTML = '<div class="loading">Loading task graph...</div>';
+    
+    // Initialize filter visibility state
+    initTaskFiltersState();
     
     try {
         // Load tasks with attributes
@@ -3772,10 +3908,10 @@ function updateDailySyncButton() {
     if (!btn) return;
     
     if (dailySyncActive) {
-        btn.textContent = '🛑 Stop Daily Sync';
+        btn.textContent = '🛑 Stop Daily';
         btn.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
     } else {
-        btn.textContent = '🌅 Start Daily Sync';
+        btn.textContent = '🌅 Start Daily';
         btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
     }
     
@@ -4087,16 +4223,16 @@ async function loadPendingQuestions() {
         // Display as a table with answer inputs
         html += `
             <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <table class="resizable-table" id="pending-questions-table">
                     <thead>
-                        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Priority</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Reason</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Task</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Attribute</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Your Answer</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">About</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Action</th>
+                        <tr>
+                            <th class="col-priority resizable">#<span class="resize-handle" data-col="0"></span></th>
+                            <th class="col-reason resizable">Reason<span class="resize-handle" data-col="1"></span></th>
+                            <th class="col-task resizable">Task<span class="resize-handle" data-col="2"></span></th>
+                            <th class="col-attribute resizable">Attribute<span class="resize-handle" data-col="3"></span></th>
+                            <th class="col-answer resizable">Your Answer<span class="resize-handle" data-col="4"></span></th>
+                            <th class="col-about resizable">About<span class="resize-handle" data-col="5"></span></th>
+                            <th class="col-action">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -4135,21 +4271,16 @@ async function loadPendingQuestions() {
                 : 'User-level';
             
             html += `
-                <tr style="border-bottom: 1px solid #dee2e6;" id="row-${p.id}">
-                    <td style="padding: 12px; color: #666;">#${p.priority}</td>
-                    <td style="padding: 12px;">${reasonBadge}</td>
-                    <td style="padding: 12px; font-weight: 500; color: #333;">${taskCell}</td>
-                    <td style="padding: 12px; color: #0066cc; font-weight: 500;">${p.attribute_label}</td>
-                    <td style="padding: 12px;">${inputHtml}</td>
-                    <td style="padding: 12px; color: #666;">${p.target_user_name}</td>
-                    <td style="padding: 8px; min-width: 90px;">
-                        <div style="display: flex; gap: 4px;">
-                            <button onclick="savePendingAnswer('${p.id}', '${p.task_id}', '${p.target_user_id}', '${p.attribute_name}')" 
-                                    class="primary-btn" style="padding: 4px 8px; font-size: 0.8rem;">💾</button>
-                            <button onclick="ignorePendingQuestion('${p.id}', '${p.task_id}', '${p.target_user_id}', '${p.attribute_name}')" 
-                                    style="padding: 4px 8px; font-size: 0.8rem; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; cursor: pointer; color: #721c24;"
-                                    title="Ignore">🚫</button>
-                        </div>
+                <tr id="row-${p.id}">
+                    <td>#${p.priority}</td>
+                    <td>${reasonBadge}</td>
+                    <td class="task-cell">${taskCell}</td>
+                    <td class="attr-cell">${p.attribute_label}</td>
+                    <td>${inputHtml}</td>
+                    <td class="secondary-text">${p.target_user_name}</td>
+                    <td class="action-cell">
+                        <button onclick="savePendingAnswer('${p.id}', '${p.task_id}', '${p.target_user_id}', '${p.attribute_name}')" class="table-action-btn primary">💾</button>
+                        <button onclick="ignorePendingQuestion('${p.id}', '${p.task_id}', '${p.target_user_id}', '${p.attribute_name}')" class="table-action-btn danger" title="Ignore">🚫</button>
                     </td>
                 </tr>
             `;
@@ -4173,6 +4304,9 @@ async function loadPendingQuestions() {
         `;
         
         container.innerHTML = html;
+        
+        // Initialize resizable columns
+        initResizableColumns('pending-questions-table');
         
     } catch (error) {
         console.error('Error loading pending questions:', error);
@@ -5603,14 +5737,14 @@ async function loadPendingDecisions() {
         // Display as compact table
         html += `
             <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <table class="resizable-table" id="pending-decisions-table">
                     <thead>
-                        <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Type</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Description</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">From</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #495057;">Time</th>
-                            <th style="padding: 12px; text-align: center; font-weight: 600; color: #495057;">Actions</th>
+                        <tr>
+                            <th class="col-type resizable" style="width: 100px;">Type<span class="resize-handle" data-col="0"></span></th>
+                            <th class="col-desc resizable" style="width: 280px;">Description<span class="resize-handle" data-col="1"></span></th>
+                            <th class="col-from resizable" style="width: 100px;">From<span class="resize-handle" data-col="2"></span></th>
+                            <th class="col-time resizable" style="width: 100px;">Time<span class="resize-handle" data-col="3"></span></th>
+                            <th class="col-actions" style="width: 150px; text-align: center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -5627,6 +5761,9 @@ async function loadPendingDecisions() {
         `;
         
         container.innerHTML = html;
+        
+        // Initialize resizable columns
+        initResizableColumns('pending-decisions-table');
         
     } catch (error) {
         console.error('Error loading pending decisions:', error);
