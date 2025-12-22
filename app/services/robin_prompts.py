@@ -13,24 +13,35 @@ from typing import Literal, Optional
 # Additional instructions for segments (rich task references).
 
 RESPONSE_SCHEMA_INSTRUCTION = """
-SEGMENTS (Rich Task References):
-When mentioning tasks in your response, populate the `segments` array for clickable rendering.
+SEGMENTS (Clickable Task & Attribute References):
+When mentioning tasks or attributes in your response, ALWAYS populate the `segments` array.
 Each segment is an object with these fields (ALL fields are required, use null for unused ones):
 - type: "text", "task_ref", or "attribute_ref"
 - text: The plain text content (for type="text", null otherwise)
 - task_id: Task UUID (for type="task_ref" or "attribute_ref", null otherwise)
 - label: Display text for the link (for type="task_ref" or "attribute_ref", null otherwise)
-- attribute_name: Attribute name (for type="attribute_ref" only, null otherwise)
+- attribute_name: Attribute name like "status", "priority", "blockers" (for type="attribute_ref" only, null otherwise)
 
-Example segments for "Your task Build Dashboard is blocked":
+Example 1 - Task reference: "Your task Build Dashboard is blocked":
 [
   {"type": "text", "text": "Your task ", "task_id": null, "label": null, "attribute_name": null},
   {"type": "task_ref", "text": null, "task_id": "abc-123-uuid", "label": "Build Dashboard", "attribute_name": null},
   {"type": "text", "text": " is blocked", "task_id": null, "label": null, "attribute_name": null}
 ]
 
-IMPORTANT:
-- `display_messages` must STILL contain the full plain-text version
+Example 2 - Attribute reference: "The priority of Build Dashboard needs updating":
+[
+  {"type": "text", "text": "The ", "task_id": null, "label": null, "attribute_name": null},
+  {"type": "attribute_ref", "text": null, "task_id": "abc-123-uuid", "label": "priority", "attribute_name": "priority"},
+  {"type": "text", "text": " of ", "task_id": null, "label": null, "attribute_name": null},
+  {"type": "task_ref", "text": null, "task_id": "abc-123-uuid", "label": "Build Dashboard", "attribute_name": null},
+  {"type": "text", "text": " needs updating", "task_id": null, "label": null, "attribute_name": null}
+]
+
+CRITICAL RULES:
+- ALWAYS use segments when mentioning any task by name - this makes tasks clickable!
+- Use attribute_ref when mentioning specific attributes (status, priority, blockers, etc.)
+- `display_messages` must STILL contain the full plain-text version as fallback
 - If no tasks are mentioned, set segments to null
 - ALWAYS include all 5 fields in each segment object
 """

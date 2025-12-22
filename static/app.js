@@ -259,11 +259,100 @@ function showDashboard() {
     document.getElementById('dashboard-user-name').textContent = currentUser.name;
     showPage('dashboard-page');
     
-    // Load default section (Robin chat)
-    showSection('robin');
+    // Initialize Robin sidebar
+    initSidebarResize();
+    loadRobinChat();
+    
+    // Load default section (Pending Questions)
+    showSection('pending');
     
     // Load other dashboard data in background
     loadMisalignments();
+}
+
+/**
+ * Toggle Robin sidebar between expanded and minimized states.
+ * When minimized, shows a floating button to reopen.
+ */
+function toggleRobinSidebar() {
+    const sidebar = document.getElementById('robin-sidebar');
+    const floatBtn = document.getElementById('robin-float-btn');
+    
+    if (!sidebar || !floatBtn) return;
+    
+    const isMinimized = sidebar.classList.toggle('minimized');
+    floatBtn.classList.toggle('visible', isMinimized);
+    
+    // Save state
+    localStorage.setItem('robinSidebarMinimized', isMinimized ? 'true' : 'false');
+}
+
+/**
+ * Initialize the Robin sidebar resize functionality.
+ * Allows dragging the left edge to resize the sidebar.
+ * Persists width to localStorage.
+ */
+function initSidebarResize() {
+    const sidebar = document.getElementById('robin-sidebar');
+    const handle = document.getElementById('sidebar-resize-handle');
+    const floatBtn = document.getElementById('robin-float-btn');
+    
+    if (!sidebar || !handle) return;
+    
+    // Restore minimized state
+    const wasMinimized = localStorage.getItem('robinSidebarMinimized') === 'true';
+    if (wasMinimized) {
+        sidebar.classList.add('minimized');
+        if (floatBtn) floatBtn.classList.add('visible');
+    }
+    
+    // Restore saved width
+    const savedWidth = localStorage.getItem('robinSidebarWidth');
+    if (savedWidth) {
+        const width = parseInt(savedWidth, 10);
+        if (width >= 280 && width <= 600) {
+            sidebar.style.width = `${width}px`;
+        }
+    }
+    
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+    
+    handle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = sidebar.offsetWidth;
+        handle.classList.add('active');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        
+        // Calculate new width (dragging left increases width, right decreases)
+        const deltaX = startX - e.clientX;
+        let newWidth = startWidth + deltaX;
+        
+        // Clamp to min/max
+        newWidth = Math.max(280, Math.min(600, newWidth));
+        
+        sidebar.style.width = `${newWidth}px`;
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (!isResizing) return;
+        
+        isResizing = false;
+        handle.classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        
+        // Save width to localStorage
+        localStorage.setItem('robinSidebarWidth', sidebar.offsetWidth.toString());
+    });
 }
 
 function showSection(sectionName) {
@@ -274,9 +363,7 @@ function showSection(sectionName) {
     document.getElementById(`${sectionName}-nav`).classList.add('active');
     
     // Load data for specific sections
-    if (sectionName === 'robin') {
-        loadRobinChat();
-    } else if (sectionName === 'pending') {
+    if (sectionName === 'pending') {
         loadPendingQuestions();
     } else if (sectionName === 'prompts') {
         loadPrompts().catch(err => console.error('Error loading prompts:', err));

@@ -51,70 +51,25 @@
             </div>
         </div>
         
-        <div class="dashboard-container">
-            <div class="dashboard-nav">
-                <button onclick="showSection('robin')" class="nav-btn active" id="robin-nav">🤖 Chat with Robin</button>
-                <button onclick="showSection('pending')" class="nav-btn" id="pending-nav">📋 Pending Questions</button>
-                <button onclick="showSection('decisions')" class="nav-btn" id="decisions-nav">✅ Pending Decisions <span id="decisions-badge" class="badge">0</span></button>
-                <button onclick="showSection('prompts')" class="nav-btn" id="prompts-nav">⚙️ Prompt Editor</button>
-                <button onclick="showSection('import-export')" class="nav-btn" id="import-export-nav">💾 Import/Export</button>
-                <button onclick="showSection('graph')" class="nav-btn" id="graph-nav">🔗 Task Graph</button>
-                <button onclick="showSection('orgchart')" class="nav-btn" id="orgchart-nav">👥 Org Chart</button>
-                <button onclick="showSection('misalignments')" class="nav-btn" id="misalignments-nav">
-                    Misalignments <span id="misalignment-badge" class="badge">0</span>
-                </button>
-                <button onclick="showSection('ontology')" class="nav-btn" id="ontology-nav">📚 Schema</button>
-                <button onclick="showSection('mcp-tools')" class="nav-btn" id="mcp-tools-nav">🔧 MCP Tools</button>
-            </div>
-            
-            <!-- Robin Chat Section -->
-            <div id="robin-section" class="section active">
-                <div class="section-header">
-                    <h3>🤖 Chat with Robin</h3>
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="triggerMorningBrief()" class="primary-btn">☀️ Morning Brief</button>
-                        <button id="daily-sync-btn" onclick="toggleDailySync()" class="primary-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">🌅 Start Daily Sync</button>
-                    </div>
-                    <div style="font-size: 0.85rem; color: #888; margin-top: 8px;">
-                        💡 Tip: Click on any Robin message to view debug data (prompt + response)
-                    </div>
+        <div class="dashboard-layout">
+            <!-- Main Content Area -->
+            <div class="dashboard-container">
+                <div class="dashboard-nav">
+                    <button onclick="showSection('pending')" class="nav-btn active" id="pending-nav">📋 Pending Questions</button>
+                    <button onclick="showSection('decisions')" class="nav-btn" id="decisions-nav">✅ Pending Decisions <span id="decisions-badge" class="badge">0</span></button>
+                    <button onclick="showSection('prompts')" class="nav-btn" id="prompts-nav">⚙️ Prompt Editor</button>
+                    <button onclick="showSection('import-export')" class="nav-btn" id="import-export-nav">💾 Import/Export</button>
+                    <button onclick="showSection('graph')" class="nav-btn" id="graph-nav">🔗 Task Graph</button>
+                    <button onclick="showSection('orgchart')" class="nav-btn" id="orgchart-nav">👥 Org Chart</button>
+                    <button onclick="showSection('misalignments')" class="nav-btn" id="misalignments-nav">
+                        Misalignments <span id="misalignment-badge" class="badge">0</span>
+                    </button>
+                    <button onclick="showSection('ontology')" class="nav-btn" id="ontology-nav">📚 Schema</button>
+                    <button onclick="showSection('mcp-tools')" class="nav-btn" id="mcp-tools-nav">🔧 MCP Tools</button>
                 </div>
-                
-                <div class="robin-chat-container">
-                    <div id="daily-sync-indicator" style="display: none; padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 0.9rem; font-weight: 500; border-radius: 8px; margin-bottom: 12px; text-align: center;">
-                        <span id="daily-sync-phase-text">Daily Sync: Greeting</span>
-                    </div>
-                    <div id="robin-messages" class="chat-messages-list">
-                        <div class="chat-message system">
-                            <div class="message-content">
-                                <p>Hi! I'm Robin, your AI assistant. I'm here to help you stay aligned with your team.</p>
-                                <p>I can:</p>
-                                <ul>
-                                    <li>Give you status updates on your tasks</li>
-                                    <li>Help you fill in task information</li>
-                                    <li>Identify misalignments with your team</li>
-                                </ul>
-                                <p>Try asking me for a <strong>morning brief</strong> or tell me about your tasks!</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="chat-input-container">
-                        <textarea 
-                            id="robin-input" 
-                            placeholder="Type your message to Robin..." 
-                            rows="2"
-                            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendMessageToRobin();}"
-                        ></textarea>
-                        <button onclick="sendMessageToRobin()" class="send-btn" id="robin-send-btn">
-                            <span>Send</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
             
             <!-- Pending Questions Section -->
-            <div id="pending-section" class="section">
+            <div id="pending-section" class="section active">
                 <div class="section-header">
                     <h3>📋 Pending Questions for Data Collection</h3>
                     <button onclick="loadPendingQuestions()" class="primary-btn">🔄 Refresh</button>
@@ -595,7 +550,48 @@
                     </div>
                 </div>
             </div>
-        </div>
+            </div><!-- End dashboard-container -->
+            
+            <!-- Robin Chat Sidebar -->
+            <div id="robin-sidebar">
+                <div class="sidebar-resize-handle" id="sidebar-resize-handle"></div>
+                <div class="robin-sidebar-content">
+                    <div class="sidebar-header">
+                        <h3>🤖 Robin</h3>
+                        <div class="sidebar-actions">
+                            <button onclick="triggerMorningBrief()" class="sidebar-btn" title="Morning Brief">☀️</button>
+                            <button id="daily-sync-btn" onclick="toggleDailySync()" class="sidebar-btn daily-sync-btn" title="Start Daily Sync">🌅</button>
+                            <button onclick="toggleRobinSidebar()" class="sidebar-minimize-btn" title="Minimize">✕</button>
+                        </div>
+                    </div>
+                    
+                    <div id="daily-sync-indicator" class="daily-sync-indicator" style="display: none;">
+                        <span id="daily-sync-phase-text">Daily Sync: Greeting</span>
+                    </div>
+                    
+                    <div id="robin-messages" class="chat-messages-list">
+                        <div class="chat-message system">
+                            <div class="message-content">
+                                <p>Hi! I'm Robin, your AI assistant. I'm here to help you stay aligned with your team.</p>
+                                <p>Try asking me for a <strong>morning brief</strong> or tell me about your tasks!</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <textarea 
+                            id="robin-input" 
+                            placeholder="Type your message to Robin..." 
+                            rows="2"
+                            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendMessageToRobin();}"
+                        ></textarea>
+                        <button onclick="sendMessageToRobin()" class="send-btn" id="robin-send-btn">
+                            <span>Send</span>
+                        </button>
+                    </div>
+                </div>
+            </div><!-- End robin-sidebar -->
+        </div><!-- End dashboard-layout -->
     </div>
 
     <!-- Task Details Modal -->
@@ -635,6 +631,9 @@
             <button onclick="closeDebugPrompt()" class="secondary-btn" style="margin-top: 16px;">Close</button>
         </div>
     </div>
+
+    <!-- Floating Robin Button (when sidebar is minimized) -->
+    <button id="robin-float-btn" onclick="toggleRobinSidebar()" title="Open Robin Chat">🤖</button>
 
     <script src="/static/app.js?v=2024121129"></script>
 </body>
