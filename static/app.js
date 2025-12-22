@@ -288,6 +288,205 @@ function toggleRobinSidebar() {
 }
 
 /**
+ * Toggle Robin sidebar between docked sidebar and floating popup modes.
+ */
+function toggleRobinPopup() {
+    const sidebar = document.getElementById('robin-sidebar');
+    const popoutBtn = document.getElementById('robin-popout-btn');
+    
+    if (!sidebar) return;
+    
+    const isPopup = sidebar.classList.toggle('popup-mode');
+    
+    // Update button icon
+    if (popoutBtn) {
+        popoutBtn.textContent = isPopup ? '⬛' : '⬜';
+        popoutBtn.title = isPopup ? 'Dock to sidebar' : 'Pop out window';
+    }
+    
+    // Initialize drag if in popup mode
+    if (isPopup) {
+        initRobinDrag();
+        // Restore saved position
+        const savedPos = localStorage.getItem('robinPopupPosition');
+        if (savedPos) {
+            const pos = JSON.parse(savedPos);
+            sidebar.style.top = pos.top;
+            sidebar.style.right = pos.right;
+            sidebar.style.left = pos.left || 'auto';
+        }
+    } else {
+        // Reset inline styles when docking
+        sidebar.style.top = '';
+        sidebar.style.right = '';
+        sidebar.style.left = '';
+    }
+    
+    // Save mode
+    localStorage.setItem('robinPopupMode', isPopup ? 'true' : 'false');
+}
+
+/**
+ * Toggle Robin settings panel visibility.
+ */
+function toggleRobinSettings() {
+    const panel = document.getElementById('robin-settings-panel');
+    if (panel) {
+        panel.classList.toggle('visible');
+    }
+}
+
+/**
+ * Update chat text size.
+ */
+function updateChatTextSize(size) {
+    const chatContainer = document.querySelector('.chat-messages-list');
+    const display = document.getElementById('text-size-display');
+    
+    if (chatContainer) {
+        chatContainer.style.fontSize = `${size}px`;
+    }
+    if (display) {
+        display.textContent = `${size}px`;
+    }
+    
+    localStorage.setItem('robinChatTextSize', size);
+}
+
+/**
+ * Update chat message spacing.
+ */
+function updateChatSpacing(spacing) {
+    const chatContainer = document.querySelector('.chat-messages-list');
+    if (!chatContainer) return;
+    
+    // Remove existing spacing classes
+    chatContainer.classList.remove('spacing-compact', 'spacing-normal', 'spacing-relaxed');
+    chatContainer.classList.add(`spacing-${spacing}`);
+    
+    localStorage.setItem('robinChatSpacing', spacing);
+}
+
+/**
+ * Update chat theme.
+ */
+function updateChatTheme(theme) {
+    const sidebar = document.getElementById('robin-sidebar');
+    if (!sidebar) return;
+    
+    // Remove existing theme classes
+    sidebar.classList.remove('theme-default', 'theme-high-contrast', 'theme-soft');
+    sidebar.classList.add(`theme-${theme}`);
+    
+    localStorage.setItem('robinChatTheme', theme);
+}
+
+/**
+ * Load saved chat settings.
+ */
+function loadChatSettings() {
+    // Text size
+    const savedSize = localStorage.getItem('robinChatTextSize');
+    if (savedSize) {
+        const sizeInput = document.getElementById('chat-text-size');
+        if (sizeInput) sizeInput.value = savedSize;
+        updateChatTextSize(savedSize);
+    }
+    
+    // Spacing
+    const savedSpacing = localStorage.getItem('robinChatSpacing');
+    if (savedSpacing) {
+        const spacingSelect = document.getElementById('chat-spacing');
+        if (spacingSelect) spacingSelect.value = savedSpacing;
+        updateChatSpacing(savedSpacing);
+    }
+    
+    // Theme
+    const savedTheme = localStorage.getItem('robinChatTheme');
+    if (savedTheme) {
+        const themeSelect = document.getElementById('chat-theme');
+        if (themeSelect) themeSelect.value = savedTheme;
+        updateChatTheme(savedTheme);
+    }
+}
+
+/**
+ * Initialize drag functionality for Robin popup mode.
+ */
+function initRobinDrag() {
+    const sidebar = document.getElementById('robin-sidebar');
+    const handle = document.getElementById('robin-drag-handle');
+    
+    if (!sidebar || !handle) return;
+    
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let startTop = 0;
+    let startLeft = 0;
+    
+    const onMouseDown = (e) => {
+        // Only drag if in popup mode and clicking on header (not buttons)
+        if (!sidebar.classList.contains('popup-mode')) return;
+        if (e.target.tagName === 'BUTTON') return;
+        
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        
+        const rect = sidebar.getBoundingClientRect();
+        startTop = rect.top;
+        startLeft = rect.left;
+        
+        document.body.style.cursor = 'move';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    };
+    
+    const onMouseMove = (e) => {
+        if (!isDragging) return;
+        
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+        
+        let newTop = startTop + deltaY;
+        let newLeft = startLeft + deltaX;
+        
+        // Keep within viewport
+        newTop = Math.max(0, Math.min(window.innerHeight - 100, newTop));
+        newLeft = Math.max(0, Math.min(window.innerWidth - 100, newLeft));
+        
+        sidebar.style.top = `${newTop}px`;
+        sidebar.style.left = `${newLeft}px`;
+        sidebar.style.right = 'auto';
+    };
+    
+    const onMouseUp = () => {
+        if (!isDragging) return;
+        
+        isDragging = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        
+        // Save position
+        localStorage.setItem('robinPopupPosition', JSON.stringify({
+            top: sidebar.style.top,
+            left: sidebar.style.left,
+            right: sidebar.style.right
+        }));
+    };
+    
+    // Remove old listeners if any
+    handle.removeEventListener('mousedown', handle._dragHandler);
+    
+    // Add new listener
+    handle._dragHandler = onMouseDown;
+    handle.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+}
+
+/**
  * Initialize the Robin sidebar resize functionality.
  * Allows dragging the left edge to resize the sidebar.
  * Persists width to localStorage.
@@ -296,12 +495,32 @@ function initSidebarResize() {
     const sidebar = document.getElementById('robin-sidebar');
     const handle = document.getElementById('sidebar-resize-handle');
     const floatBtn = document.getElementById('robin-float-btn');
+    const popoutBtn = document.getElementById('robin-popout-btn');
     
     if (!sidebar || !handle) return;
     
-    // Restore minimized state
+    // Restore popup mode state
+    const wasPopup = localStorage.getItem('robinPopupMode') === 'true';
+    if (wasPopup) {
+        sidebar.classList.add('popup-mode');
+        if (popoutBtn) {
+            popoutBtn.textContent = '⬛';
+            popoutBtn.title = 'Dock to sidebar';
+        }
+        initRobinDrag();
+        // Restore saved position
+        const savedPos = localStorage.getItem('robinPopupPosition');
+        if (savedPos) {
+            const pos = JSON.parse(savedPos);
+            sidebar.style.top = pos.top;
+            sidebar.style.right = pos.right;
+            sidebar.style.left = pos.left || 'auto';
+        }
+    }
+    
+    // Restore minimized state (only if not in popup mode)
     const wasMinimized = localStorage.getItem('robinSidebarMinimized') === 'true';
-    if (wasMinimized) {
+    if (wasMinimized && !wasPopup) {
         sidebar.classList.add('minimized');
         if (floatBtn) floatBtn.classList.add('visible');
     }
@@ -310,10 +529,13 @@ function initSidebarResize() {
     const savedWidth = localStorage.getItem('robinSidebarWidth');
     if (savedWidth) {
         const width = parseInt(savedWidth, 10);
-        if (width >= 280 && width <= 600) {
+        if (width >= 280) {
             sidebar.style.width = `${width}px`;
         }
     }
+    
+    // Load chat settings (text size, spacing, theme)
+    loadChatSettings();
     
     let isResizing = false;
     let startX = 0;

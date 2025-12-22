@@ -556,12 +556,42 @@
             <div id="robin-sidebar">
                 <div class="sidebar-resize-handle" id="sidebar-resize-handle"></div>
                 <div class="robin-sidebar-content">
-                    <div class="sidebar-header">
+                    <div class="sidebar-header" id="robin-drag-handle">
                         <h3>🤖 Robin</h3>
                         <div class="sidebar-actions">
                             <button onclick="triggerMorningBrief()" class="sidebar-btn" title="Morning Brief">☀️</button>
                             <button id="daily-sync-btn" onclick="toggleDailySync()" class="sidebar-btn daily-sync-btn" title="Start Daily Sync">🌅</button>
+                            <button onclick="toggleRobinSettings()" class="sidebar-settings-btn" title="Chat Settings">⚙️</button>
+                            <button onclick="toggleRobinPopup()" class="sidebar-popout-btn" id="robin-popout-btn" title="Pop out / Dock">⬜</button>
                             <button onclick="toggleRobinSidebar()" class="sidebar-minimize-btn" title="Minimize">✕</button>
+                        </div>
+                    </div>
+                    
+                    <div class="robin-settings-panel" id="robin-settings-panel">
+                        <h4>
+                            Chat Settings
+                            <button onclick="toggleRobinSettings()">✕</button>
+                        </h4>
+                        <div class="settings-row">
+                            <label>Text Size</label>
+                            <input type="range" id="chat-text-size" min="12" max="20" value="14" oninput="updateChatTextSize(this.value)">
+                            <span class="value-display" id="text-size-display">14px</span>
+                        </div>
+                        <div class="settings-row">
+                            <label>Message Spacing</label>
+                            <select id="chat-spacing" onchange="updateChatSpacing(this.value)">
+                                <option value="compact">Compact</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="relaxed">Relaxed</option>
+                            </select>
+                        </div>
+                        <div class="settings-row">
+                            <label>Theme</label>
+                            <select id="chat-theme" onchange="updateChatTheme(this.value)">
+                                <option value="default" selected>Default</option>
+                                <option value="high-contrast">High Contrast</option>
+                                <option value="soft">Soft</option>
+                            </select>
                         </div>
                     </div>
                     
