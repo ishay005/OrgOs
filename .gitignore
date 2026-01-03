@@ -15,3 +15,7 @@ ENV/
 .vscode/
 *.log
 
+
+# secrets
+/taskgraph_eval/api_key.txt
+.env
