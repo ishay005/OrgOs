@@ -1,0 +1,16 @@
+{
+  "case_id": "004905",
+  "target_id": 49,
+  "seed": 49004,
+  "bucket": "MIXED",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Design frontend API (#49-0)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

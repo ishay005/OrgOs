@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Review backend documentation (#37-3) | parent=Analyze database metrics (#37-10) |
+
+Return ONLY valid JSON. No markdown. No extra text.

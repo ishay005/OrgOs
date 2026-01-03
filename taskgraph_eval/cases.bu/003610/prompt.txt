@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Refactor import codebase (#36-3) | parent=Optimize worker performance (#36-11) |
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,18 @@
+{
+  "case_id": "002010",
+  "target_id": 20,
+  "seed": 20009,
+  "bucket": "ADD",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [
+      "Analyze worker metrics (#20-5)",
+      "Implement backup feature (#20-41)",
+      "Implement alerting feature (#20-58)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 9
+  }
+}

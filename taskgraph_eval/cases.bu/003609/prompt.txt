@@ -1,0 +1,6 @@
+Make these changes to the task graph:
+
+• Add dependency: "Monitor reporting health (#36-9)" → "Monitor backup health (#36-0)"
+• Add dependency: "Research analytics options (#36-5)" → "Analyze gateway metrics (#36-8)"
+
+Return ONLY valid JSON. No markdown. No extra text.

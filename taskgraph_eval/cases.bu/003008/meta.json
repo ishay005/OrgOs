@@ -1,0 +1,16 @@
+{
+  "case_id": "003008",
+  "target_id": 30,
+  "seed": 30007,
+  "bucket": "MIXED",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Migrate alerting database (#30-1)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

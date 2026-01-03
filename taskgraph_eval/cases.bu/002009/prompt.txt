@@ -1,0 +1,12 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[UPDATE] Task "Create worker assets (#20-75)" requires changes:
+         - impact_size: 4
+
+
+Return ONLY valid JSON. No markdown. No extra text.

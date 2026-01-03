@@ -1,0 +1,15 @@
+{
+  "ops": [
+    {
+      "op": "TASK_UPDATE",
+      "id": "T5",
+      "field": "priority",
+      "value": "High"
+    },
+    {
+      "op": "SET_PARENT",
+      "child": "T10",
+      "parent": "T3"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "case_id": "002802",
+  "target_id": 28,
+  "seed": 28001,
+  "bucket": "ADD",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [
+      "Test worker integration (#28-0)",
+      "Debug frontend issue (#28-6)",
+      "Design storage API (#28-11)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 2
+  }
+}

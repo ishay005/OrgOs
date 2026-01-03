@@ -1,0 +1,3 @@
+Move the task "Test gateway integration (#32-6)" to be a subtask of "Debug proxy issue (#32-3)".
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,16 @@
+{
+  "case_id": "003307",
+  "target_id": 33,
+  "seed": 33006,
+  "bucket": "MIXED",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Update restore configuration (#33-1)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

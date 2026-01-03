@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Analyze gateway metrics (#22-28) | parent=Research alerting options (#22-20) |
+| SET_PARENT | Update payment configuration (#22-33) | parent=Review database documentation (#22-0) |
+
+Return ONLY valid JSON. No markdown. No extra text.

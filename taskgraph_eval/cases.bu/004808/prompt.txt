@@ -1,0 +1,24 @@
+Please make the following changes:
+
+1. Create a new task titled "Analyze storage metrics (#48-0)"
+   - Set priority to: "High"
+   - Set status to: "Done"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 1
+   - Set depends_on to: ["Debug API issue (#48-30)", "Debug cache issue (#48-31)"]
+   - Set perceived_owner to: "Architect"
+   - Set parent to: "Test scheduler integration (#48-6)"
+2. Create a new task titled "Review cache documentation (#48-12)"
+   - Set priority to: "Low"
+   - Set status to: "Blocked"
+   - Set state to: "DRAFT"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 1
+   - Set depends_on to: []
+   - Set parent to: "Optimize database performance (#48-34)"
+3. Add dependency: "Test scheduler integration (#48-6)" depends on "Review cache documentation (#48-12)"
+
+Return ONLY valid JSON. No markdown. No extra text.

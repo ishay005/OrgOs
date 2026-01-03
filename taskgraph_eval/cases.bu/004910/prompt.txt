@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Research export options (#49-4)"
+      set:
+        priority: "Medium"
+  parent_changes:
+    - task: "Fix API bug (#49-5)"
+      parent: "Monitor monitoring health (#49-8)"
+
+Return ONLY valid JSON. No markdown. No extra text.

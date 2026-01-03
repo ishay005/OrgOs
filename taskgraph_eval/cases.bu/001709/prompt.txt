@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Test worker integration (#17-31) | parent=Create API assets (#17-26) |
+| SET_PARENT | Test database integration (#17-36) | parent=Test gateway integration (#17-10) |
+
+Return ONLY valid JSON. No markdown. No extra text.

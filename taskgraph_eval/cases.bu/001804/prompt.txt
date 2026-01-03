@@ -1,0 +1,11 @@
+Please make the following changes:
+
+1. Update task "Document sync usage (#18-0)":
+   - Change status to: "Not started"
+2. Update task "Research sync options (#18-9)":
+   - Change status to: "Done"
+   - Change priority to: "Medium"
+3. Update task "Create scheduler assets (#18-10)":
+   - Change priority to: "Low"
+
+Return ONLY valid JSON. No markdown. No extra text.

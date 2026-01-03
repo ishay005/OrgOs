@@ -1,0 +1,25 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Design gateway API (#1-9)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T20",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T5",
+      "depends_on": "new1"
+    }
+  ]
+}

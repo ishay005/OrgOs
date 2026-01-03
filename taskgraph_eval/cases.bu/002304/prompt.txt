@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Update sync configuration (#23-27) | parent=Design queue API (#23-16) |
+| SET_PARENT | Backup backup data (#23-32) | parent=Design queue API (#23-16) |
+
+Return ONLY valid JSON. No markdown. No extra text.

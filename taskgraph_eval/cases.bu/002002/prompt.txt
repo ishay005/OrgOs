@@ -1,0 +1,11 @@
+Please make the following changes:
+
+1. Update task "Debug queue issue (#20-114)":
+   - Change status to: "In progress"
+2. Update task "Refactor payment codebase (#20-0)":
+   - Change impact_size to: 5
+   - Change state to: "ACTIVE"
+3. Update task "Fix storage bug (#20-104)":
+   - Change status to: "Not started"
+
+Return ONLY valid JSON. No markdown. No extra text.

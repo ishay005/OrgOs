@@ -1,0 +1,28 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Setup alerting environment (#49-3)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T1",
+      "depends_on": [
+        "T9",
+        "T5"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T2",
+      "depends_on": "new1"
+    }
+  ]
+}

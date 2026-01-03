@@ -1,0 +1,16 @@
+{
+  "case_id": "003208",
+  "target_id": 32,
+  "seed": 32007,
+  "bucket": "MIXED",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Setup dashboard environment (#32-1)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

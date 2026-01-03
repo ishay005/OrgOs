@@ -1,0 +1,24 @@
+Make these changes to the task graph:
+
+• Add new task: "Test proxy integration (#13-4)"
+  → priority: "High"
+  → status: "Not started"
+  → state: "ACTIVE"
+  → owner: "U_elram"
+  → created_by: "U_ishay"
+  → impact_size: 5
+  → depends_on: ["Refactor alerting codebase (#13-3)", "Debug cache issue (#13-12)"]
+  → parent: "Implement sync feature (#13-5)"
+• Add new task: "Debug cache issue (#13-12)"
+  → priority: "Medium"
+  → status: "Blocked"
+  → state: "DRAFT"
+  → owner: "U_ishay"
+  → created_by: "U_ishay"
+  → impact_size: 2
+  → depends_on: ["Test API integration (#13-7)"]
+  → resources: "1 developer, 3 days"
+  → parent: "Analyze worker metrics (#13-0)"
+• Add dependency: "Analyze worker metrics (#13-0)" → "Debug cache issue (#13-12)"
+
+Return ONLY valid JSON. No markdown. No extra text.

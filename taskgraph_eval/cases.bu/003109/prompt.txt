@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Backup reporting data (#31-3)"
+  → priority: "Medium"
+• Move "Design scheduler API (#31-6)" under "Setup search environment (#31-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

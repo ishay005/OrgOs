@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Document sync usage (#18-0)"
+      parent: "Monitor reporting health (#18-6)"
+    - task: "Refactor authentication codebase (#18-2)"
+      parent: "Monitor reporting health (#18-6)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Analyze API metrics (#44-25) | parent=Review gateway documentation (#44-7) |
+
+Return ONLY valid JSON. No markdown. No extra text.

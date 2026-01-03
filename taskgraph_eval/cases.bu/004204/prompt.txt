@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Deploy analytics to production (#42-1) | parent=Refactor import codebase (#42-3) |
+
+Return ONLY valid JSON. No markdown. No extra text.

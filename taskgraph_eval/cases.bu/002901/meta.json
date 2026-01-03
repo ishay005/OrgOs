@@ -1,0 +1,18 @@
+{
+  "case_id": "002901",
+  "target_id": 29,
+  "seed": 29000,
+  "bucket": "ADD",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [
+      "Configure caching settings (#29-0)",
+      "Review queue documentation (#29-3)",
+      "Implement reporting feature (#29-18)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 4
+  }
+}

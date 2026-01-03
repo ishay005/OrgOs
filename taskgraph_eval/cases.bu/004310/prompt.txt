@@ -1,0 +1,24 @@
+Please make the following changes:
+
+1. Create a new task titled "Update alerting configuration (#43-0)"
+   - Set priority to: "Medium"
+   - Set status to: "Done"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 3
+   - Set depends_on to: []
+   - Set parent to: "Review database documentation (#43-3)"
+2. Create a new task titled "Backup authentication data (#43-12)"
+   - Set priority to: "Low"
+   - Set status to: "Blocked"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_ishay"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 3
+   - Set depends_on to: []
+   - Set main_goal to: "Enhance security"
+   - Set resources to: "External contractor"
+   - Set parent to: "Update caching configuration (#43-4)"
+
+Return ONLY valid JSON. No markdown. No extra text.

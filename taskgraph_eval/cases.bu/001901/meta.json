@@ -1,0 +1,17 @@
+{
+  "case_id": "001901",
+  "target_id": 19,
+  "seed": 19000,
+  "bucket": "ADD",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [
+      "Research search options (#19-2)",
+      "Research dashboard options (#19-9)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 2
+  }
+}

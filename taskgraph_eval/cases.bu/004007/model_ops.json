@@ -1,0 +1,55 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Validate frontend workflow (#40-12)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Reduce technical debt",
+      "resources": null,
+      "parent": "T26",
+      "depends_on": [
+        "T24"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Fix worker bug (#40-13)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Reduce technical debt",
+      "resources": "2 developers, 1 week",
+      "parent": "T23",
+      "depends_on": [
+        "T30"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T1",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T25",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T29",
+      "depends_on": "new1"
+    }
+  ]
+}

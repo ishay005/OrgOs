@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Refactor backup codebase (#16-20) | priority→"Critical" |
+| SET_PARENT | Backup payment data (#16-19) | parent=Analyze scheduler metrics (#16-17) |
+
+Return ONLY valid JSON. No markdown. No extra text.

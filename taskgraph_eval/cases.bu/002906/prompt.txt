@@ -1,0 +1,12 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[UPDATE] Task "Research dashboard options (#29-17)" requires changes:
+         - state: "DRAFT"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

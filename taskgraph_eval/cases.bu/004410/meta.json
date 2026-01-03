@@ -1,0 +1,16 @@
+{
+  "case_id": "004410",
+  "target_id": 44,
+  "seed": 44009,
+  "bucket": "MIXED",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Setup restore environment (#44-6)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

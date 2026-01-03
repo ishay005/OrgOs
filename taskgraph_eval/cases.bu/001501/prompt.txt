@@ -1,0 +1,7 @@
+changes:
+  dependency_changes:
+    - action: add
+      task: "Review API documentation (#15-17)"
+      depends_on: "Fix cache bug (#15-34)"
+
+Return ONLY valid JSON. No markdown. No extra text.

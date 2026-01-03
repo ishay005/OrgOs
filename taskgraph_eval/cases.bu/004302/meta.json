@@ -1,0 +1,14 @@
+{
+  "case_id": "004302",
+  "target_id": 43,
+  "seed": 43001,
+  "bucket": "DEPENDENCY",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 2
+  }
+}

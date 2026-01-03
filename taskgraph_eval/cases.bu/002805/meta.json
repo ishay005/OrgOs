@@ -1,0 +1,17 @@
+{
+  "case_id": "002805",
+  "target_id": 28,
+  "seed": 28004,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Test worker integration (#28-0)",
+      "Optimize frontend performance (#28-14)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

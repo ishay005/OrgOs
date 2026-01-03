@@ -1,0 +1,50 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Research search options (#19-2)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": "Manager",
+      "main_goal": "Reduce technical debt",
+      "resources": null,
+      "parent": "T12",
+      "depends_on": [
+        "T7",
+        "T1",
+        "T11"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Research dashboard options (#19-9)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "External contractor",
+      "parent": "T2",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T5",
+      "depends_on": "new2"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T8",
+      "depends_on": "new2"
+    }
+  ]
+}

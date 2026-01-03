@@ -1,0 +1,17 @@
+{
+  "case_id": "004002",
+  "target_id": 40,
+  "seed": 40001,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Fix proxy bug (#40-4)",
+      "Implement payment feature (#40-24)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

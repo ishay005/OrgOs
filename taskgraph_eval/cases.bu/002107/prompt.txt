@@ -1,0 +1,11 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[DEPENDENCY] Add: "Design backend API (#21-6)" depends on "Fix scheduler bug (#21-0)"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

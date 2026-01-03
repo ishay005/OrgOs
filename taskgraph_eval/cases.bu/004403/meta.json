@@ -1,0 +1,17 @@
+{
+  "case_id": "004403",
+  "target_id": 44,
+  "seed": 44002,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Validate proxy workflow (#44-29)",
+      "Test storage integration (#44-31)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 2
+  }
+}

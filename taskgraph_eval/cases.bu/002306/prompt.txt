@@ -1,0 +1,13 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[UPDATE] Task "Create scheduler assets (#23-13)" requires changes:
+         - status: "Blocked"
+         - state: "DRAFT"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Fix API bug (#24-79) | status→"Blocked" |
+
+Return ONLY valid JSON. No markdown. No extra text.

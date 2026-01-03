@@ -1,0 +1,37 @@
+changes:
+  add_tasks:
+    - title: "Refactor sync codebase (#4-3)"
+      priority: "Low"
+      status: "Not started"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_ishay"
+      impact_size: 4
+      depends_on: ["Design API API (#4-6)", "Setup restore environment (#4-5)", "Analyze backend metrics (#4-20)"]
+      perceived_owner: "Developer"
+      parent: "Refactor monitoring codebase (#4-1)"
+    - title: "Setup import environment (#4-11)"
+      priority: "Low"
+      status: "Done"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_ishay"
+      impact_size: 4
+      depends_on: ["Research sync options (#4-19)", "Setup restore environment (#4-5)", "Design API API (#4-2)"]
+      perceived_owner: "Developer"
+      parent: "Monitor payment health (#4-21)"
+    - title: "Research sync options (#4-19)"
+      priority: "High"
+      status: "Not started"
+      state: "DRAFT"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 4
+      depends_on: []
+      parent: "Test frontend integration (#4-4)"
+  dependency_changes:
+    - action: add
+      task: "Document analytics usage (#4-15)"
+      depends_on: "Research sync options (#4-19)"
+
+Return ONLY valid JSON. No markdown. No extra text.

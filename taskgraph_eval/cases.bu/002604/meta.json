@@ -1,0 +1,18 @@
+{
+  "case_id": "002604",
+  "target_id": 26,
+  "seed": 26003,
+  "bucket": "ADD",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [
+      "Review storage documentation (#26-2)",
+      "Analyze queue metrics (#26-11)",
+      "Test queue integration (#26-16)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

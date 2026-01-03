@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Document analytics usage (#37-1)"
+  → priority: "Medium"
+• Move "Deploy export to production (#37-2)" under "Analyze database metrics (#37-10)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Backup backup data (#6-6)"
+      set:
+        status: "Done"
+    - title: "Implement caching feature (#6-4)"
+      set:
+        state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

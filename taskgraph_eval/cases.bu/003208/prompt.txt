@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Setup dashboard environment (#32-1)"
+  → priority: "High"
+• Move "Debug proxy issue (#32-3)" under "Document sync usage (#32-2)"
+
+Return ONLY valid JSON. No markdown. No extra text.

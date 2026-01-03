@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Deploy restore to production (#22-15) | parent=Research alerting options (#22-20) |
+| SET_PARENT | Document search usage (#22-18) | parent=Monitor dashboard health (#22-21) |
+
+Return ONLY valid JSON. No markdown. No extra text.

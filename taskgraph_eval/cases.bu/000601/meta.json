@@ -1,0 +1,16 @@
+{
+  "case_id": "000601",
+  "target_id": 6,
+  "seed": 6000,
+  "bucket": "ADD",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [
+      "Implement caching feature (#6-4)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

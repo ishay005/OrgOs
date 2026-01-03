@@ -1,0 +1,18 @@
+{
+  "case_id": "001209",
+  "target_id": 12,
+  "seed": 12008,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Migrate backup database (#12-3)",
+      "Create proxy assets (#12-7)",
+      "Create database assets (#12-8)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 6
+  }
+}

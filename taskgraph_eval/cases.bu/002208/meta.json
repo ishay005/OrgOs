@@ -1,0 +1,18 @@
+{
+  "case_id": "002208",
+  "target_id": 22,
+  "seed": 22007,
+  "bucket": "ADD",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [
+      "Configure export settings (#22-1)",
+      "Design database API (#22-10)",
+      "Backup monitoring data (#22-16)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

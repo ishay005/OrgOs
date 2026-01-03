@@ -1,0 +1,44 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Test frontend integration (#48-8)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T18",
+      "depends_on": [
+        "T31",
+        "T7"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Research dashboard options (#48-33)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Improve user experience",
+      "resources": null,
+      "parent": "T35",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T5",
+      "depends_on": "new2"
+    }
+  ]
+}

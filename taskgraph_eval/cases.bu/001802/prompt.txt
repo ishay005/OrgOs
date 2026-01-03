@@ -1,0 +1,26 @@
+Make these changes to the task graph:
+
+• Add new task: "Test API integration (#18-1)"
+  → priority: "Medium"
+  → status: "Done"
+  → state: "ACTIVE"
+  → owner: "U_elram"
+  → created_by: "U_ishay"
+  → impact_size: 5
+  → depends_on: ["Monitor backup health (#18-7)"]
+  → parent: "Monitor reporting health (#18-6)"
+• Add new task: "Research sync options (#18-9)"
+  → priority: "Medium"
+  → status: "Done"
+  → state: "DRAFT"
+  → owner: "U_ishay"
+  → created_by: "U_elram"
+  → impact_size: 2
+  → depends_on: ["Analyze API metrics (#18-5)"]
+  → main_goal: "Reduce technical debt"
+  → resources: "Team effort, 2 sprints"
+  → parent: "Optimize scheduler performance (#18-3)"
+• Add dependency: "Monitor reporting health (#18-6)" → "Test API integration (#18-1)"
+• Add dependency: "Backup alerting data (#18-8)" → "Test API integration (#18-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

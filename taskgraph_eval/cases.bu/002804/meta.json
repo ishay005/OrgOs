@@ -1,0 +1,16 @@
+{
+  "case_id": "002804",
+  "target_id": 28,
+  "seed": 28003,
+  "bucket": "EDIT",
+  "prompt_format": "table",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Update payment configuration (#28-19)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

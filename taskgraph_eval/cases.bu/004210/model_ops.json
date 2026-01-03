@@ -1,0 +1,20 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Validate gateway workflow (#42-0)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": "Team Lead",
+      "main_goal": "Enhance security",
+      "resources": "External contractor",
+      "parent": "T5",
+      "depends_on": []
+    }
+  ]
+}

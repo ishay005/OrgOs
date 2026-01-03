@@ -1,0 +1,9 @@
+Make these changes to the task graph:
+
+• Edit task "Analyze worker metrics (#40-21)"
+  → impact_size: 3
+• Edit task "Design queue API (#40-10)"
+  → priority: "High"
+  → state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,5 @@
+Please make the following changes:
+
+1. Set the parent of "Debug scheduler issue (#26-8)" to "Design gateway API (#26-36)"
+
+Return ONLY valid JSON. No markdown. No extra text.

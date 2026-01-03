@@ -1,0 +1,18 @@
+{
+  "case_id": "001407",
+  "target_id": 14,
+  "seed": 14006,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Setup sync environment (#14-1)",
+      "Update backup configuration (#14-12)",
+      "Backup reporting data (#14-70)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 3
+  }
+}

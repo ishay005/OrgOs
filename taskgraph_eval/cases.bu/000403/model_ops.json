@@ -1,0 +1,24 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Setup import environment (#4-11)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 4,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": "Developer",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T22",
+      "depends_on": [
+        "T20",
+        "T6",
+        "T3"
+      ]
+    }
+  ]
+}

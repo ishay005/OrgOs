@@ -1,0 +1,16 @@
+{
+  "case_id": "002504",
+  "target_id": 25,
+  "seed": 25003,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Migrate analytics database (#25-18)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

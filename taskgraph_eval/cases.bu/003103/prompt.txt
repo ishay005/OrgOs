@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| ADD_DEP | Validate frontend workflow (#31-2) → Configure backup settings (#31-5) | - |
+
+Return ONLY valid JSON. No markdown. No extra text.

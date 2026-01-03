@@ -1,0 +1,10 @@
+Make these changes to the task graph:
+
+• Edit task "Validate cache workflow (#24-3)"
+  → status: "Done"
+  → priority: "Low"
+• Edit task "Fix proxy bug (#24-56)"
+  → status: "Done"
+  → state: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

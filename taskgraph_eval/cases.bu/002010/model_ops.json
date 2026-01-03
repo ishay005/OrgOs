@@ -1,0 +1,104 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Analyze worker metrics (#20-5)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": "Team Lead",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T2",
+      "depends_on": [
+        "T30"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Implement backup feature (#20-41)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 5,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": "Developer",
+      "main_goal": "Reduce technical debt",
+      "resources": null,
+      "parent": "T2",
+      "depends_on": [
+        "new1"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Implement alerting feature (#20-58)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": "Developer",
+      "main_goal": "Improve user experience",
+      "resources": "External contractor",
+      "parent": "T19",
+      "depends_on": [
+        "T48",
+        "T25"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T10",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T14",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T17",
+      "depends_on": "new3"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T26",
+      "depends_on": "new3"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T37",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T44",
+      "depends_on": "new3"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T45",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T49",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T73",
+      "depends_on": "new1"
+    }
+  ]
+}

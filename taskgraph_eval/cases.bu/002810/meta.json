@@ -1,0 +1,16 @@
+{
+  "case_id": "002810",
+  "target_id": 28,
+  "seed": 28009,
+  "bucket": "MIXED",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Create storage assets (#28-2)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

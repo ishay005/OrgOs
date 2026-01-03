@@ -1,0 +1,17 @@
+{
+  "case_id": "003809",
+  "target_id": 38,
+  "seed": 38008,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Configure sync settings (#38-5)",
+      "Monitor monitoring health (#38-24)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

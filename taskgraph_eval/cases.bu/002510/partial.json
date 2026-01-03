@@ -1,0 +1,340 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Setup restore environment (#25-0)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T20",
+        "T5",
+        "T15"
+      ],
+      "parent": "T6"
+    },
+    {
+      "id": "T2",
+      "title": "Create database assets (#25-1)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T18"
+    },
+    {
+      "id": "T3",
+      "title": "Debug storage issue (#25-2)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T11"
+      ],
+      "main_goal": "Enhance security",
+      "parent": "T16"
+    },
+    {
+      "id": "T4",
+      "title": "Implement sync feature (#25-3)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T11",
+        "T22"
+      ],
+      "perceived_owner": "Architect",
+      "parent": "T6"
+    },
+    {
+      "id": "T5",
+      "title": "Research monitoring options (#25-4)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T12",
+        "T8"
+      ],
+      "perceived_owner": "Architect",
+      "main_goal": "Enable new features",
+      "resources": "2 developers, 1 week",
+      "parent": "T21"
+    },
+    {
+      "id": "T6",
+      "title": "Update payment configuration (#25-5)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [],
+      "perceived_owner": "Architect"
+    },
+    {
+      "id": "T7",
+      "title": "Validate storage workflow (#25-6)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T19",
+        "T1",
+        "T8",
+        "T13"
+      ],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Improve user experience",
+      "parent": "T1"
+    },
+    {
+      "id": "T8",
+      "title": "Refactor notification codebase (#25-7)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T19"
+      ],
+      "parent": "T19"
+    },
+    {
+      "id": "T9",
+      "title": "Analyze gateway metrics (#25-8)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "parent": "T6"
+    },
+    {
+      "id": "T10",
+      "title": "Fix worker bug (#25-9)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T8",
+        "T5"
+      ],
+      "parent": "T6"
+    },
+    {
+      "id": "T11",
+      "title": "Analyze gateway metrics (#25-10)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Enable new features",
+      "parent": "T6"
+    },
+    {
+      "id": "T12",
+      "title": "Configure notification settings (#25-11)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T19",
+        "T11"
+      ],
+      "perceived_owner": "Manager",
+      "main_goal": "Increase performance",
+      "parent": "T8"
+    },
+    {
+      "id": "T13",
+      "title": "Deploy reporting to production (#25-12)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T11",
+        "T15"
+      ],
+      "perceived_owner": "Manager",
+      "parent": "T22"
+    },
+    {
+      "id": "T14",
+      "title": "Setup monitoring environment (#25-13)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T16"
+      ],
+      "perceived_owner": "Manager",
+      "parent": "T6"
+    },
+    {
+      "id": "T15",
+      "title": "Monitor sync health (#25-14)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T8"
+      ],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Reduce technical debt",
+      "parent": "T18"
+    },
+    {
+      "id": "T16",
+      "title": "Optimize scheduler performance (#25-15)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "resources": "2 developers, 1 week",
+      "parent": "T6"
+    },
+    {
+      "id": "T17",
+      "title": "Implement authentication feature (#25-16)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T19"
+      ],
+      "resources": "2 developers, 1 week",
+      "parent": "T15"
+    },
+    {
+      "id": "T18",
+      "title": "Configure reporting settings (#25-17)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ARCHIVED",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "main_goal": "Improve user experience"
+    },
+    {
+      "id": "T19",
+      "title": "Migrate analytics database (#25-18)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "parent": "T6"
+    },
+    {
+      "id": "T20",
+      "title": "Monitor import health (#25-19)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "resources": "External contractor",
+      "parent": "T5"
+    },
+    {
+      "id": "T21",
+      "title": "Research alerting options (#25-20)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T19",
+        "T8"
+      ],
+      "perceived_owner": "Manager",
+      "main_goal": "Increase performance",
+      "parent": "T16"
+    },
+    {
+      "id": "T22",
+      "title": "Optimize worker performance (#25-21)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T8",
+        "T21"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T20"
+    }
+  ]
+}

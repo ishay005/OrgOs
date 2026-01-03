@@ -1,0 +1,3 @@
+Create a new task called "Setup sync environment (#46-12)" with priority="Medium", status="In progress", state="DRAFT", owner="U_elram", created_by="U_ishay", impact_size=2, depends_on=["Optimize backend performance (#46-20)"], main_goal="Enhance security", parent="Optimize backend performance (#46-20)". Create a new task called "Optimize worker performance (#46-25)" with priority="High", status="Done", state="DRAFT", owner="U_elram", created_by="U_ishay", impact_size=3, depends_on=[], parent="Configure dashboard settings (#46-1)".
+
+Return ONLY valid JSON. No markdown. No extra text.

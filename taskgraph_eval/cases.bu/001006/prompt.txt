@@ -1,0 +1,7 @@
+changes:
+  dependency_changes:
+    - action: add
+      task: "Setup logging environment (#10-9)"
+      depends_on: "Deploy authentication to production (#10-3)"
+
+Return ONLY valid JSON. No markdown. No extra text.

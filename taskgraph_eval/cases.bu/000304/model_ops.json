@@ -1,0 +1,28 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Analyze gateway metrics (#3-2)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 4,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": "Manager",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T6",
+      "depends_on": [
+        "T7",
+        "T1"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T12",
+      "depends_on": "new1"
+    }
+  ]
+}

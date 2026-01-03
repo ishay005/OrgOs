@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Configure dashboard settings (#46-1)"
+  → priority: "Low"
+• Move "Create cache assets (#46-2)" under "Configure dashboard settings (#46-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

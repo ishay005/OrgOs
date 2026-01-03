@@ -1,0 +1,3 @@
+Move the task "Document analytics usage (#38-9)" to be a subtask of "Implement payment feature (#38-12)".
+
+Return ONLY valid JSON. No markdown. No extra text.

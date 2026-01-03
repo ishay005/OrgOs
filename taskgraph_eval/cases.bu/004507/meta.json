@@ -1,0 +1,16 @@
+{
+  "case_id": "004507",
+  "target_id": 45,
+  "seed": 45006,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Design backend API (#45-3)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

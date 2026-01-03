@@ -1,0 +1,27 @@
+Make these changes to the task graph:
+
+• Add new task: "Research search options (#19-2)"
+  → priority: "High"
+  → status: "Not started"
+  → state: "ACTIVE"
+  → owner: "U_ishay"
+  → created_by: "U_elram"
+  → impact_size: 1
+  → depends_on: ["Refactor logging codebase (#19-6)", "Implement dashboard feature (#19-0)", "Implement dashboard feature (#19-10)"]
+  → perceived_owner: "Manager"
+  → main_goal: "Reduce technical debt"
+  → parent: "Create queue assets (#19-11)"
+• Add new task: "Research dashboard options (#19-9)"
+  → priority: "Critical"
+  → status: "Done"
+  → state: "ACTIVE"
+  → owner: "U_ishay"
+  → created_by: "U_ishay"
+  → impact_size: 2
+  → depends_on: []
+  → resources: "External contractor"
+  → parent: "Optimize API performance (#19-1)"
+• Add dependency: "Design worker API (#19-4)" → "Research dashboard options (#19-9)"
+• Add dependency: "Validate database workflow (#19-7)" → "Research dashboard options (#19-9)"
+
+Return ONLY valid JSON. No markdown. No extra text.

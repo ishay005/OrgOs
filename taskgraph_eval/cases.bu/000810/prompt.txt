@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Document search usage (#8-25)"
+      set:
+        priority: "Critical"
+  parent_changes:
+    - task: "Implement notification feature (#8-17)"
+      parent: "Backup monitoring data (#8-31)"
+
+Return ONLY valid JSON. No markdown. No extra text.

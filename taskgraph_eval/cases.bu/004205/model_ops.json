@@ -1,0 +1,42 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Create gateway assets (#42-2)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Enable new features",
+      "resources": null,
+      "parent": "T9",
+      "depends_on": [
+        "T7"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Setup monitoring environment (#42-5)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "impact_size": 4,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "2 developers, 1 week",
+      "parent": null,
+      "depends_on": [
+        "T5",
+        "new1",
+        "T8"
+      ]
+    }
+  ]
+}

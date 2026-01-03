@@ -1,0 +1,11 @@
+Please make the following changes:
+
+1. Update task "Implement dashboard feature (#19-0)":
+   - Change status to: "Not started"
+2. Update task "Research dashboard options (#19-9)":
+   - Change impact_size to: 2
+   - Change state to: "ACTIVE"
+3. Update task "Implement dashboard feature (#19-10)":
+   - Change status to: "Blocked"
+
+Return ONLY valid JSON. No markdown. No extra text.

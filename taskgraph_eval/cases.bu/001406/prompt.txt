@@ -1,0 +1,28 @@
+Make these changes to the task graph:
+
+• Add new task: "Create queue assets (#14-9)"
+  → priority: "High"
+  → status: "Done"
+  → state: "DRAFT"
+  → owner: "U_ishay"
+  → created_by: "U_elram"
+  → impact_size: 3
+  → depends_on: ["Setup payment environment (#14-64)", "Refactor caching codebase (#14-3)"]
+  → parent: "Backup analytics data (#14-29)"
+• Add new task: "Setup payment environment (#14-52)"
+  → priority: "High"
+  → status: "Not started"
+  → state: "ACTIVE"
+  → owner: "U_ishay"
+  → created_by: "U_elram"
+  → impact_size: 1
+  → depends_on: []
+  → resources: "Team effort, 2 sprints"
+  → parent: "Setup backup environment (#14-54)"
+• Add dependency: "Debug worker issue (#14-4)" → "Create queue assets (#14-9)"
+• Add dependency: "Create storage assets (#14-11)" → "Setup payment environment (#14-52)"
+• Add dependency: "Create queue assets (#14-51)" → "Create queue assets (#14-9)"
+• Add dependency: "Debug worker issue (#14-72)" → "Setup payment environment (#14-52)"
+• Add dependency: "Test gateway integration (#14-94)" → "Create queue assets (#14-9)"
+
+Return ONLY valid JSON. No markdown. No extra text.

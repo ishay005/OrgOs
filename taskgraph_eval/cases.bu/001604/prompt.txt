@@ -1,0 +1,24 @@
+Make these changes to the task graph:
+
+• Add new task: "Implement caching feature (#16-6)"
+  → priority: "Low"
+  → status: "Done"
+  → state: "DRAFT"
+  → owner: "U_elram"
+  → created_by: "U_ishay"
+  → impact_size: 4
+  → depends_on: []
+  → parent: "Analyze proxy metrics (#16-7)"
+• Add new task: "Test backend integration (#16-16)"
+  → priority: "Critical"
+  → status: "Blocked"
+  → state: "DRAFT"
+  → owner: "U_ishay"
+  → created_by: "U_ishay"
+  → impact_size: 5
+  → depends_on: ["Update caching configuration (#16-18)", "Create frontend assets (#16-15)", "Document alerting usage (#16-14)"]
+  → perceived_owner: "Manager"
+  → parent: "Design scheduler API (#16-13)"
+• Add dependency: "Debug worker issue (#16-3)" → "Test backend integration (#16-16)"
+
+Return ONLY valid JSON. No markdown. No extra text.

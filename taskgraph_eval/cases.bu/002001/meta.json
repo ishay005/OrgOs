@@ -1,0 +1,18 @@
+{
+  "case_id": "002001",
+  "target_id": 20,
+  "seed": 20000,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Review database documentation (#20-8)",
+      "Document import usage (#20-38)",
+      "Implement backup feature (#20-41)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

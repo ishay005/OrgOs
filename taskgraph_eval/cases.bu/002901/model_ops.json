@@ -1,0 +1,72 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Configure caching settings (#29-0)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Reduce technical debt",
+      "resources": null,
+      "parent": "T20",
+      "depends_on": []
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Review queue documentation (#29-3)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "DRAFT",
+      "impact_size": 4,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Enhance security",
+      "resources": null,
+      "parent": "T15",
+      "depends_on": []
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Implement reporting feature (#29-18)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "DRAFT",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Enable new features",
+      "resources": null,
+      "parent": "T22",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T2",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T5",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T6",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T23",
+      "depends_on": "new1"
+    }
+  ]
+}

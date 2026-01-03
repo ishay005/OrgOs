@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Validate database workflow (#24-0)"
+      parent: "Fix database bug (#24-70)"
+    - task: "Validate frontend workflow (#24-23)"
+      parent: "Create queue assets (#24-36)"
+
+Return ONLY valid JSON. No markdown. No extra text.

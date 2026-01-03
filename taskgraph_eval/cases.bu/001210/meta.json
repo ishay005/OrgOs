@@ -1,0 +1,18 @@
+{
+  "case_id": "001210",
+  "target_id": 12,
+  "seed": 12009,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Validate queue workflow (#12-0)",
+      "Document monitoring usage (#12-1)",
+      "Fix backend bug (#12-34)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

@@ -1,0 +1,20 @@
+Please make the following changes:
+
+1. Create a new task titled "Analyze gateway metrics (#44-1)"
+   - Set priority to: "Medium"
+   - Set status to: "Done"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 3
+   - Set depends_on to: ["Document notification usage (#44-51)"]
+   - Set main_goal to: "Enable new features"
+   - Set parent to: "Update monitoring configuration (#44-55)"
+2. Add dependency: "Validate gateway workflow (#44-16)" depends on "Analyze gateway metrics (#44-1)"
+3. Add dependency: "Setup monitoring environment (#44-23)" depends on "Analyze gateway metrics (#44-1)"
+4. Add dependency: "Create frontend assets (#44-41)" depends on "Analyze gateway metrics (#44-1)"
+5. Add dependency: "Analyze proxy metrics (#44-48)" depends on "Analyze gateway metrics (#44-1)"
+6. Add dependency: "Review frontend documentation (#44-60)" depends on "Analyze gateway metrics (#44-1)"
+7. Add dependency: "Analyze queue metrics (#44-73)" depends on "Analyze gateway metrics (#44-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Test storage integration (#47-0)"
+  → priority: "Medium"
+• Move "Test storage integration (#47-0)" under "Setup export environment (#47-10)"
+
+Return ONLY valid JSON. No markdown. No extra text.

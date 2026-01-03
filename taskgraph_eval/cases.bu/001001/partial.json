@@ -1,0 +1,148 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Refactor sync codebase (#10-0)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T2"
+      ],
+      "perceived_owner": "Developer",
+      "main_goal": "Enable new features",
+      "resources": "2 developers, 1 week",
+      "parent": "T10"
+    },
+    {
+      "id": "T2",
+      "title": "Deploy backup to production (#10-1)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "main_goal": "Improve user experience",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T5"
+    },
+    {
+      "id": "T3",
+      "title": "Backup payment data (#10-2)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T6",
+        "T4"
+      ],
+      "parent": "T10"
+    },
+    {
+      "id": "T4",
+      "title": "Deploy authentication to production (#10-3)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "parent": "T10"
+    },
+    {
+      "id": "T5",
+      "title": "Test scheduler integration (#10-4)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ARCHIVED",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T10"
+    },
+    {
+      "id": "T6",
+      "title": "Update payment configuration (#10-5)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T9"
+    },
+    {
+      "id": "T7",
+      "title": "Deploy import to production (#10-6)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "resources": "Team effort, 2 sprints",
+      "parent": "T6"
+    },
+    {
+      "id": "T8",
+      "title": "Analyze scheduler metrics (#10-7)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T4"
+    },
+    {
+      "id": "T9",
+      "title": "Setup caching environment (#10-8)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "resources": "External contractor",
+      "parent": "T2"
+    },
+    {
+      "id": "T10",
+      "title": "Setup logging environment (#10-9)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T4"
+      ]
+    }
+  ]
+}

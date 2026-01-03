@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Refactor sync codebase (#10-0) | priority→"Medium" |
+| SET_PARENT | Backup payment data (#10-2) | parent=Setup logging environment (#10-9) |
+
+Return ONLY valid JSON. No markdown. No extra text.

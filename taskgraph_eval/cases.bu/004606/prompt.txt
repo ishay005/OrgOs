@@ -1,0 +1,13 @@
+Please make the following changes:
+
+1. Create a new task titled "Backup backup data (#46-6)"
+   - Set priority to: "High"
+   - Set status to: "Blocked"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_ishay"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 2
+   - Set depends_on to: ["Migrate alerting database (#46-14)"]
+   - Set parent to: "Debug frontend issue (#46-19)"
+
+Return ONLY valid JSON. No markdown. No extra text.

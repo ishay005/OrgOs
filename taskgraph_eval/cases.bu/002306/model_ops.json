@@ -1,0 +1,16 @@
+{
+  "ops": [
+    {
+      "op": "TASK_UPDATE",
+      "id": "T14",
+      "field": "status",
+      "value": "Blocked"
+    },
+    {
+      "op": "TASK_UPDATE",
+      "id": "T14",
+      "field": "state",
+      "value": "DRAFT"
+    }
+  ]
+}

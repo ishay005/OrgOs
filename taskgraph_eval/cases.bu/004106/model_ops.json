@@ -1,0 +1,50 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Fix scheduler bug (#41-10)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "2 developers, 1 week",
+      "parent": "T10",
+      "depends_on": [
+        "T2"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Implement authentication feature (#41-13)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": "Team Lead",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T31",
+      "depends_on": [
+        "T10"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T6",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T21",
+      "depends_on": "new1"
+    }
+  ]
+}

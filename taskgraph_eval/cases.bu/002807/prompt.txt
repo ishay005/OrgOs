@@ -1,0 +1,12 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[UPDATE] Task "Implement logging feature (#28-17)" requires changes:
+         - state: "ACTIVE"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

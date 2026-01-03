@@ -1,0 +1,17 @@
+{
+  "case_id": "003908",
+  "target_id": 39,
+  "seed": 39007,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Design proxy API (#39-25)",
+      "Implement search feature (#39-27)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

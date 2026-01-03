@@ -1,0 +1,340 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Configure caching settings (#29-0)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "parent": "T20"
+    },
+    {
+      "id": "T2",
+      "title": "Design frontend API (#29-1)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T20",
+        "T15",
+        "T5",
+        "T1"
+      ],
+      "parent": "T20"
+    },
+    {
+      "id": "T3",
+      "title": "Setup sync environment (#29-2)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "parent": "T15"
+    },
+    {
+      "id": "T4",
+      "title": "Review queue documentation (#29-3)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "main_goal": "Enhance security",
+      "parent": "T15"
+    },
+    {
+      "id": "T5",
+      "title": "Test database integration (#29-4)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T1"
+      ],
+      "parent": "T21"
+    },
+    {
+      "id": "T6",
+      "title": "Design scheduler API (#29-5)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T1"
+      ],
+      "parent": null
+    },
+    {
+      "id": "T7",
+      "title": "Debug storage issue (#29-6)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T5"
+      ],
+      "parent": "T13"
+    },
+    {
+      "id": "T8",
+      "title": "Deploy search to production (#29-7)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [],
+      "parent": "T15"
+    },
+    {
+      "id": "T9",
+      "title": "Backup reporting data (#29-8)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T16",
+        "T23"
+      ],
+      "parent": "T15"
+    },
+    {
+      "id": "T10",
+      "title": "Debug backend issue (#29-9)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T15"
+    },
+    {
+      "id": "T11",
+      "title": "Update backup configuration (#29-10)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "main_goal": "Increase performance",
+      "parent": "T17"
+    },
+    {
+      "id": "T12",
+      "title": "Research reporting options (#29-11)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T10"
+      ],
+      "parent": "T2"
+    },
+    {
+      "id": "T13",
+      "title": "Fix cache bug (#29-12)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T9"
+      ],
+      "perceived_owner": "Developer",
+      "parent": "T15"
+    },
+    {
+      "id": "T14",
+      "title": "Document logging usage (#29-13)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T15"
+      ],
+      "perceived_owner": "Developer",
+      "main_goal": "Improve user experience",
+      "parent": "T15"
+    },
+    {
+      "id": "T15",
+      "title": "Optimize database performance (#29-14)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T6"
+      ],
+      "main_goal": "Reduce technical debt"
+    },
+    {
+      "id": "T16",
+      "title": "Migrate alerting database (#29-15)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T5"
+      ],
+      "parent": "T15"
+    },
+    {
+      "id": "T17",
+      "title": "Document search usage (#29-16)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T5",
+        "T6"
+      ],
+      "resources": "Team effort, 2 sprints",
+      "parent": "T15"
+    },
+    {
+      "id": "T18",
+      "title": "Research dashboard options (#29-17)",
+      "priority": "High",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T14",
+        "T8"
+      ],
+      "parent": "T15"
+    },
+    {
+      "id": "T19",
+      "title": "Implement reporting feature (#29-18)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "main_goal": "Enable new features",
+      "parent": "T22"
+    },
+    {
+      "id": "T20",
+      "title": "Update restore configuration (#29-19)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T14",
+        "T15"
+      ],
+      "parent": "T10"
+    },
+    {
+      "id": "T21",
+      "title": "Review gateway documentation (#29-20)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T18",
+        "T6"
+      ],
+      "resources": "External contractor",
+      "parent": "T16"
+    },
+    {
+      "id": "T22",
+      "title": "Optimize database performance (#29-21)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [],
+      "perceived_owner": "Manager",
+      "parent": "T12"
+    },
+    {
+      "id": "T23",
+      "title": "Validate frontend workflow (#29-22)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T1"
+      ],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Reduce technical debt",
+      "parent": "T15"
+    }
+  ]
+}

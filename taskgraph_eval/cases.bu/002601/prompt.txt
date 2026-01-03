@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Implement export feature (#26-28) | parent=Create scheduler assets (#26-17) |
+| SET_PARENT | Design API API (#26-33) | parent=Create scheduler assets (#26-17) |
+
+Return ONLY valid JSON. No markdown. No extra text.

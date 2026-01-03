@@ -1,0 +1,27 @@
+Make these changes to the task graph:
+
+• Add new task: "Create proxy assets (#12-7)"
+  → priority: "High"
+  → status: "Blocked"
+  → state: "ACTIVE"
+  → owner: "U_elram"
+  → created_by: "U_elram"
+  → impact_size: 3
+  → depends_on: []
+  → perceived_owner: "Architect"
+  → parent: "Validate queue workflow (#12-24)"
+• Add new task: "Debug frontend issue (#12-32)"
+  → priority: "Medium"
+  → status: "Done"
+  → state: "DRAFT"
+  → owner: "U_ishay"
+  → created_by: "U_elram"
+  → impact_size: 2
+  → depends_on: ["Migrate backup database (#12-3)", "Create proxy assets (#12-7)"]
+  → main_goal: "Improve user experience"
+  → resources: "2 developers, 1 week"
+  → parent: "Document monitoring usage (#12-1)"
+• Add dependency: "Review queue documentation (#12-11)" → "Create proxy assets (#12-7)"
+• Add dependency: "Setup sync environment (#12-23)" → "Create proxy assets (#12-7)"
+
+Return ONLY valid JSON. No markdown. No extra text.

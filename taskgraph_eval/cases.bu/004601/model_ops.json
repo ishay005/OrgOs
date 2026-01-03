@@ -1,0 +1,38 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Setup sync environment (#46-12)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "DRAFT",
+      "impact_size": 2,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Enhance security",
+      "resources": null,
+      "parent": "T21",
+      "depends_on": [
+        "T21"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Optimize worker performance (#46-25)",
+      "priority": "High",
+      "status": "Done",
+      "state": "DRAFT",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T2",
+      "depends_on": []
+    }
+  ]
+}

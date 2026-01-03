@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Fix storage bug (#42-7) | priority→"Critical" |
+| SET_PARENT | Test storage integration (#42-6) | parent=Fix storage bug (#42-7) |
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,46 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Test proxy integration (#13-4)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 5,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T6",
+      "depends_on": [
+        "T4",
+        "new2"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Debug cache issue (#13-12)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "1 developer, 3 days",
+      "parent": "T1",
+      "depends_on": [
+        "T8"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T1",
+      "depends_on": "new2"
+    }
+  ]
+}

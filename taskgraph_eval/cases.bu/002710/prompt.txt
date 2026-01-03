@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Monitor monitoring health (#27-8)"
+      parent: "Document import usage (#27-1)"
+    - task: "Create scheduler assets (#27-7)"
+      parent: "Monitor monitoring health (#27-8)"
+
+Return ONLY valid JSON. No markdown. No extra text.

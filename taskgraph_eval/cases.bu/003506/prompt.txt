@@ -1,0 +1,3 @@
+Move the task "Validate cache workflow (#35-34)" to be a subtask of "Create cache assets (#35-4)".
+
+Return ONLY valid JSON. No markdown. No extra text.

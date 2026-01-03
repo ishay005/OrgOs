@@ -1,0 +1,9 @@
+Make these changes to the task graph:
+
+• Edit task "Review scheduler documentation (#46-21)"
+  → impact_size: 4
+• Edit task "Monitor import health (#46-10)"
+  → priority: "Critical"
+  → state: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

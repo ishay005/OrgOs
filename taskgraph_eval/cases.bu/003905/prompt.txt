@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Fix proxy bug (#39-62) | priority→"High" |
+| SET_PARENT | Research authentication options (#39-74) | parent=Update monitoring configuration (#39-9) |
+
+Return ONLY valid JSON. No markdown. No extra text.

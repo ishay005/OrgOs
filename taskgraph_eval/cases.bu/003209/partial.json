@@ -1,0 +1,182 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Validate backend workflow (#32-0)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "resources": "2 developers, 1 week"
+    },
+    {
+      "id": "T2",
+      "title": "Setup dashboard environment (#32-1)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T8"
+      ],
+      "parent": "T10"
+    },
+    {
+      "id": "T3",
+      "title": "Document sync usage (#32-2)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T10"
+    },
+    {
+      "id": "T4",
+      "title": "Debug proxy issue (#32-3)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T6",
+        "T11"
+      ],
+      "parent": "T3"
+    },
+    {
+      "id": "T5",
+      "title": "Migrate logging database (#32-4)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "parent": "T6"
+    },
+    {
+      "id": "T6",
+      "title": "Debug frontend issue (#32-5)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T10",
+        "T5",
+        "T12"
+      ]
+    },
+    {
+      "id": "T7",
+      "title": "Test gateway integration (#32-6)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "main_goal": "Enable new features",
+      "parent": null
+    },
+    {
+      "id": "T8",
+      "title": "Setup authentication environment (#32-7)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T11"
+    },
+    {
+      "id": "T9",
+      "title": "Analyze proxy metrics (#32-8)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "parent": "T13"
+    },
+    {
+      "id": "T10",
+      "title": "Configure import settings (#32-9)",
+      "priority": "High",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": []
+    },
+    {
+      "id": "T11",
+      "title": "Refactor analytics codebase (#32-10)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "main_goal": "Increase performance",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T7"
+    },
+    {
+      "id": "T12",
+      "title": "Create queue assets (#32-11)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T10"
+      ],
+      "parent": "T10"
+    },
+    {
+      "id": "T13",
+      "title": "Update export configuration (#32-12)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T10"
+    }
+  ]
+}

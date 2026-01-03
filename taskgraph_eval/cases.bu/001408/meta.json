@@ -1,0 +1,18 @@
+{
+  "case_id": "001408",
+  "target_id": 14,
+  "seed": 14007,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Migrate logging database (#14-0)",
+      "Create storage assets (#14-78)",
+      "Optimize scheduler performance (#14-76)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

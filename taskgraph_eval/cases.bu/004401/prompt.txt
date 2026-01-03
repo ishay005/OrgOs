@@ -1,0 +1,6 @@
+Make these changes to the task graph:
+
+• Add dependency: "Backup notification data (#44-78)" → "Update monitoring configuration (#44-55)"
+• Add dependency: "Document export usage (#44-77)" → "Validate API workflow (#44-13)"
+
+Return ONLY valid JSON. No markdown. No extra text.

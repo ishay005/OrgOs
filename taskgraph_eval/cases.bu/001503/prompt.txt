@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Backup reporting data (#15-25)"
+      set:
+        priority: "High"
+  parent_changes:
+    - task: "Fix cache bug (#15-34)"
+      parent: "Migrate dashboard database (#15-8)"
+
+Return ONLY valid JSON. No markdown. No extra text.

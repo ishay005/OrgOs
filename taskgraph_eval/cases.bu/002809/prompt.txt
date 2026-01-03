@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Design gateway API (#28-22)"
+      parent: "Design API API (#28-4)"
+    - task: "Review storage documentation (#28-16)"
+      parent: "Design API API (#28-4)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,59 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Research dashboard options (#23-0)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": "Manager",
+      "main_goal": "Reduce technical debt",
+      "resources": null,
+      "parent": "T3",
+      "depends_on": [
+        "T29",
+        "T14"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Implement monitoring feature (#23-10)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "DRAFT",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Enhance security",
+      "resources": null,
+      "parent": "T17",
+      "depends_on": [
+        "T20"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Design gateway API (#23-15)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": "Architect",
+      "main_goal": null,
+      "resources": "Team effort, 2 sprints",
+      "parent": "T17",
+      "depends_on": [
+        "T9"
+      ]
+    }
+  ]
+}

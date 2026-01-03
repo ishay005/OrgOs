@@ -1,0 +1,27 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Implement caching feature (#6-4)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 4,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Enhance security",
+      "resources": null,
+      "parent": "T7",
+      "depends_on": [
+        "T2"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T9",
+      "depends_on": "new1"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Document search usage (#8-25)"
+      set:
+        status: "Blocked"
+    - title: "Refactor dashboard codebase (#8-18)"
+      set:
+        state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

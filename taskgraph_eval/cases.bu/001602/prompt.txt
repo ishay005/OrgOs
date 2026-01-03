@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Test API integration (#16-12)"
+      set:
+        priority: "Medium"
+  parent_changes:
+    - task: "Backup payment data (#16-19)"
+      parent: "Analyze scheduler metrics (#16-17)"
+
+Return ONLY valid JSON. No markdown. No extra text.

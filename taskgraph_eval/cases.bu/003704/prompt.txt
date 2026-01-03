@@ -1,0 +1,3 @@
+Move the task "Design backend API (#37-4)" to be a subtask of "Test worker integration (#37-7)".
+
+Return ONLY valid JSON. No markdown. No extra text.

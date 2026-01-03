@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| ADD_DEP | Fix scheduler bug (#30-3) → Setup authentication environment (#30-10) | - |
+
+Return ONLY valid JSON. No markdown. No extra text.

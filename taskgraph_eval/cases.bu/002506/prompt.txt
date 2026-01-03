@@ -1,0 +1,5 @@
+Make these changes to the task graph:
+
+• Move "Setup restore environment (#25-0)" under "Update payment configuration (#25-5)"
+
+Return ONLY valid JSON. No markdown. No extra text.

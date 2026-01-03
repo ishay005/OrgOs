@@ -1,0 +1,492 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T2",
+      "title": "Deploy backup to production (#48-1)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T15"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Monitor reporting health (#48-2)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T8",
+        "T14",
+        "T22"
+      ],
+      "parent": "T7"
+    },
+    {
+      "id": "T4",
+      "title": "Debug worker issue (#48-3)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T22",
+        "T30"
+      ],
+      "parent": "T3"
+    },
+    {
+      "id": "T5",
+      "title": "Document caching usage (#48-4)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T14",
+        "T34"
+      ],
+      "resources": "2 developers, 1 week",
+      "parent": "T4"
+    },
+    {
+      "id": "T6",
+      "title": "Review backend documentation (#48-5)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T30"
+      ],
+      "parent": "T22"
+    },
+    {
+      "id": "T7",
+      "title": "Test scheduler integration (#48-6)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T12",
+        "T27",
+        "T13"
+      ],
+      "main_goal": "Increase performance"
+    },
+    {
+      "id": "T8",
+      "title": "Implement dashboard feature (#48-7)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T31"
+    },
+    {
+      "id": "T9",
+      "title": "Test frontend integration (#48-8)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T31",
+        "T7"
+      ],
+      "parent": "T18"
+    },
+    {
+      "id": "T10",
+      "title": "Create API assets (#48-9)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T3"
+      ],
+      "perceived_owner": "Developer",
+      "parent": "T7"
+    },
+    {
+      "id": "T11",
+      "title": "Update authentication configuration (#48-10)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T26"
+      ],
+      "parent": "T21"
+    },
+    {
+      "id": "T12",
+      "title": "Analyze API metrics (#48-11)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T5"
+      ],
+      "parent": "T21"
+    },
+    {
+      "id": "T13",
+      "title": "Review cache documentation (#48-12)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T35"
+    },
+    {
+      "id": "T14",
+      "title": "Optimize storage performance (#48-13)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "main_goal": "Enhance security",
+      "parent": "T2"
+    },
+    {
+      "id": "T15",
+      "title": "Debug queue issue (#48-14)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T11"
+    },
+    {
+      "id": "T16",
+      "title": "Document restore usage (#48-15)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T30",
+        "T32",
+        "T11",
+        "T7",
+        "T23",
+        "T33"
+      ],
+      "perceived_owner": "Architect",
+      "parent": "T2"
+    },
+    {
+      "id": "T17",
+      "title": "Implement sync feature (#48-16)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T8"
+      ],
+      "parent": "T19"
+    },
+    {
+      "id": "T18",
+      "title": "Validate queue workflow (#48-17)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T7"
+    },
+    {
+      "id": "T19",
+      "title": "Deploy authentication to production (#48-18)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "parent": "T16"
+    },
+    {
+      "id": "T20",
+      "title": "Create proxy assets (#48-19)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T27",
+        "T7",
+        "T29"
+      ],
+      "main_goal": "Reduce technical debt",
+      "parent": "T7"
+    },
+    {
+      "id": "T21",
+      "title": "Configure search settings (#48-20)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "resources": "1 developer, 3 days"
+    },
+    {
+      "id": "T22",
+      "title": "Validate backend workflow (#48-21)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T33"
+    },
+    {
+      "id": "T23",
+      "title": "Review backend documentation (#48-22)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "main_goal": "Enhance security",
+      "parent": "T29"
+    },
+    {
+      "id": "T24",
+      "title": "Test storage integration (#48-23)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "parent": "T7"
+    },
+    {
+      "id": "T25",
+      "title": "Configure logging settings (#48-24)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T5",
+        "T20",
+        "T24"
+      ],
+      "parent": "T23"
+    },
+    {
+      "id": "T26",
+      "title": "Validate backend workflow (#48-25)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T2"
+    },
+    {
+      "id": "T27",
+      "title": "Document analytics usage (#48-26)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T14",
+        "T3"
+      ],
+      "parent": "T21"
+    },
+    {
+      "id": "T28",
+      "title": "Test storage integration (#48-27)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T23"
+      ],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Enhance security",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T7"
+    },
+    {
+      "id": "T29",
+      "title": "Setup search environment (#48-28)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "main_goal": "Enhance security",
+      "parent": "T16"
+    },
+    {
+      "id": "T30",
+      "title": "Refactor caching codebase (#48-29)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T6"
+    },
+    {
+      "id": "T31",
+      "title": "Debug API issue (#48-30)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T7"
+      ],
+      "perceived_owner": "Developer",
+      "parent": "T2"
+    },
+    {
+      "id": "T32",
+      "title": "Debug cache issue (#48-31)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T17"
+      ],
+      "parent": "T21"
+    },
+    {
+      "id": "T33",
+      "title": "Configure payment settings (#48-32)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T3",
+        "T28"
+      ],
+      "perceived_owner": "Manager",
+      "parent": "T4"
+    },
+    {
+      "id": "T34",
+      "title": "Research dashboard options (#48-33)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "main_goal": "Improve user experience",
+      "parent": "T35"
+    },
+    {
+      "id": "T35",
+      "title": "Optimize database performance (#48-34)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T33"
+      ],
+      "parent": "T21"
+    }
+  ]
+}

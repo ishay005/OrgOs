@@ -1,0 +1,16 @@
+{
+  "case_id": "004108",
+  "target_id": 41,
+  "seed": 41007,
+  "bucket": "MIXED",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Research monitoring options (#41-18)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

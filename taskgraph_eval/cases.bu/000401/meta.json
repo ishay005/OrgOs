@@ -1,0 +1,18 @@
+{
+  "case_id": "000401",
+  "target_id": 4,
+  "seed": 4000,
+  "bucket": "ADD",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [
+      "Refactor sync codebase (#4-3)",
+      "Setup import environment (#4-11)",
+      "Research sync options (#4-19)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

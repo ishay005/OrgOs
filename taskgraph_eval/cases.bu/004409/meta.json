@@ -1,0 +1,17 @@
+{
+  "case_id": "004409",
+  "target_id": 44,
+  "seed": 44008,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Analyze API metrics (#44-10)",
+      "Analyze queue metrics (#44-56)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 7
+  }
+}

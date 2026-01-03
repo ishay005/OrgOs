@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| ADD_DEP | Configure caching settings (#24-87) → Setup caching environment (#24-11) | - |
+
+Return ONLY valid JSON. No markdown. No extra text.

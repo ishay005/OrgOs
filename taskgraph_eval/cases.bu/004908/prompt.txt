@@ -1,0 +1,25 @@
+Please make the following changes:
+
+1. Create a new task titled "Migrate export database (#49-7)"
+   - Set priority to: "Low"
+   - Set status to: "Done"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 4
+   - Set depends_on to: []
+   - Set perceived_owner to: "Manager"
+   - Set parent to: "Monitor monitoring health (#49-8)"
+2. Create a new task titled "Refactor monitoring codebase (#49-9)"
+   - Set priority to: "Critical"
+   - Set status to: "Blocked"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_ishay"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 2
+   - Set depends_on to: []
+   - Set main_goal to: "Increase performance"
+   - Set parent to: "Analyze proxy metrics (#49-2)"
+3. Add dependency: "Monitor notification health (#49-1)" depends on "Migrate export database (#49-7)"
+
+Return ONLY valid JSON. No markdown. No extra text.

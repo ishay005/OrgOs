@@ -1,0 +1,6 @@
+Make these changes to the task graph:
+
+• Add dependency: "Refactor analytics codebase (#35-84)" → "Backup payment data (#35-9)"
+• Add dependency: "Fix database bug (#35-83)" → "Fix cache bug (#35-13)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,5 @@
+Make these changes to the task graph:
+
+• Move "Migrate alerting database (#30-1)" under "Setup notification environment (#30-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

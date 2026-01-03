@@ -1,0 +1,14 @@
+{
+  "case_id": "000808",
+  "target_id": 8,
+  "seed": 8007,
+  "bucket": "DEPENDENCY",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

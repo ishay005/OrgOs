@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Refactor dashboard codebase (#24-29) | parent=Document authentication usage (#24-45) |
+| SET_PARENT | Setup payment environment (#24-34) | parent=Debug frontend issue (#24-59) |
+
+Return ONLY valid JSON. No markdown. No extra text.

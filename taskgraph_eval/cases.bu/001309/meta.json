@@ -1,0 +1,18 @@
+{
+  "case_id": "001309",
+  "target_id": 13,
+  "seed": 13008,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Analyze worker metrics (#13-0)",
+      "Monitor search health (#13-9)",
+      "Debug proxy issue (#13-11)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

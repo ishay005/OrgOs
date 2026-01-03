@@ -1,0 +1,17 @@
+{
+  "case_id": "003102",
+  "target_id": 31,
+  "seed": 31001,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Setup search environment (#31-0)",
+      "Design frontend API (#31-14)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

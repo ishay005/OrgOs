@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Refactor notification codebase (#16-9) | parent=Debug worker issue (#16-3) |
+| SET_PARENT | Create cache assets (#16-24) | parent=Analyze proxy metrics (#16-7) |
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,9 @@
+Make these changes to the task graph:
+
+• Edit task "Review worker documentation (#44-87)"
+  → impact_size: 1
+• Edit task "Create worker assets (#44-42)"
+  → priority: "High"
+  → state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

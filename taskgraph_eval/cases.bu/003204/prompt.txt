@@ -1,0 +1,5 @@
+Please make the following changes:
+
+1. Set the parent of "Debug proxy issue (#32-3)" to "Document sync usage (#32-2)"
+
+Return ONLY valid JSON. No markdown. No extra text.

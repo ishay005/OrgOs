@@ -1,0 +1,16 @@
+{
+  "case_id": "002801",
+  "target_id": 28,
+  "seed": 28000,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Update analytics configuration (#28-18)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

@@ -1,0 +1,47 @@
+changes:
+  add_tasks:
+    - title: "Configure caching settings (#29-0)"
+      priority: "Low"
+      status: "Blocked"
+      state: "DRAFT"
+      owner: "U_ishay"
+      created_by: "U_ishay"
+      impact_size: 2
+      depends_on: []
+      main_goal: "Reduce technical debt"
+      parent: "Update restore configuration (#29-19)"
+    - title: "Review queue documentation (#29-3)"
+      priority: "Medium"
+      status: "In progress"
+      state: "DRAFT"
+      owner: "U_ishay"
+      created_by: "U_elram"
+      impact_size: 4
+      depends_on: []
+      main_goal: "Enhance security"
+      parent: "Optimize database performance (#29-14)"
+    - title: "Implement reporting feature (#29-18)"
+      priority: "Medium"
+      status: "Done"
+      state: "DRAFT"
+      owner: "U_ishay"
+      created_by: "U_ishay"
+      impact_size: 2
+      depends_on: []
+      main_goal: "Enable new features"
+      parent: "Optimize database performance (#29-21)"
+  dependency_changes:
+    - action: add
+      task: "Design frontend API (#29-1)"
+      depends_on: "Configure caching settings (#29-0)"
+    - action: add
+      task: "Test database integration (#29-4)"
+      depends_on: "Configure caching settings (#29-0)"
+    - action: add
+      task: "Design scheduler API (#29-5)"
+      depends_on: "Configure caching settings (#29-0)"
+    - action: add
+      task: "Validate frontend workflow (#29-22)"
+      depends_on: "Configure caching settings (#29-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

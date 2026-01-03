@@ -1,0 +1,6 @@
+changes:
+  parent_changes:
+    - task: "Deploy authentication to production (#38-19)"
+      parent: "Analyze scheduler metrics (#38-8)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,18 @@
+{
+  "case_id": "001903",
+  "target_id": 19,
+  "seed": 19002,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Implement dashboard feature (#19-0)",
+      "Research dashboard options (#19-9)",
+      "Implement dashboard feature (#19-10)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

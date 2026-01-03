@@ -1,0 +1,10 @@
+Please make the following changes:
+
+1. Update task "Implement monitoring feature (#41-9)":
+   - Change priority to: "Low"
+   - Change state to: "ACTIVE"
+2. Update task "Review storage documentation (#41-3)":
+   - Change status to: "Not started"
+   - Change state to: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

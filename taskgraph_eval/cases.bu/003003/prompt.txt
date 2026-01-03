@@ -1,0 +1,10 @@
+Make these changes to the task graph:
+
+• Edit task "Setup notification environment (#30-0)"
+  → status: "In progress"
+  → priority: "Medium"
+• Edit task "Setup backup environment (#30-7)"
+  → status: "In progress"
+  → state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

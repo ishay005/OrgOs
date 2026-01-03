@@ -1,0 +1,18 @@
+{
+  "case_id": "001605",
+  "target_id": 16,
+  "seed": 16004,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Validate frontend workflow (#16-1)",
+      "Implement caching feature (#16-6)",
+      "Refactor backup codebase (#16-20)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Create scheduler assets (#18-10) | priority→"Low" |
+| SET_PARENT | Research sync options (#18-9) | parent=Optimize scheduler performance (#18-3) |
+
+Return ONLY valid JSON. No markdown. No extra text.

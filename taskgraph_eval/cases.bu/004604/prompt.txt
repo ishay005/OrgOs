@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Configure authentication settings (#46-7) | parent=Update analytics configuration (#46-5) |
+
+Return ONLY valid JSON. No markdown. No extra text.

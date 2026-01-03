@@ -1,0 +1,17 @@
+{
+  "case_id": "004305",
+  "target_id": 43,
+  "seed": 43004,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Debug storage issue (#43-10)",
+      "Migrate monitoring database (#43-5)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

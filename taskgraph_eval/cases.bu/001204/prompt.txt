@@ -1,0 +1,7 @@
+changes:
+  dependency_changes:
+    - action: add
+      task: "Debug frontend issue (#12-32)"
+      depends_on: "Migrate backup database (#12-3)"
+
+Return ONLY valid JSON. No markdown. No extra text.

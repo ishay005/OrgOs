@@ -1,0 +1,6 @@
+changes:
+  parent_changes:
+    - task: "Validate backend workflow (#35-69)"
+      parent: "Test API integration (#35-28)"
+
+Return ONLY valid JSON. No markdown. No extra text.

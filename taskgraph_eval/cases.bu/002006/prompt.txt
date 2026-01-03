@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Update import configuration (#20-31) | parent=Design cache API (#20-34) |
+| SET_PARENT | Monitor alerting health (#20-88) | parent=Refactor payment codebase (#20-0) |
+
+Return ONLY valid JSON. No markdown. No extra text.

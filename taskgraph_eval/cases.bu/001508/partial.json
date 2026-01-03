@@ -1,0 +1,544 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Migrate alerting database (#15-0)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "resources": "1 developer, 3 days",
+      "parent": "T4"
+    },
+    {
+      "id": "T2",
+      "title": "Create storage assets (#15-1)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T5"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T15"
+    },
+    {
+      "id": "T3",
+      "title": "Debug worker issue (#15-2)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T9"
+    },
+    {
+      "id": "T4",
+      "title": "Deploy dashboard to production (#15-3)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T34"
+      ],
+      "perceived_owner": "Architect",
+      "main_goal": "Improve user experience",
+      "parent": "T34"
+    },
+    {
+      "id": "T5",
+      "title": "Deploy dashboard to production (#15-4)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T9"
+      ],
+      "parent": "T32"
+    },
+    {
+      "id": "T6",
+      "title": "Validate backend workflow (#15-5)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "main_goal": "Enhance security",
+      "parent": "T30"
+    },
+    {
+      "id": "T7",
+      "title": "Fix API bug (#15-6)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "main_goal": "Increase performance",
+      "parent": "T22"
+    },
+    {
+      "id": "T8",
+      "title": "Optimize API performance (#15-7)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T16"
+      ],
+      "main_goal": "Increase performance",
+      "parent": "T1"
+    },
+    {
+      "id": "T9",
+      "title": "Migrate dashboard database (#15-8)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": []
+    },
+    {
+      "id": "T10",
+      "title": "Document export usage (#15-9)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T34"
+      ],
+      "main_goal": "Enhance security",
+      "parent": "T6"
+    },
+    {
+      "id": "T11",
+      "title": "Setup payment environment (#15-10)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T2"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T14"
+    },
+    {
+      "id": "T12",
+      "title": "Optimize queue performance (#15-11)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "parent": "T9"
+    },
+    {
+      "id": "T13",
+      "title": "Implement backup feature (#15-12)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "main_goal": "Increase performance",
+      "parent": "T9"
+    },
+    {
+      "id": "T14",
+      "title": "Migrate alerting database (#15-13)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Manager",
+      "resources": "Team effort, 2 sprints"
+    },
+    {
+      "id": "T15",
+      "title": "Deploy notification to production (#15-14)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T38",
+        "T30"
+      ],
+      "parent": "T14"
+    },
+    {
+      "id": "T16",
+      "title": "Optimize queue performance (#15-15)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T26"
+    },
+    {
+      "id": "T17",
+      "title": "Update restore configuration (#15-16)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "parent": "T14"
+    },
+    {
+      "id": "T18",
+      "title": "Review API documentation (#15-17)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T35"
+      ],
+      "parent": "T7"
+    },
+    {
+      "id": "T19",
+      "title": "Debug worker issue (#15-18)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "parent": "T3"
+    },
+    {
+      "id": "T20",
+      "title": "Validate proxy workflow (#15-19)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T14"
+    },
+    {
+      "id": "T21",
+      "title": "Design worker API (#15-20)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "parent": "T33"
+    },
+    {
+      "id": "T22",
+      "title": "Migrate dashboard database (#15-21)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T11"
+      ],
+      "parent": "T14"
+    },
+    {
+      "id": "T23",
+      "title": "Optimize storage performance (#15-22)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [],
+      "resources": "2 developers, 1 week",
+      "parent": "T14"
+    },
+    {
+      "id": "T24",
+      "title": "Analyze API metrics (#15-23)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T13"
+      ],
+      "main_goal": "Enable new features",
+      "parent": "T20"
+    },
+    {
+      "id": "T25",
+      "title": "Monitor backup health (#15-24)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "resources": "2 developers, 1 week",
+      "parent": "T20"
+    },
+    {
+      "id": "T26",
+      "title": "Backup reporting data (#15-25)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T16",
+        "T2",
+        "T17",
+        "T37"
+      ],
+      "parent": "T9"
+    },
+    {
+      "id": "T27",
+      "title": "Setup monitoring environment (#15-26)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T21"
+    },
+    {
+      "id": "T28",
+      "title": "Implement sync feature (#15-27)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T27"
+      ],
+      "parent": "T12"
+    },
+    {
+      "id": "T29",
+      "title": "Deploy alerting to production (#15-28)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T14"
+    },
+    {
+      "id": "T30",
+      "title": "Monitor monitoring health (#15-29)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T2"
+      ],
+      "parent": "T5"
+    },
+    {
+      "id": "T31",
+      "title": "Optimize scheduler performance (#15-30)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T17"
+      ],
+      "resources": "2 developers, 1 week",
+      "parent": "T9"
+    },
+    {
+      "id": "T32",
+      "title": "Test cache integration (#15-31)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T18"
+      ],
+      "resources": "Team effort, 2 sprints",
+      "parent": "T24"
+    },
+    {
+      "id": "T33",
+      "title": "Create proxy assets (#15-32)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T11"
+      ],
+      "resources": "Team effort, 2 sprints",
+      "parent": "T14"
+    },
+    {
+      "id": "T34",
+      "title": "Deploy payment to production (#15-33)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "parent": "T14"
+    },
+    {
+      "id": "T35",
+      "title": "Fix cache bug (#15-34)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "parent": "T9"
+    },
+    {
+      "id": "T36",
+      "title": "Migrate import database (#15-35)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T14"
+    },
+    {
+      "id": "T37",
+      "title": "Validate backend workflow (#15-36)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "parent": "T14"
+    },
+    {
+      "id": "T38",
+      "title": "Create cache assets (#15-37)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T7",
+        "T16"
+      ],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Reduce technical debt",
+      "parent": "T14"
+    },
+    {
+      "id": "T39",
+      "title": "Extra task to delete (15-7-0)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": []
+    }
+  ]
+}

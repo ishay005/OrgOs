@@ -1,0 +1,6 @@
+Make these changes to the task graph:
+
+• Add dependency: "Refactor dashboard codebase (#43-11)" → "Analyze API metrics (#43-1)"
+• Add dependency: "Validate proxy workflow (#43-13)" → "Analyze API metrics (#43-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

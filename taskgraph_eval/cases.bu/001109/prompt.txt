@@ -1,0 +1,23 @@
+Make these changes to the task graph:
+
+• Add new task: "Validate frontend workflow (#11-3)"
+  → priority: "Medium"
+  → status: "In progress"
+  → state: "ACTIVE"
+  → owner: "U_ishay"
+  → created_by: "U_elram"
+  → impact_size: 3
+  → depends_on: ["Design scheduler API (#11-23)"]
+  → resources: "External contractor"
+  → parent: "Update logging configuration (#11-0)"
+• Add new task: "Refactor analytics codebase (#11-17)"
+  → priority: "Low"
+  → status: "Blocked"
+  → state: "ACTIVE"
+  → owner: "U_elram"
+  → created_by: "U_ishay"
+  → impact_size: 2
+  → depends_on: []
+  → parent: "Document authentication usage (#11-22)"
+
+Return ONLY valid JSON. No markdown. No extra text.

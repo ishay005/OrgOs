@@ -1,0 +1,77 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Analyze API metrics (#44-10)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "DRAFT",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T14",
+      "depends_on": [
+        "T44"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Analyze queue metrics (#44-56)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "DRAFT",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Improve user experience",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T65",
+      "depends_on": [
+        "T9",
+        "T71",
+        "T28"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T16",
+      "depends_on": "new2"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T39",
+      "depends_on": "new2"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T39",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T44",
+      "depends_on": "new2"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T54",
+      "depends_on": "new2"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T67",
+      "depends_on": "new2"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T85",
+      "depends_on": "new1"
+    }
+  ]
+}

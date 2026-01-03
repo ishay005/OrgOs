@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Migrate alerting database (#15-0)"
+      parent: "Deploy dashboard to production (#15-3)"
+    - task: "Implement backup feature (#15-12)"
+      parent: "Migrate dashboard database (#15-8)"
+
+Return ONLY valid JSON. No markdown. No extra text.

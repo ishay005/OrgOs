@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| ADD_DEP | Implement sync feature (#25-3) → Analyze gateway metrics (#25-10) | - |
+
+Return ONLY valid JSON. No markdown. No extra text.

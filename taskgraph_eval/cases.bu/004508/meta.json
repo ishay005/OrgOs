@@ -1,0 +1,17 @@
+{
+  "case_id": "004508",
+  "target_id": 45,
+  "seed": 45007,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Design backend API (#45-3)",
+      "Optimize database performance (#45-9)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

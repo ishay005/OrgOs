@@ -1,0 +1,10 @@
+Make these changes to the task graph:
+
+• Edit task "Research import options (#23-1)"
+  → status: "In progress"
+  → priority: "Critical"
+• Edit task "Validate database workflow (#23-28)"
+  → status: "Done"
+  → state: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

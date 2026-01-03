@@ -1,0 +1,14 @@
+{
+  "case_id": "002103",
+  "target_id": 21,
+  "seed": 21002,
+  "bucket": "DEPENDENCY",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

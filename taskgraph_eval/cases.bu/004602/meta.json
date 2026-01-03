@@ -1,0 +1,17 @@
+{
+  "case_id": "004602",
+  "target_id": 46,
+  "seed": 46001,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Review scheduler documentation (#46-21)",
+      "Monitor import health (#46-10)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

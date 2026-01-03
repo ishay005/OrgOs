@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Analyze API metrics (#36-7) | priority→"High" |
+| SET_PARENT | Document monitoring usage (#36-12) | parent=Optimize worker performance (#36-11) |
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,9 @@
+Make these changes to the task graph:
+
+• Edit task "Analyze worker metrics (#45-5)"
+  → impact_size: 5
+• Edit task "Test database integration (#45-8)"
+  → priority: "Critical"
+  → state: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Configure export settings (#22-1)"
+      parent: "Review database documentation (#22-0)"
+    - task: "Update search configuration (#22-12)"
+      parent: "Optimize gateway performance (#22-31)"
+
+Return ONLY valid JSON. No markdown. No extra text.

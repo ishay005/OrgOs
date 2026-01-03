@@ -1,0 +1,6 @@
+changes:
+  parent_changes:
+    - task: "Monitor reporting health (#36-9)"
+      parent: "Refactor import codebase (#36-3)"
+
+Return ONLY valid JSON. No markdown. No extra text.

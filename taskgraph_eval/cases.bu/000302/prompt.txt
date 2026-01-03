@@ -1,0 +1,34 @@
+changes:
+  add_tasks:
+    - title: "Validate scheduler workflow (#3-1)"
+      priority: "Critical"
+      status: "In progress"
+      state: "DRAFT"
+      owner: "U_elram"
+      created_by: "U_ishay"
+      impact_size: 5
+      depends_on: ["Refactor import codebase (#3-0)", "Deploy backup to production (#3-3)"]
+      main_goal: "Increase performance"
+      parent: "Analyze database metrics (#3-7)"
+    - title: "Analyze gateway metrics (#3-2)"
+      priority: "High"
+      status: "Done"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 4
+      depends_on: ["Research import options (#3-6)", "Refactor import codebase (#3-0)"]
+      perceived_owner: "Manager"
+      parent: "Refactor notification codebase (#3-5)"
+    - title: "Design gateway API (#3-11)"
+      priority: "Critical"
+      status: "In progress"
+      state: "ACTIVE"
+      owner: "U_ishay"
+      created_by: "U_elram"
+      impact_size: 4
+      depends_on: ["Optimize queue performance (#3-4)", "Analyze gateway metrics (#3-2)"]
+      main_goal: "Enhance security"
+      parent: "Analyze database metrics (#3-7)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,44 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Setup alerting environment (#49-3)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T1",
+      "depends_on": [
+        "T9",
+        "T5"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Refactor monitoring codebase (#49-9)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Increase performance",
+      "resources": null,
+      "parent": "T3",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T2",
+      "depends_on": "new1"
+    }
+  ]
+}

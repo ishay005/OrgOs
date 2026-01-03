@@ -1,0 +1,11 @@
+Please make the following changes:
+
+1. Update task "Backup import data (#17-0)":
+   - Change status to: "Done"
+2. Update task "Create worker assets (#17-2)":
+   - Change status to: "Done"
+   - Change priority to: "Medium"
+3. Update task "Research caching options (#17-69)":
+   - Change priority to: "Medium"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,16 @@
+{
+  "case_id": "000207",
+  "target_id": 2,
+  "seed": 2006,
+  "bucket": "MIXED",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Research logging options (#2-2)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

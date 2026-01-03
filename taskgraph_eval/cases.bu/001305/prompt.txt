@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Deploy import to production (#13-6)"
+      set:
+        priority: "Medium"
+  parent_changes:
+    - task: "Debug proxy issue (#13-11)"
+      parent: "Deploy import to production (#13-6)"
+
+Return ONLY valid JSON. No markdown. No extra text.

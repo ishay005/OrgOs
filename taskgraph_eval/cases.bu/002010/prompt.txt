@@ -1,0 +1,65 @@
+changes:
+  add_tasks:
+    - title: "Analyze worker metrics (#20-5)"
+      priority: "Low"
+      status: "Blocked"
+      state: "DRAFT"
+      owner: "U_elram"
+      created_by: "U_ishay"
+      impact_size: 1
+      depends_on: ["Analyze backend metrics (#20-29)"]
+      perceived_owner: "Team Lead"
+      parent: "Configure monitoring settings (#20-1)"
+    - title: "Implement backup feature (#20-41)"
+      priority: "Medium"
+      status: "Blocked"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 5
+      depends_on: ["Analyze worker metrics (#20-5)"]
+      perceived_owner: "Developer"
+      main_goal: "Reduce technical debt"
+      parent: "Configure monitoring settings (#20-1)"
+    - title: "Implement alerting feature (#20-58)"
+      priority: "Critical"
+      status: "Not started"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_ishay"
+      impact_size: 1
+      depends_on: ["Implement search feature (#20-47)", "Migrate payment database (#20-24)"]
+      perceived_owner: "Developer"
+      main_goal: "Improve user experience"
+      resources: "External contractor"
+      parent: "Refactor alerting codebase (#20-18)"
+  dependency_changes:
+    - action: add
+      task: "Review frontend documentation (#20-9)"
+      depends_on: "Analyze worker metrics (#20-5)"
+    - action: add
+      task: "Test backend integration (#20-13)"
+      depends_on: "Analyze worker metrics (#20-5)"
+    - action: add
+      task: "Monitor restore health (#20-16)"
+      depends_on: "Implement alerting feature (#20-58)"
+    - action: add
+      task: "Implement search feature (#20-25)"
+      depends_on: "Implement alerting feature (#20-58)"
+    - action: add
+      task: "Test queue integration (#20-36)"
+      depends_on: "Analyze worker metrics (#20-5)"
+    - action: add
+      task: "Validate gateway workflow (#20-43)"
+      depends_on: "Implement alerting feature (#20-58)"
+    - action: add
+      task: "Design cache API (#20-44)"
+      depends_on: "Analyze worker metrics (#20-5)"
+    - action: add
+      task: "Update caching configuration (#20-48)"
+      depends_on: "Analyze worker metrics (#20-5)"
+    - action: add
+      task: "Test queue integration (#20-72)"
+      depends_on: "Analyze worker metrics (#20-5)"
+
+Return ONLY valid JSON. No markdown. No extra text.

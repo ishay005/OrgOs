@@ -1,0 +1,69 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Optimize storage performance (#17-16)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "DRAFT",
+      "impact_size": 3,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Enhance security",
+      "resources": "1 developer, 3 days",
+      "parent": "T60",
+      "depends_on": []
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Design storage API (#17-58)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "impact_size": 1,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T11",
+      "depends_on": [
+        "T37",
+        "T29"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T26",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T39",
+      "depends_on": "new2"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T44",
+      "depends_on": "new2"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T48",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T57",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T60",
+      "depends_on": "new1"
+    }
+  ]
+}

@@ -1,0 +1,181 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Test storage integration (#47-0)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T11"
+    },
+    {
+      "id": "T2",
+      "title": "Refactor authentication codebase (#47-1)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T3"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T8"
+    },
+    {
+      "id": "T3",
+      "title": "Monitor search health (#47-2)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": []
+    },
+    {
+      "id": "T4",
+      "title": "Implement payment feature (#47-3)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T9"
+    },
+    {
+      "id": "T5",
+      "title": "Optimize queue performance (#47-4)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T3"
+      ],
+      "perceived_owner": "Manager",
+      "parent": "T9"
+    },
+    {
+      "id": "T6",
+      "title": "Review scheduler documentation (#47-5)",
+      "priority": "High",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "main_goal": "Enhance security",
+      "parent": "T9"
+    },
+    {
+      "id": "T7",
+      "title": "Document alerting usage (#47-6)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T6",
+        "T8"
+      ],
+      "resources": "External contractor",
+      "parent": "T9"
+    },
+    {
+      "id": "T8",
+      "title": "Test frontend integration (#47-7)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T3"
+      ],
+      "perceived_owner": "Architect",
+      "parent": "T4"
+    },
+    {
+      "id": "T9",
+      "title": "Monitor authentication health (#47-8)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": []
+    },
+    {
+      "id": "T11",
+      "title": "Setup export environment (#47-10)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T7",
+        "T1"
+      ],
+      "parent": "T2"
+    },
+    {
+      "id": "T12",
+      "depends_on": [
+        "T5"
+      ],
+      "title": "Optimize queue performance (#47-9)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "DRAFT",
+      "impact_size": 1,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "main_goal": "Improve user experience",
+      "parent": "T6"
+    },
+    {
+      "id": "T13",
+      "depends_on": [
+        "T6",
+        "T3",
+        "T2",
+        "T8"
+      ],
+      "title": "Design queue API (#47-11)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "resources": "External contractor",
+      "parent": "T3"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+changes:
+  add_tasks:
+    - title: "Review backend documentation (#1-2)"
+      priority: "Medium"
+      status: "Blocked"
+      state: "ACTIVE"
+      owner: "U_ishay"
+      created_by: "U_elram"
+      impact_size: 5
+      depends_on: []
+      perceived_owner: "Architect"
+      main_goal: "Increase performance"
+      parent: "Create database assets (#1-18)"
+    - title: "Backup logging data (#1-3)"
+      priority: "High"
+      status: "Not started"
+      state: "ACTIVE"
+      owner: "U_ishay"
+      created_by: "U_elram"
+      impact_size: 1
+      depends_on: ["Review backend documentation (#1-2)"]
+      parent: "Research monitoring options (#1-5)"
+    - title: "Design gateway API (#1-9)"
+      priority: "Critical"
+      status: "Blocked"
+      state: "ACTIVE"
+      owner: "U_ishay"
+      created_by: "U_elram"
+      impact_size: 2
+      depends_on: []
+      parent: "Deploy payment to production (#1-19)"
+  dependency_changes:
+    - action: add
+      task: "Research logging options (#1-4)"
+      depends_on: "Design gateway API (#1-9)"
+    - action: add
+      task: "Refactor notification codebase (#1-13)"
+      depends_on: "Review backend documentation (#1-2)"
+
+Return ONLY valid JSON. No markdown. No extra text.

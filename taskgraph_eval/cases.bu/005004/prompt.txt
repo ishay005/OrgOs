@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Document alerting usage (#50-30)"
+  → priority: "High"
+• Move "Review frontend documentation (#50-27)" under "Design gateway API (#50-25)"
+
+Return ONLY valid JSON. No markdown. No extra text.

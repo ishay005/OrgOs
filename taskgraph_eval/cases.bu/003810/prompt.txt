@@ -1,0 +1,9 @@
+Make these changes to the task graph:
+
+• Edit task "Analyze scheduler metrics (#38-21)"
+  → impact_size: 3
+• Edit task "Update sync configuration (#38-10)"
+  → priority: "Critical"
+  → state: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

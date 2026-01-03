@@ -1,0 +1,17 @@
+{
+  "case_id": "002706",
+  "target_id": 27,
+  "seed": 27005,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Review cache documentation (#27-0)",
+      "Create scheduler assets (#27-7)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

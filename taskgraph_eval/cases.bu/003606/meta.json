@@ -1,0 +1,17 @@
+{
+  "case_id": "003606",
+  "target_id": 36,
+  "seed": 36005,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Migrate export database (#36-2)",
+      "Monitor backup health (#36-0)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

@@ -1,0 +1,14 @@
+Please make the following changes:
+
+1. Create a new task titled "Design backend API (#45-3)"
+   - Set priority to: "Medium"
+   - Set status to: "Blocked"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_ishay"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 5
+   - Set depends_on to: ["Backup payment data (#45-2)"]
+   - Set resources to: "2 developers, 1 week"
+   - Set parent to: "Fix backend bug (#45-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

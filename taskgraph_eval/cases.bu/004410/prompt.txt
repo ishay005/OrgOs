@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Setup restore environment (#44-6)"
+  → priority: "High"
+• Move "Monitor import health (#44-8)" under "Configure dashboard settings (#44-74)"
+
+Return ONLY valid JSON. No markdown. No extra text.

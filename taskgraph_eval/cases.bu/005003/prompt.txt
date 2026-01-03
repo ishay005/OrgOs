@@ -1,0 +1,25 @@
+Please make the following changes:
+
+1. Create a new task titled "Validate storage workflow (#50-28)"
+   - Set priority to: "Medium"
+   - Set status to: "Not started"
+   - Set state to: "DRAFT"
+   - Set owner to: "U_ishay"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 4
+   - Set depends_on to: ["Deploy search to production (#50-2)", "Validate worker workflow (#50-24)", "Debug proxy issue (#50-23)", "Validate worker workflow (#50-5)", "Deploy dashboard to production (#50-18)"]
+   - Set main_goal to: "Enable new features"
+   - Set parent to: "Design gateway API (#50-25)"
+2. Create a new task titled "Document alerting usage (#50-30)"
+   - Set priority to: "High"
+   - Set status to: "Done"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 2
+   - Set depends_on to: ["Update backup configuration (#50-9)", "Debug queue issue (#50-7)"]
+   - Set parent to: "Backup import data (#50-21)"
+3. Add dependency: "Optimize database performance (#50-15)" depends on "Validate storage workflow (#50-28)"
+4. Add dependency: "Deploy reporting to production (#50-29)" depends on "Document alerting usage (#50-30)"
+
+Return ONLY valid JSON. No markdown. No extra text.

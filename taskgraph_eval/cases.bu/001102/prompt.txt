@@ -1,0 +1,5 @@
+Please make the following changes:
+
+1. Delete the task titled "Extra task to delete (11-1-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

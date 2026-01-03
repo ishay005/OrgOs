@@ -1,0 +1,17 @@
+{
+  "case_id": "004107",
+  "target_id": 41,
+  "seed": 41006,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Test scheduler integration (#41-21)",
+      "Migrate restore database (#41-32)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

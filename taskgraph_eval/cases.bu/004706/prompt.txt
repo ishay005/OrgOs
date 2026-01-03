@@ -1,0 +1,24 @@
+Please make the following changes:
+
+1. Create a new task titled "Test storage integration (#47-0)"
+   - Set priority to: "Medium"
+   - Set status to: "In progress"
+   - Set state to: "DRAFT"
+   - Set owner to: "U_ishay"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 2
+   - Set depends_on to: []
+   - Set parent to: "Setup export environment (#47-10)"
+2. Create a new task titled "Design queue API (#47-11)"
+   - Set priority to: "High"
+   - Set status to: "Not started"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_ishay"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 2
+   - Set depends_on to: ["Review scheduler documentation (#47-5)", "Monitor search health (#47-2)", "Refactor authentication codebase (#47-1)", "Test frontend integration (#47-7)"]
+   - Set resources to: "External contractor"
+   - Set parent to: "Monitor search health (#47-2)"
+3. Add dependency: "Setup export environment (#47-10)" depends on "Test storage integration (#47-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

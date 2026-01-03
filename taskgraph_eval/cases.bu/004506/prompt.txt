@@ -1,0 +1,5 @@
+Please make the following changes:
+
+1. Set the parent of "Fix backend bug (#45-1)" to "Configure payment settings (#45-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

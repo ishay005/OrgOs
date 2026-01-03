@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Monitor payment health (#50-3) | impact_size→5 |
+| UPDATE | Monitor dashboard health (#50-17) | state→"DRAFT" |
+
+Return ONLY valid JSON. No markdown. No extra text.

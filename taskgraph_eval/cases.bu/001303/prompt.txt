@@ -1,0 +1,7 @@
+changes:
+  dependency_changes:
+    - action: add
+      task: "Debug cache issue (#13-12)"
+      depends_on: "Test API integration (#13-7)"
+
+Return ONLY valid JSON. No markdown. No extra text.

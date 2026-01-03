@@ -1,0 +1,5 @@
+Make these changes to the task graph:
+
+• Move "Configure caching settings (#29-0)" under "Update restore configuration (#29-19)"
+
+Return ONLY valid JSON. No markdown. No extra text.

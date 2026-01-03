@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Optimize database performance (#45-9) | parent=Backup payment data (#45-2) |
+
+Return ONLY valid JSON. No markdown. No extra text.

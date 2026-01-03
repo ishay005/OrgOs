@@ -1,0 +1,168 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Design frontend API (#49-0)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T7"
+      ],
+      "main_goal": "Improve user experience",
+      "parent": "T2"
+    },
+    {
+      "id": "T2",
+      "title": "Monitor notification health (#49-1)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T4",
+        "T7",
+        "T8"
+      ],
+      "main_goal": "Enhance security",
+      "parent": "T5"
+    },
+    {
+      "id": "T3",
+      "title": "Analyze proxy metrics (#49-2)",
+      "priority": "High",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T11"
+      ],
+      "parent": "T9"
+    },
+    {
+      "id": "T4",
+      "title": "Setup alerting environment (#49-3)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T9",
+        "T5"
+      ],
+      "parent": null
+    },
+    {
+      "id": "T5",
+      "title": "Research export options (#49-4)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "parent": "T11"
+    },
+    {
+      "id": "T6",
+      "title": "Fix API bug (#49-5)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "resources": "External contractor",
+      "parent": "T9"
+    },
+    {
+      "id": "T7",
+      "title": "Optimize frontend performance (#49-6)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T5"
+      ],
+      "main_goal": "Improve user experience",
+      "parent": "T9"
+    },
+    {
+      "id": "T8",
+      "title": "Migrate export database (#49-7)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "perceived_owner": "Manager",
+      "parent": "T9"
+    },
+    {
+      "id": "T9",
+      "title": "Monitor monitoring health (#49-8)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Developer"
+    },
+    {
+      "id": "T10",
+      "title": "Refactor monitoring codebase (#49-9)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "main_goal": "Increase performance",
+      "parent": "T3"
+    },
+    {
+      "id": "T11",
+      "title": "Design frontend API (#49-10)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T7"
+      ],
+      "main_goal": "Enable new features",
+      "resources": "External contractor",
+      "parent": "T9"
+    }
+  ]
+}

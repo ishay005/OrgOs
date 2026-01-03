@@ -1,0 +1,11 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[DEPENDENCY] Add: "Deploy reporting to production (#20-97)" depends on "Implement search feature (#20-47)"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

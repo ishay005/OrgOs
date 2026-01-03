@@ -1,0 +1,35 @@
+changes:
+  add_tasks:
+    - title: "Backup alerting data (#24-2)"
+      priority: "High"
+      status: "Blocked"
+      state: "DRAFT"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 2
+      depends_on: ["Deploy analytics to production (#24-65)", "Design cache API (#24-42)"]
+      parent: "Debug frontend issue (#24-59)"
+    - title: "Analyze backend metrics (#24-17)"
+      priority: "High"
+      status: "Not started"
+      state: "ACTIVE"
+      owner: "U_ishay"
+      created_by: "U_ishay"
+      impact_size: 4
+      depends_on: ["Review worker documentation (#24-72)"]
+      parent: "Create storage assets (#24-31)"
+    - title: "Migrate search database (#24-27)"
+      priority: "High"
+      status: "Blocked"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 4
+      depends_on: ["Deploy reporting to production (#24-47)"]
+      parent: "Analyze storage metrics (#24-58)"
+  dependency_changes:
+    - action: add
+      task: "Review scheduler documentation (#24-37)"
+      depends_on: "Migrate search database (#24-27)"
+
+Return ONLY valid JSON. No markdown. No extra text.

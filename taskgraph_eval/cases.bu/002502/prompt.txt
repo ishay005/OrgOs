@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Monitor sync health (#25-14) | parent=Configure reporting settings (#25-17) |
+| SET_PARENT | Implement authentication feature (#25-16) | parent=Monitor sync health (#25-14) |
+
+Return ONLY valid JSON. No markdown. No extra text.

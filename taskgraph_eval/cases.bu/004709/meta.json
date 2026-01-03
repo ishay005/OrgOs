@@ -1,0 +1,17 @@
+{
+  "case_id": "004709",
+  "target_id": 47,
+  "seed": 47008,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Optimize queue performance (#47-4)",
+      "Design queue API (#47-11)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

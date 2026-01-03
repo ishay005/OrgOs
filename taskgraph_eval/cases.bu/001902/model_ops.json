@@ -1,0 +1,63 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Implement dashboard feature (#19-0)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Increase performance",
+      "resources": "1 developer, 3 days",
+      "parent": "T5",
+      "depends_on": [
+        "T7"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Research search options (#19-2)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": "Manager",
+      "main_goal": "Reduce technical debt",
+      "resources": null,
+      "parent": "T12",
+      "depends_on": [
+        "T7",
+        "new1",
+        "T11"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Update authentication configuration (#19-3)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 5,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T6",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T12",
+      "depends_on": "new3"
+    }
+  ]
+}

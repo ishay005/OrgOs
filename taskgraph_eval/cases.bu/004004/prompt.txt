@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Fix database bug (#40-29) | priority→"Medium" |
+| SET_PARENT | Monitor reporting health (#40-15) | parent=Deploy authentication to production (#40-3) |
+
+Return ONLY valid JSON. No markdown. No extra text.

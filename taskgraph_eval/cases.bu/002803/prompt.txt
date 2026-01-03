@@ -1,0 +1,5 @@
+Make these changes to the task graph:
+
+• Move "Test worker integration (#28-0)" under "Backup export data (#28-7)"
+
+Return ONLY valid JSON. No markdown. No extra text.

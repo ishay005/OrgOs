@@ -1,0 +1,152 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Configure payment settings (#45-0)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [],
+      "resources": "1 developer, 3 days",
+      "parent": "T3"
+    },
+    {
+      "id": "T2",
+      "title": "Fix backend bug (#45-1)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T9"
+      ],
+      "parent": "T1"
+    },
+    {
+      "id": "T3",
+      "title": "Backup payment data (#45-2)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "main_goal": "Increase performance",
+      "parent": "T6"
+    },
+    {
+      "id": "T4",
+      "title": "Design backend API (#45-3)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T3"
+      ],
+      "resources": "2 developers, 1 week",
+      "parent": "T2"
+    },
+    {
+      "id": "T5",
+      "title": "Migrate logging database (#45-4)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T10"
+      ],
+      "resources": "Team effort, 2 sprints"
+    },
+    {
+      "id": "T6",
+      "title": "Analyze worker metrics (#45-5)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T7"
+      ],
+      "perceived_owner": "Manager",
+      "main_goal": "Enable new features"
+    },
+    {
+      "id": "T7",
+      "title": "Update notification configuration (#45-6)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T9"
+      ],
+      "perceived_owner": "Developer",
+      "parent": "T5"
+    },
+    {
+      "id": "T8",
+      "title": "Document notification usage (#45-7)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T6"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T9"
+    },
+    {
+      "id": "T9",
+      "title": "Test database integration (#45-8)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T3"
+      ]
+    },
+    {
+      "id": "T10",
+      "title": "Optimize database performance (#45-9)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "parent": "T1"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "case_id": "001507",
+  "target_id": 15,
+  "seed": 15006,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Migrate alerting database (#15-0)",
+      "Create storage assets (#15-1)",
+      "Fix cache bug (#15-34)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

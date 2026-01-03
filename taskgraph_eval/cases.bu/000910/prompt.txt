@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Fix proxy bug (#9-10) | priority→"High" |
+| SET_PARENT | Fix proxy bug (#9-10) | parent=Test gateway integration (#9-1) |
+
+Return ONLY valid JSON. No markdown. No extra text.

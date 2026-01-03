@@ -1,0 +1,17 @@
+{
+  "case_id": "004805",
+  "target_id": 48,
+  "seed": 48004,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Test frontend integration (#48-8)",
+      "Research dashboard options (#48-33)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

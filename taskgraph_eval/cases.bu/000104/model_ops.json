@@ -1,0 +1,64 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Review backend documentation (#1-2)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 5,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": "Architect",
+      "main_goal": "Increase performance",
+      "resources": null,
+      "parent": "T19",
+      "depends_on": []
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Backup logging data (#1-3)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T6",
+      "depends_on": [
+        "new1"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Design gateway API (#1-9)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T20",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T5",
+      "depends_on": "new3"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T14",
+      "depends_on": "new1"
+    }
+  ]
+}

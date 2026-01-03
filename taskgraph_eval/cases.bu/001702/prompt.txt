@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Implement sync feature (#17-4) | priority→"Critical" |
+| SET_PARENT | Update alerting configuration (#17-18) | parent=Setup caching environment (#17-45) |
+
+Return ONLY valid JSON. No markdown. No extra text.

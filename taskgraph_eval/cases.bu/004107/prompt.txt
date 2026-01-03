@@ -1,0 +1,9 @@
+Make these changes to the task graph:
+
+• Edit task "Test scheduler integration (#41-21)"
+  → impact_size: 3
+• Edit task "Migrate restore database (#41-32)"
+  → priority: "Critical"
+  → state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

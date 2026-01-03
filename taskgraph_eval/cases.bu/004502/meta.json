@@ -1,0 +1,17 @@
+{
+  "case_id": "004502",
+  "target_id": 45,
+  "seed": 45001,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Update notification configuration (#45-6)",
+      "Document notification usage (#45-7)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

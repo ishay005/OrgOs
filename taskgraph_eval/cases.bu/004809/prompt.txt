@@ -1,0 +1,26 @@
+Please make the following changes:
+
+1. Create a new task titled "Document analytics usage (#48-26)"
+   - Set priority to: "High"
+   - Set status to: "Not started"
+   - Set state to: "DRAFT"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 2
+   - Set depends_on to: ["Optimize storage performance (#48-13)", "Monitor reporting health (#48-2)"]
+   - Set parent to: "Configure search settings (#48-20)"
+2. Create a new task titled "Research dashboard options (#48-33)"
+   - Set priority to: "Critical"
+   - Set status to: "Not started"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 3
+   - Set depends_on to: []
+   - Set main_goal to: "Improve user experience"
+   - Set parent to: "Optimize database performance (#48-34)"
+3. Add dependency: "Document caching usage (#48-4)" depends on "Research dashboard options (#48-33)"
+4. Add dependency: "Test scheduler integration (#48-6)" depends on "Document analytics usage (#48-26)"
+5. Add dependency: "Create proxy assets (#48-19)" depends on "Document analytics usage (#48-26)"
+
+Return ONLY valid JSON. No markdown. No extra text.

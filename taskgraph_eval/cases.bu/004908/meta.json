@@ -1,0 +1,17 @@
+{
+  "case_id": "004908",
+  "target_id": 49,
+  "seed": 49007,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Migrate export database (#49-7)",
+      "Refactor monitoring codebase (#49-9)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Test worker integration (#37-7) | priority→"High" |
+| SET_PARENT | Setup payment environment (#37-8) | parent=Document analytics usage (#37-1) |
+
+Return ONLY valid JSON. No markdown. No extra text.

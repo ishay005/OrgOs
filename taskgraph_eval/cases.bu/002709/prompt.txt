@@ -1,0 +1,5 @@
+Please make the following changes:
+
+1. Set the parent of "Validate gateway workflow (#27-3)" to "Create frontend assets (#27-4)"
+
+Return ONLY valid JSON. No markdown. No extra text.

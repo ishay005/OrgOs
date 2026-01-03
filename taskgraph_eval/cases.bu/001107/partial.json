@@ -1,0 +1,338 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Update logging configuration (#11-0)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "perceived_owner": "Developer"
+    },
+    {
+      "id": "T2",
+      "title": "Create API assets (#11-1)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T8"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T1"
+    },
+    {
+      "id": "T3",
+      "title": "Analyze API metrics (#11-2)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T15"
+      ],
+      "main_goal": "Increase performance",
+      "resources": "2 developers, 1 week",
+      "parent": "T21"
+    },
+    {
+      "id": "T4",
+      "title": "Validate frontend workflow (#11-3)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T24"
+      ],
+      "resources": "External contractor",
+      "parent": "T1"
+    },
+    {
+      "id": "T5",
+      "title": "Document dashboard usage (#11-4)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T9",
+        "T15"
+      ],
+      "parent": "T10"
+    },
+    {
+      "id": "T6",
+      "title": "Refactor dashboard codebase (#11-5)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "parent": "T22"
+    },
+    {
+      "id": "T7",
+      "title": "Deploy notification to production (#11-6)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T24"
+      ],
+      "resources": "Team effort, 2 sprints",
+      "parent": "T15"
+    },
+    {
+      "id": "T8",
+      "title": "Optimize scheduler performance (#11-7)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T1"
+    },
+    {
+      "id": "T9",
+      "title": "Fix frontend bug (#11-8)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "parent": "T1"
+    },
+    {
+      "id": "T10",
+      "title": "Create cache assets (#11-9)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T15"
+      ],
+      "parent": "T1"
+    },
+    {
+      "id": "T11",
+      "title": "Deploy backup to production (#11-10)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T22"
+      ],
+      "main_goal": "Improve user experience",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T7"
+    },
+    {
+      "id": "T12",
+      "title": "Debug proxy issue (#11-11)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [],
+      "resources": "2 developers, 1 week",
+      "parent": "T8"
+    },
+    {
+      "id": "T13",
+      "title": "Setup analytics environment (#11-12)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T8"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T11"
+    },
+    {
+      "id": "T14",
+      "title": "Test queue integration (#11-13)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "resources": "External contractor",
+      "parent": "T1"
+    },
+    {
+      "id": "T15",
+      "title": "Update alerting configuration (#11-14)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [],
+      "parent": "T1"
+    },
+    {
+      "id": "T16",
+      "title": "Create frontend assets (#11-15)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T1"
+    },
+    {
+      "id": "T17",
+      "title": "Fix cache bug (#11-16)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T15"
+    },
+    {
+      "id": "T18",
+      "title": "Refactor analytics codebase (#11-17)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": null
+    },
+    {
+      "id": "T19",
+      "title": "Create frontend assets (#11-18)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T20",
+        "T15"
+      ],
+      "main_goal": "Reduce technical debt",
+      "parent": "T17"
+    },
+    {
+      "id": "T20",
+      "title": "Optimize database performance (#11-19)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T5"
+    },
+    {
+      "id": "T21",
+      "title": "Update authentication configuration (#11-20)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T24"
+      ],
+      "parent": "T1"
+    },
+    {
+      "id": "T22",
+      "title": "Design cache API (#11-21)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T1"
+    },
+    {
+      "id": "T23",
+      "title": "Document authentication usage (#11-22)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T7"
+      ],
+      "perceived_owner": "Manager",
+      "parent": "T13"
+    },
+    {
+      "id": "T24",
+      "title": "Design scheduler API (#11-23)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T1"
+    }
+  ]
+}

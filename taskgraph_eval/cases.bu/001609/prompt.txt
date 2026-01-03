@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Validate frontend workflow (#16-1)"
+      parent: "Update caching configuration (#16-18)"
+    - task: "Implement caching feature (#16-6)"
+      parent: "Analyze proxy metrics (#16-7)"
+
+Return ONLY valid JSON. No markdown. No extra text.

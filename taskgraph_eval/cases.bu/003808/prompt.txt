@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Update search configuration (#38-6) | parent=Analyze scheduler metrics (#38-21) |
+
+Return ONLY valid JSON. No markdown. No extra text.

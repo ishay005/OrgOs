@@ -1,0 +1,16 @@
+{
+  "case_id": "000702",
+  "target_id": 7,
+  "seed": 7001,
+  "bucket": "MIXED",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Deploy caching to production (#7-9)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

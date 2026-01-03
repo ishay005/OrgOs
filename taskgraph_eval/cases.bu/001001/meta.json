@@ -1,0 +1,17 @@
+{
+  "case_id": "001001",
+  "target_id": 10,
+  "seed": 10000,
+  "bucket": "EDIT",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Deploy import to production (#10-6)",
+      "Test scheduler integration (#10-4)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

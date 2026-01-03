@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Deploy authentication to production (#17-50)"
+      set:
+        priority: "Low"
+  parent_changes:
+    - task: "Setup logging environment (#17-67)"
+      parent: "Optimize cache performance (#17-72)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,16 @@
+{
+  "case_id": "001404",
+  "target_id": 14,
+  "seed": 14003,
+  "bucket": "MIXED",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Configure analytics settings (#14-50)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

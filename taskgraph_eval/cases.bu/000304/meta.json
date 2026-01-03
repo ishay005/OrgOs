@@ -1,0 +1,16 @@
+{
+  "case_id": "000304",
+  "target_id": 3,
+  "seed": 3003,
+  "bucket": "ADD",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [
+      "Analyze gateway metrics (#3-2)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

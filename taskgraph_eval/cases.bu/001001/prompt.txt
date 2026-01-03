@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Deploy import to production (#10-6)"
+      set:
+        status: "In progress"
+    - title: "Test scheduler integration (#10-4)"
+      set:
+        state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

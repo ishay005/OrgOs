@@ -1,0 +1,14 @@
+{
+  "ops": [
+    {
+      "op": "SET_PARENT",
+      "child": "T4",
+      "parent": "T6"
+    },
+    {
+      "op": "SET_PARENT",
+      "child": "T7",
+      "parent": "T6"
+    }
+  ]
+}

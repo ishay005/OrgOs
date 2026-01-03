@@ -1,0 +1,17 @@
+{
+  "case_id": "003201",
+  "target_id": 32,
+  "seed": 32000,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Validate backend workflow (#32-0)",
+      "Setup authentication environment (#32-7)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

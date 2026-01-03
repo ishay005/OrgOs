@@ -1,0 +1,11 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[DEPENDENCY] Add: "Validate database workflow (#19-7)" depends on "Design worker API (#19-4)"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

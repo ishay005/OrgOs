@@ -1,0 +1,11 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[DEPENDENCY] Add: "Create queue assets (#19-11)" depends on "Validate database workflow (#19-7)"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

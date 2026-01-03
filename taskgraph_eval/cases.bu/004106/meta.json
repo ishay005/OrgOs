@@ -1,0 +1,17 @@
+{
+  "case_id": "004106",
+  "target_id": 41,
+  "seed": 41005,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Fix scheduler bug (#41-10)",
+      "Implement authentication feature (#41-13)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 2
+  }
+}

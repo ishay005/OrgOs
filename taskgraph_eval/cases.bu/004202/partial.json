@@ -1,0 +1,140 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Validate gateway workflow (#42-0)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Enhance security",
+      "resources": "External contractor",
+      "parent": "T5"
+    },
+    {
+      "id": "T2",
+      "title": "Deploy analytics to production (#42-1)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T7"
+      ],
+      "parent": "T4"
+    },
+    {
+      "id": "T3",
+      "title": "Create gateway assets (#42-2)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T7"
+      ],
+      "main_goal": "Enable new features",
+      "parent": "T9"
+    },
+    {
+      "id": "T4",
+      "title": "Refactor import codebase (#42-3)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "parent": "T5"
+    },
+    {
+      "id": "T5",
+      "title": "Implement analytics feature (#42-4)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T4"
+      ],
+      "resources": "External contractor"
+    },
+    {
+      "id": "T6",
+      "title": "Setup monitoring environment (#42-5)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T5",
+        "T3",
+        "T8"
+      ],
+      "resources": "2 developers, 1 week"
+    },
+    {
+      "id": "T7",
+      "title": "Test storage integration (#42-6)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": null
+    },
+    {
+      "id": "T8",
+      "title": "Fix storage bug (#42-7)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T2"
+      ],
+      "perceived_owner": "Developer",
+      "parent": "T5"
+    },
+    {
+      "id": "T9",
+      "title": "Research logging options (#42-8)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "main_goal": "Enhance security",
+      "parent": "T2"
+    }
+  ]
+}

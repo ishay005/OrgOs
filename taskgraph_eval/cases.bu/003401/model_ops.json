@@ -1,0 +1,10 @@
+{
+  "ops": [
+    {
+      "op": "TASK_UPDATE",
+      "id": "T18",
+      "field": "state",
+      "value": "ACTIVE"
+    }
+  ]
+}

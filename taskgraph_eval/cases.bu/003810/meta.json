@@ -1,0 +1,17 @@
+{
+  "case_id": "003810",
+  "target_id": 38,
+  "seed": 38009,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Analyze scheduler metrics (#38-21)",
+      "Update sync configuration (#38-10)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

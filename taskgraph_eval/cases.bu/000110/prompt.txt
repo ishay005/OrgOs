@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Analyze worker metrics (#1-12)"
+      set:
+        status: "Not started"
+    - title: "Design gateway API (#1-9)"
+      set:
+        state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

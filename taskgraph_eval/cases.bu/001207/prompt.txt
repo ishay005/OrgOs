@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Setup reporting environment (#12-2) | priority→"Critical" |
+| SET_PARENT | Design worker API (#12-9) | parent=Document monitoring usage (#12-1) |
+
+Return ONLY valid JSON. No markdown. No extra text.

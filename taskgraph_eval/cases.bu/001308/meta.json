@@ -1,0 +1,18 @@
+{
+  "case_id": "001308",
+  "target_id": 13,
+  "seed": 13007,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Refactor alerting codebase (#13-3)",
+      "Test proxy integration (#13-4)",
+      "Implement authentication feature (#13-10)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 2
+  }
+}

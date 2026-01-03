@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Migrate alerting database (#9-6)"
+      set:
+        priority: "Low"
+  parent_changes:
+    - task: "Fix proxy bug (#9-10)"
+      parent: "Test gateway integration (#9-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

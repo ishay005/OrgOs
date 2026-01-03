@@ -1,0 +1,5 @@
+Make these changes to the task graph:
+
+• Move "Debug scheduler issue (#26-1)" under "Implement notification feature (#26-22)"
+
+Return ONLY valid JSON. No markdown. No extra text.

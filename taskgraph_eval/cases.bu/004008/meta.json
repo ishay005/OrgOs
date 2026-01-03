@@ -1,0 +1,17 @@
+{
+  "case_id": "004008",
+  "target_id": 40,
+  "seed": 40007,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Analyze worker metrics (#40-21)",
+      "Design queue API (#40-10)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

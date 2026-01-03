@@ -1,0 +1,71 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Refactor alerting codebase (#13-3)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "DRAFT",
+      "impact_size": 5,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": "Architect",
+      "main_goal": "Improve user experience",
+      "resources": "1 developer, 3 days",
+      "parent": "T10",
+      "depends_on": [
+        "T3",
+        "T12"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Test proxy integration (#13-4)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 5,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T6",
+      "depends_on": [
+        "new1",
+        "T13"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Implement authentication feature (#13-10)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "DRAFT",
+      "impact_size": 4,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Enable new features",
+      "resources": null,
+      "parent": "T9",
+      "depends_on": [
+        "T1",
+        "T9"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T9",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T10",
+      "depends_on": "new3"
+    }
+  ]
+}

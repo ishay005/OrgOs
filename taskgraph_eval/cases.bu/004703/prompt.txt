@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Implement payment feature (#47-3) | parent=Monitor authentication health (#47-8) |
+
+Return ONLY valid JSON. No markdown. No extra text.

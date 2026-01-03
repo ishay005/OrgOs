@@ -1,0 +1,36 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Update alerting configuration (#43-0)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T4",
+      "depends_on": []
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Backup authentication data (#43-12)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Enhance security",
+      "resources": "External contractor",
+      "parent": "T5",
+      "depends_on": []
+    }
+  ]
+}

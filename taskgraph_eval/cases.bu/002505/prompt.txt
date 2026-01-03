@@ -1,0 +1,33 @@
+changes:
+  add_tasks:
+    - title: "Create database assets (#25-1)"
+      priority: "Critical"
+      status: "Blocked"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_ishay"
+      impact_size: 3
+      depends_on: []
+      parent: "Configure reporting settings (#25-17)"
+    - title: "Implement sync feature (#25-3)"
+      priority: "High"
+      status: "In progress"
+      state: "ACTIVE"
+      owner: "U_ishay"
+      created_by: "U_ishay"
+      impact_size: 4
+      depends_on: ["Analyze gateway metrics (#25-10)", "Optimize worker performance (#25-21)"]
+      perceived_owner: "Architect"
+      parent: "Update payment configuration (#25-5)"
+    - title: "Analyze gateway metrics (#25-8)"
+      priority: "Critical"
+      status: "In progress"
+      state: "DRAFT"
+      owner: "U_ishay"
+      created_by: "U_ishay"
+      impact_size: 3
+      depends_on: []
+      perceived_owner: "Team Lead"
+      parent: "Update payment configuration (#25-5)"
+
+Return ONLY valid JSON. No markdown. No extra text.

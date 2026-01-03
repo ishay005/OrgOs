@@ -1,0 +1,43 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Optimize queue performance (#47-9)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "DRAFT",
+      "impact_size": 1,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Improve user experience",
+      "resources": null,
+      "parent": "T6",
+      "depends_on": [
+        "T5"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Design queue API (#47-11)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "External contractor",
+      "parent": "T3",
+      "depends_on": [
+        "T6",
+        "T3",
+        "T2",
+        "T8"
+      ]
+    }
+  ]
+}

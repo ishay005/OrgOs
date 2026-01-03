@@ -1,0 +1,24 @@
+Make these changes to the task graph:
+
+• Add new task: "Implement backup feature (#15-12)"
+  → priority: "High"
+  → status: "Done"
+  → state: "ACTIVE"
+  → owner: "U_elram"
+  → created_by: "U_elram"
+  → impact_size: 1
+  → depends_on: []
+  → main_goal: "Increase performance"
+  → parent: "Migrate dashboard database (#15-8)"
+• Add new task: "Migrate import database (#15-35)"
+  → priority: "Medium"
+  → status: "Not started"
+  → state: "ACTIVE"
+  → owner: "U_ishay"
+  → created_by: "U_ishay"
+  → impact_size: 2
+  → depends_on: []
+  → parent: "Migrate alerting database (#15-13)"
+• Add dependency: "Analyze API metrics (#15-23)" → "Implement backup feature (#15-12)"
+
+Return ONLY valid JSON. No markdown. No extra text.

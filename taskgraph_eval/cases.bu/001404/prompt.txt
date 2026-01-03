@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Configure analytics settings (#14-50)"
+      set:
+        priority: "Critical"
+  parent_changes:
+    - task: "Setup dashboard environment (#14-67)"
+      parent: "Update search configuration (#14-38)"
+
+Return ONLY valid JSON. No markdown. No extra text.

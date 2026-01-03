@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Document caching usage (#4-12)"
+      set:
+        status: "Not started"
+    - title: "Optimize gateway performance (#4-9)"
+      set:
+        state: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

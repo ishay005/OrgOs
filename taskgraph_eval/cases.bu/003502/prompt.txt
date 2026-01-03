@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Fix database bug (#35-83)"
+      parent: "Test API integration (#35-28)"
+    - task: "Test backend integration (#35-58)"
+      parent: "Debug cache issue (#35-39)"
+
+Return ONLY valid JSON. No markdown. No extra text.

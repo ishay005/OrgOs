@@ -1,0 +1,65 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Fix scheduler bug (#21-0)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 5,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": "Developer",
+      "main_goal": "Reduce technical debt",
+      "resources": "1 developer, 3 days",
+      "parent": "T5",
+      "depends_on": [
+        "T4",
+        "T8"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Backup monitoring data (#21-2)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "DRAFT",
+      "impact_size": 2,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": "Developer",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T4",
+      "depends_on": [
+        "T4",
+        "T8"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Test database integration (#21-8)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Increase performance",
+      "resources": null,
+      "parent": "T6",
+      "depends_on": [
+        "T6"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T7",
+      "depends_on": "new1"
+    }
+  ]
+}

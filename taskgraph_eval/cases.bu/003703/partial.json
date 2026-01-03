@@ -1,0 +1,170 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Optimize scheduler performance (#37-0)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T11"
+    },
+    {
+      "id": "T2",
+      "title": "Document analytics usage (#37-1)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T10"
+      ],
+      "main_goal": "Improve user experience",
+      "parent": "T10"
+    },
+    {
+      "id": "T3",
+      "title": "Deploy export to production (#37-2)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T6",
+        "T10"
+      ],
+      "perceived_owner": "Developer",
+      "main_goal": "Enable new features",
+      "parent": null
+    },
+    {
+      "id": "T4",
+      "title": "Review backend documentation (#37-3)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "main_goal": "Enhance security",
+      "parent": "T11"
+    },
+    {
+      "id": "T5",
+      "title": "Design backend API (#37-4)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T4"
+      ],
+      "parent": "T8"
+    },
+    {
+      "id": "T6",
+      "title": "Deploy import to production (#37-5)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T10"
+      ]
+    },
+    {
+      "id": "T7",
+      "title": "Review API documentation (#37-6)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T10",
+        "T3"
+      ],
+      "perceived_owner": "Manager",
+      "parent": "T1"
+    },
+    {
+      "id": "T8",
+      "title": "Test worker integration (#37-7)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T7",
+        "T6"
+      ],
+      "perceived_owner": "Team Lead",
+      "resources": "External contractor",
+      "parent": "T9"
+    },
+    {
+      "id": "T9",
+      "title": "Setup payment environment (#37-8)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T2"
+    },
+    {
+      "id": "T10",
+      "title": "Refactor analytics codebase (#37-9)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "parent": "T6"
+    },
+    {
+      "id": "T11",
+      "title": "Analyze database metrics (#37-10)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T4",
+        "T7",
+        "T3"
+      ],
+      "main_goal": "Improve user experience"
+    }
+  ]
+}

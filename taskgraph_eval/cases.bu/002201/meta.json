@@ -1,0 +1,16 @@
+{
+  "case_id": "002201",
+  "target_id": 22,
+  "seed": 22000,
+  "bucket": "DELETE",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [
+      "Extra task to delete (22-0-0)"
+    ],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "case_id": "000507",
+  "target_id": 5,
+  "seed": 5006,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Fix database bug (#5-0)",
+      "Test API integration (#5-1)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

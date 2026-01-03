@@ -1,0 +1,17 @@
+{
+  "case_id": "001208",
+  "target_id": 12,
+  "seed": 12007,
+  "bucket": "ADD",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [
+      "Create proxy assets (#12-7)",
+      "Debug frontend issue (#12-32)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 2
+  }
+}

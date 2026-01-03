@@ -1,0 +1,64 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Backup alerting data (#24-2)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "impact_size": 2,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T60",
+      "depends_on": [
+        "T66",
+        "T43"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Analyze backend metrics (#24-17)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 4,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T32",
+      "depends_on": [
+        "T73"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Migrate search database (#24-27)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 4,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T59",
+      "depends_on": [
+        "T48"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T38",
+      "depends_on": "new3"
+    }
+  ]
+}

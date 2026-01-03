@@ -1,0 +1,25 @@
+Please make the following changes:
+
+1. Create a new task titled "Design backend API (#45-3)"
+   - Set priority to: "Medium"
+   - Set status to: "Blocked"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_ishay"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 5
+   - Set depends_on to: ["Backup payment data (#45-2)"]
+   - Set resources to: "2 developers, 1 week"
+   - Set parent to: "Fix backend bug (#45-1)"
+2. Create a new task titled "Optimize database performance (#45-9)"
+   - Set priority to: "High"
+   - Set status to: "In progress"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 5
+   - Set depends_on to: []
+   - Set main_goal to: "Reduce technical debt"
+   - Set parent to: "Backup payment data (#45-2)"
+3. Add dependency: "Migrate logging database (#45-4)" depends on "Optimize database performance (#45-9)"
+
+Return ONLY valid JSON. No markdown. No extra text.

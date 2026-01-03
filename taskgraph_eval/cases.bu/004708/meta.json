@@ -1,0 +1,16 @@
+{
+  "case_id": "004708",
+  "target_id": 47,
+  "seed": 47007,
+  "bucket": "MIXED",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Optimize queue performance (#47-4)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

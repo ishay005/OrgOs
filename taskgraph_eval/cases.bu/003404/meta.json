@@ -1,0 +1,16 @@
+{
+  "case_id": "003404",
+  "target_id": 34,
+  "seed": 34003,
+  "bucket": "MIXED",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Optimize storage performance (#34-2)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

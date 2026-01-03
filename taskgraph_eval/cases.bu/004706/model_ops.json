@@ -1,0 +1,46 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Test storage integration (#47-0)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "DRAFT",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T11",
+      "depends_on": []
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Design queue API (#47-11)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "External contractor",
+      "parent": "T3",
+      "depends_on": [
+        "T6",
+        "T3",
+        "T2",
+        "T8"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T11",
+      "depends_on": "new1"
+    }
+  ]
+}

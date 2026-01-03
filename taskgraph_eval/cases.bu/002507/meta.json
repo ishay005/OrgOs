@@ -1,0 +1,16 @@
+{
+  "case_id": "002507",
+  "target_id": 25,
+  "seed": 25006,
+  "bucket": "EDIT",
+  "prompt_format": "table",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Monitor import health (#25-19)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

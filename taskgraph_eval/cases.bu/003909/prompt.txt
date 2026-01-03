@@ -1,0 +1,9 @@
+Make these changes to the task graph:
+
+• Edit task "Debug gateway issue (#39-87)"
+  → impact_size: 2
+• Edit task "Refactor reporting codebase (#39-42)"
+  → priority: "Medium"
+  → state: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

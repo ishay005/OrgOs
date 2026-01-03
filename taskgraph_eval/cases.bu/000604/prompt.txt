@@ -1,0 +1,21 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[UPDATE] Task "Review worker documentation (#6-3)" requires changes:
+         - status: "Not started"
+         - state: "DRAFT"
+
+[UPDATE] Task "Fix queue bug (#6-2)" requires changes:
+         - impact_size: 3
+         - priority: "Critical"
+
+[UPDATE] Task "Implement notification feature (#6-5)" requires changes:
+         - status: "In progress"
+         - state: "ACTIVE"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

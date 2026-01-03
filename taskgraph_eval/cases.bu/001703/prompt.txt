@@ -1,0 +1,30 @@
+Make these changes to the task graph:
+
+• Add new task: "Optimize storage performance (#17-16)"
+  → priority: "High"
+  → status: "In progress"
+  → state: "DRAFT"
+  → owner: "U_ishay"
+  → created_by: "U_ishay"
+  → impact_size: 3
+  → depends_on: []
+  → main_goal: "Enhance security"
+  → resources: "1 developer, 3 days"
+  → parent: "Document import usage (#17-59)"
+• Add new task: "Design storage API (#17-58)"
+  → priority: "Critical"
+  → status: "Blocked"
+  → state: "DRAFT"
+  → owner: "U_ishay"
+  → created_by: "U_elram"
+  → impact_size: 1
+  → depends_on: ["Test database integration (#17-36)", "Refactor analytics codebase (#17-28)"]
+  → parent: "Test gateway integration (#17-10)"
+• Add dependency: "Backup search data (#17-25)" → "Optimize storage performance (#17-16)"
+• Add dependency: "Fix gateway bug (#17-38)" → "Design storage API (#17-58)"
+• Add dependency: "Monitor sync health (#17-43)" → "Design storage API (#17-58)"
+• Add dependency: "Analyze frontend metrics (#17-47)" → "Optimize storage performance (#17-16)"
+• Add dependency: "Refactor export codebase (#17-56)" → "Optimize storage performance (#17-16)"
+• Add dependency: "Document import usage (#17-59)" → "Optimize storage performance (#17-16)"
+
+Return ONLY valid JSON. No markdown. No extra text.

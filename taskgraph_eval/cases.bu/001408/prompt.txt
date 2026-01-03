@@ -1,0 +1,11 @@
+Please make the following changes:
+
+1. Update task "Migrate logging database (#14-0)":
+   - Change status to: "In progress"
+2. Update task "Create storage assets (#14-78)":
+   - Change impact_size to: 4
+   - Change state to: "ACTIVE"
+3. Update task "Optimize scheduler performance (#14-76)":
+   - Change status to: "Blocked"
+
+Return ONLY valid JSON. No markdown. No extra text.

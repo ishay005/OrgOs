@@ -1,0 +1,7 @@
+changes:
+  dependency_changes:
+    - action: add
+      task: "Update authentication configuration (#11-20)"
+      depends_on: "Design scheduler API (#11-23)"
+
+Return ONLY valid JSON. No markdown. No extra text.

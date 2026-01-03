@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Update backup configuration (#17-55) | parent=Create frontend assets (#17-19) |
+| SET_PARENT | Analyze backend metrics (#17-64) | parent=Create worker assets (#17-2) |
+
+Return ONLY valid JSON. No markdown. No extra text.

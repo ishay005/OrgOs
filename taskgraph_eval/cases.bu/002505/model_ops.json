@@ -1,0 +1,55 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Create database assets (#25-1)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T18",
+      "depends_on": []
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Implement sync feature (#25-3)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 4,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": "Architect",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T6",
+      "depends_on": [
+        "T11",
+        "T22"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Analyze gateway metrics (#25-8)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "DRAFT",
+      "impact_size": 3,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": "Team Lead",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T6",
+      "depends_on": []
+    }
+  ]
+}

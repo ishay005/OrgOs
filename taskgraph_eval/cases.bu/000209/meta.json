@@ -1,0 +1,17 @@
+{
+  "case_id": "000209",
+  "target_id": 2,
+  "seed": 2008,
+  "bucket": "EDIT",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Deploy sync to production (#2-6)",
+      "Research logging options (#2-2)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

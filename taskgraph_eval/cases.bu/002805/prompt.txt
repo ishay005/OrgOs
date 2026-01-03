@@ -1,0 +1,10 @@
+Make these changes to the task graph:
+
+• Edit task "Test worker integration (#28-0)"
+  → status: "In progress"
+  → priority: "High"
+• Edit task "Optimize frontend performance (#28-14)"
+  → status: "Not started"
+  → state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

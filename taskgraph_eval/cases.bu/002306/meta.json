@@ -1,0 +1,16 @@
+{
+  "case_id": "002306",
+  "target_id": 23,
+  "seed": 23005,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Create scheduler assets (#23-13)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

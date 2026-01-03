@@ -1,0 +1,9 @@
+Please make the following changes:
+
+1. Update task "Optimize queue performance (#35-19)":
+   - Change impact_size to: 3
+2. Update task "Update alerting configuration (#35-99)":
+   - Change status to: "Not started"
+   - Change state to: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

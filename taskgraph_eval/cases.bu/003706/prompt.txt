@@ -1,0 +1,6 @@
+changes:
+  parent_changes:
+    - task: "Refactor analytics codebase (#37-9)"
+      parent: "Deploy import to production (#37-5)"
+
+Return ONLY valid JSON. No markdown. No extra text.

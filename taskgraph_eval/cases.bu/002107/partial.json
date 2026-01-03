@@ -1,0 +1,144 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Fix scheduler bug (#21-0)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T4",
+        "T8"
+      ],
+      "perceived_owner": "Developer",
+      "main_goal": "Reduce technical debt",
+      "resources": "1 developer, 3 days",
+      "parent": "T5"
+    },
+    {
+      "id": "T2",
+      "title": "Research backup options (#21-1)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T8"
+      ],
+      "resources": "Team effort, 2 sprints",
+      "parent": "T4"
+    },
+    {
+      "id": "T3",
+      "title": "Backup monitoring data (#21-2)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T4",
+        "T8"
+      ],
+      "perceived_owner": "Developer",
+      "parent": "T4"
+    },
+    {
+      "id": "T4",
+      "title": "Migrate payment database (#21-3)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T6"
+      ],
+      "parent": "T6"
+    },
+    {
+      "id": "T5",
+      "title": "Document payment usage (#21-4)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T2"
+    },
+    {
+      "id": "T6",
+      "title": "Refactor analytics codebase (#21-5)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "main_goal": "Increase performance"
+    },
+    {
+      "id": "T7",
+      "title": "Design backend API (#21-6)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "parent": "T6"
+    },
+    {
+      "id": "T8",
+      "title": "Create scheduler assets (#21-7)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T6"
+      ],
+      "perceived_owner": "Manager",
+      "main_goal": "Enhance security",
+      "resources": "1 developer, 3 days",
+      "parent": "T6"
+    },
+    {
+      "id": "T9",
+      "title": "Test database integration (#21-8)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T6"
+      ],
+      "main_goal": "Increase performance",
+      "parent": "T6"
+    }
+  ]
+}

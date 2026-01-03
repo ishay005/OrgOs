@@ -1,0 +1,16 @@
+{
+  "case_id": "004009",
+  "target_id": 40,
+  "seed": 40008,
+  "bucket": "MIXED",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Implement payment feature (#40-24)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

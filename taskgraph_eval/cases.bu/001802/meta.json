@@ -1,0 +1,17 @@
+{
+  "case_id": "001802",
+  "target_id": 18,
+  "seed": 18001,
+  "bucket": "ADD",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [
+      "Test API integration (#18-1)",
+      "Research sync options (#18-9)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 2
+  }
+}

@@ -1,0 +1,10 @@
+Make these changes to the task graph:
+
+• Edit task "Review cache documentation (#27-0)"
+  → status: "In progress"
+  → priority: "Low"
+• Edit task "Create scheduler assets (#27-7)"
+  → status: "Done"
+  → state: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

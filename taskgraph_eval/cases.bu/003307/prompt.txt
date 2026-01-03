@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Update restore configuration (#33-1)"
+  → priority: "Critical"
+• Move "Validate scheduler workflow (#33-2)" under "Configure import settings (#33-11)"
+
+Return ONLY valid JSON. No markdown. No extra text.

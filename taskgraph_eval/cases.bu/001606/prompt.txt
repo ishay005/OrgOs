@@ -1,0 +1,11 @@
+Please make the following changes:
+
+1. Update task "Analyze API metrics (#16-0)":
+   - Change status to: "Not started"
+2. Update task "Backup payment data (#16-19)":
+   - Change status to: "In progress"
+   - Change priority to: "Critical"
+3. Update task "Analyze scheduler metrics (#16-17)":
+   - Change priority to: "High"
+
+Return ONLY valid JSON. No markdown. No extra text.

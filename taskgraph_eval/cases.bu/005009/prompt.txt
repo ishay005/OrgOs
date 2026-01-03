@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Update backup configuration (#50-9)"
+      set:
+        priority: "High"
+  parent_changes:
+    - task: "Deploy dashboard to production (#50-11)"
+      parent: "Design gateway API (#50-25)"
+
+Return ONLY valid JSON. No markdown. No extra text.

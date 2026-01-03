@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Deploy sync to production (#2-6)"
+      set:
+        status: "Blocked"
+    - title: "Research logging options (#2-2)"
+      set:
+        state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,6 @@
+Make these changes to the task graph:
+
+• Add dependency: "Test worker integration (#37-7)" → "Deploy import to production (#37-5)"
+• Add dependency: "Analyze database metrics (#37-10)" → "Review API documentation (#37-6)"
+
+Return ONLY valid JSON. No markdown. No extra text.

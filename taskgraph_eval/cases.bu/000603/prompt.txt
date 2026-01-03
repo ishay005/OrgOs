@@ -1,0 +1,14 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[UPDATE] Task "Fix queue bug (#6-2)" requires changes:
+         - priority: "Critical"
+
+[REORG] Move "Research restore options (#6-9)" under "Fix queue bug (#6-2)"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

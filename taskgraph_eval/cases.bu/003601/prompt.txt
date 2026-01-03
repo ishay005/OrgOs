@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Analyze gateway metrics (#36-8)"
+      parent: "Monitor reporting health (#36-9)"
+    - task: "Migrate alerting database (#36-6)"
+      parent: "Debug frontend issue (#36-10)"
+
+Return ONLY valid JSON. No markdown. No extra text.

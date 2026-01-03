@@ -1,0 +1,17 @@
+{
+  "case_id": "001604",
+  "target_id": 16,
+  "seed": 16003,
+  "bucket": "ADD",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [
+      "Implement caching feature (#16-6)",
+      "Test backend integration (#16-16)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

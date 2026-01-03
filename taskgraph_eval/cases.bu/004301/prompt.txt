@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Review database documentation (#43-7) | priority→"Critical" |
+| SET_PARENT | Debug storage issue (#43-10) | parent=Review database documentation (#43-3) |
+
+Return ONLY valid JSON. No markdown. No extra text.

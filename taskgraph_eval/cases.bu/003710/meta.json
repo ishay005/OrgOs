@@ -1,0 +1,17 @@
+{
+  "case_id": "003710",
+  "target_id": 37,
+  "seed": 37009,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Review backend documentation (#37-3)",
+      "Design backend API (#37-4)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Create storage assets (#15-1)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": "Team Lead",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T15",
+      "depends_on": [
+        "T5"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Implement backup feature (#15-12)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Increase performance",
+      "resources": null,
+      "parent": "T9",
+      "depends_on": []
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Optimize queue performance (#15-15)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T26",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T8",
+      "depends_on": "new3"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T11",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T24",
+      "depends_on": "new2"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T26",
+      "depends_on": "new3"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T26",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T30",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T38",
+      "depends_on": "new3"
+    }
+  ]
+}

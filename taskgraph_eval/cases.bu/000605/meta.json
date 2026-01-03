@@ -1,0 +1,17 @@
+{
+  "case_id": "000605",
+  "target_id": 6,
+  "seed": 6004,
+  "bucket": "EDIT",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Backup backup data (#6-6)",
+      "Implement caching feature (#6-4)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

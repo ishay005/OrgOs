@@ -1,0 +1,52 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Analyze gateway metrics (#44-1)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Enable new features",
+      "resources": null,
+      "parent": "T56",
+      "depends_on": [
+        "T52"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T17",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T24",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T42",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T49",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T61",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T74",
+      "depends_on": "new1"
+    }
+  ]
+}

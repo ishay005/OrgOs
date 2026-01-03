@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Update export configuration (#35-15)"
+  → priority: "High"
+• Move "Debug scheduler issue (#35-21)" under "Validate scheduler workflow (#35-12)"
+
+Return ONLY valid JSON. No markdown. No extra text.

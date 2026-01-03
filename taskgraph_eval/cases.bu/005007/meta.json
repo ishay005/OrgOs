@@ -1,0 +1,17 @@
+{
+  "case_id": "005007",
+  "target_id": 50,
+  "seed": 50006,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Optimize database performance (#50-15)",
+      "Validate worker workflow (#50-24)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

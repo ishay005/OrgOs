@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Document reporting usage (#39-26) | parent=Update logging configuration (#39-43) |
+
+Return ONLY valid JSON. No markdown. No extra text.

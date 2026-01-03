@@ -1,0 +1,9 @@
+Please make the following changes:
+
+1. Update task "Debug frontend issue (#38-4)":
+   - Change impact_size to: 2
+2. Update task "Monitor monitoring health (#38-24)":
+   - Change status to: "Not started"
+   - Change state to: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

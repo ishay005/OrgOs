@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Fix scheduler bug (#21-0)"
+      parent: "Document payment usage (#21-4)"
+    - task: "Research backup options (#21-1)"
+      parent: "Migrate payment database (#21-3)"
+
+Return ONLY valid JSON. No markdown. No extra text.

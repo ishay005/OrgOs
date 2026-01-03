@@ -1,0 +1,3 @@
+Create a new task called "Review backend documentation (#37-3)" with priority="Low", status="In progress", state="ACTIVE", owner="U_ishay", created_by="U_elram", impact_size=1, depends_on=[], main_goal="Enhance security", parent="Analyze database metrics (#37-10)". Create a new task called "Design backend API (#37-4)" with priority="Low", status="Done", state="ACTIVE", owner="U_elram", created_by="U_elram", impact_size=1, depends_on=["Review backend documentation (#37-3)"], parent="Test worker integration (#37-7)". Add a dependency where "Analyze database metrics (#37-10)" depends on "Review backend documentation (#37-3)".
+
+Return ONLY valid JSON. No markdown. No extra text.

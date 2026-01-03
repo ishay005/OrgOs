@@ -1,0 +1,17 @@
+{
+  "case_id": "003210",
+  "target_id": 32,
+  "seed": 32009,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Document sync usage (#32-2)",
+      "Validate backend workflow (#32-0)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

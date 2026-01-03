@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Migrate import database (#12-25)"
+      set:
+        priority: "Critical"
+  parent_changes:
+    - task: "Fix backend bug (#12-34)"
+      parent: "Document monitoring usage (#12-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

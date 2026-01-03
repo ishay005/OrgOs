@@ -1,0 +1,198 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Update alerting configuration (#9-0)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T5"
+      ],
+      "perceived_owner": "Manager",
+      "resources": "1 developer, 3 days",
+      "parent": "T2"
+    },
+    {
+      "id": "T2",
+      "title": "Test gateway integration (#9-1)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": []
+    },
+    {
+      "id": "T3",
+      "title": "Optimize backend performance (#9-2)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T7"
+      ],
+      "main_goal": "Improve user experience",
+      "parent": "T10"
+    },
+    {
+      "id": "T4",
+      "title": "Backup sync data (#9-3)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T9"
+      ],
+      "parent": "T2"
+    },
+    {
+      "id": "T5",
+      "title": "Analyze database metrics (#9-4)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ARCHIVED",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T2"
+      ],
+      "parent": "T10"
+    },
+    {
+      "id": "T6",
+      "title": "Debug worker issue (#9-5)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "parent": "T13"
+    },
+    {
+      "id": "T7",
+      "title": "Migrate alerting database (#9-6)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T5"
+    },
+    {
+      "id": "T8",
+      "title": "Analyze cache metrics (#9-7)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T2",
+        "T3"
+      ],
+      "perceived_owner": "Team Lead"
+    },
+    {
+      "id": "T9",
+      "title": "Deploy search to production (#9-8)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T10",
+        "T5"
+      ],
+      "parent": "T2"
+    },
+    {
+      "id": "T10",
+      "title": "Configure analytics settings (#9-9)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T2",
+        "T11"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T8"
+    },
+    {
+      "id": "T11",
+      "title": "Fix proxy bug (#9-10)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T7"
+      ],
+      "main_goal": "Enable new features",
+      "resources": "2 developers, 1 week",
+      "parent": "T2"
+    },
+    {
+      "id": "T12",
+      "title": "Refactor payment codebase (#9-11)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T5"
+      ],
+      "parent": "T1"
+    },
+    {
+      "id": "T13",
+      "title": "Refactor caching codebase (#9-12)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "resources": "2 developers, 1 week",
+      "parent": "T7"
+    }
+  ]
+}

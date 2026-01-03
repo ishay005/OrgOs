@@ -1,0 +1,181 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Implement dashboard feature (#19-0)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T7"
+      ],
+      "main_goal": "Increase performance",
+      "resources": "1 developer, 3 days",
+      "parent": "T5"
+    },
+    {
+      "id": "T2",
+      "title": "Optimize API performance (#19-1)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "resources": "External contractor"
+    },
+    {
+      "id": "T3",
+      "title": "Research search options (#19-2)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T7",
+        "T1",
+        "T11"
+      ],
+      "perceived_owner": "Manager",
+      "main_goal": "Reduce technical debt",
+      "parent": "T12"
+    },
+    {
+      "id": "T4",
+      "title": "Update authentication configuration (#19-3)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "parent": "T6"
+    },
+    {
+      "id": "T5",
+      "title": "Design worker API (#19-4)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T10"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Analyze queue metrics (#19-5)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T5"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T2"
+    },
+    {
+      "id": "T7",
+      "title": "Refactor logging codebase (#19-6)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T5"
+    },
+    {
+      "id": "T8",
+      "title": "Validate database workflow (#19-7)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T10",
+        "T5",
+        "T7"
+      ],
+      "parent": "T9"
+    },
+    {
+      "id": "T9",
+      "title": "Analyze proxy metrics (#19-8)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T2"
+      ],
+      "parent": "T2"
+    },
+    {
+      "id": "T10",
+      "title": "Research dashboard options (#19-9)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "resources": "External contractor",
+      "parent": "T2"
+    },
+    {
+      "id": "T11",
+      "title": "Implement dashboard feature (#19-10)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T8"
+    },
+    {
+      "id": "T12",
+      "title": "Create queue assets (#19-11)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T11",
+        "T8",
+        "T4"
+      ],
+      "parent": "T11"
+    }
+  ]
+}

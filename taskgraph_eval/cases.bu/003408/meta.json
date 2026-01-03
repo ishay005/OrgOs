@@ -1,0 +1,17 @@
+{
+  "case_id": "003408",
+  "target_id": 34,
+  "seed": 34007,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Review API documentation (#34-4)",
+      "Create frontend assets (#34-24)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

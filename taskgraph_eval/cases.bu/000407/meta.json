@@ -1,0 +1,17 @@
+{
+  "case_id": "000407",
+  "target_id": 4,
+  "seed": 4006,
+  "bucket": "EDIT",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Document caching usage (#4-12)",
+      "Optimize gateway performance (#4-9)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Setup sync environment (#14-1)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 5,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Increase performance",
+      "resources": null,
+      "parent": "T82",
+      "depends_on": [
+        "T29"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Update backup configuration (#14-12)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T12",
+      "depends_on": [
+        "T87"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Backup reporting data (#14-70)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T3",
+      "depends_on": [
+        "T8",
+        "T28"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T5",
+      "depends_on": "new3"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T36",
+      "depends_on": "new3"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T74",
+      "depends_on": "new3"
+    }
+  ]
+}

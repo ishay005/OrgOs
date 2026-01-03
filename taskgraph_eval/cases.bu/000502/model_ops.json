@@ -1,0 +1,25 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Update reporting configuration (#5-5)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "DRAFT",
+      "impact_size": 4,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Enhance security",
+      "resources": null,
+      "parent": "T12",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T11",
+      "depends_on": "new1"
+    }
+  ]
+}

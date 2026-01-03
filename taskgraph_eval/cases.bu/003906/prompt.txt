@@ -1,0 +1,6 @@
+Make these changes to the task graph:
+
+• Add dependency: "Research authentication options (#39-74)" → "Setup analytics environment (#39-21)"
+• Add dependency: "Migrate reporting database (#39-99)" → "Fix worker bug (#39-2)"
+
+Return ONLY valid JSON. No markdown. No extra text.

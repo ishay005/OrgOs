@@ -1,0 +1,184 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Monitor backup health (#36-0)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T4"
+      ],
+      "perceived_owner": "Architect",
+      "parent": "T8"
+    },
+    {
+      "id": "T2",
+      "title": "Refactor notification codebase (#36-1)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "main_goal": "Increase performance",
+      "parent": "T9"
+    },
+    {
+      "id": "T3",
+      "title": "Migrate export database (#36-2)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [],
+      "parent": null
+    },
+    {
+      "id": "T4",
+      "title": "Refactor import codebase (#36-3)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "main_goal": "Improve user experience",
+      "parent": "T12"
+    },
+    {
+      "id": "T5",
+      "title": "Setup alerting environment (#36-4)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "parent": "T2"
+    },
+    {
+      "id": "T6",
+      "title": "Research analytics options (#36-5)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T9"
+      ],
+      "parent": "T12"
+    },
+    {
+      "id": "T7",
+      "title": "Migrate alerting database (#36-6)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Manager",
+      "main_goal": "Enhance security",
+      "parent": "T11"
+    },
+    {
+      "id": "T8",
+      "title": "Analyze API metrics (#36-7)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Enhance security"
+    },
+    {
+      "id": "T9",
+      "title": "Analyze gateway metrics (#36-8)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T10"
+    },
+    {
+      "id": "T10",
+      "title": "Monitor reporting health (#36-9)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T1"
+      ],
+      "main_goal": "Improve user experience",
+      "parent": "T4"
+    },
+    {
+      "id": "T11",
+      "title": "Debug frontend issue (#36-10)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "resources": "1 developer, 3 days"
+    },
+    {
+      "id": "T12",
+      "title": "Optimize worker performance (#36-11)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Developer"
+    },
+    {
+      "id": "T13",
+      "title": "Document monitoring usage (#36-12)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "resources": "2 developers, 1 week",
+      "parent": "T12"
+    }
+  ]
+}

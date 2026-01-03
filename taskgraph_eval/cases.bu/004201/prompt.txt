@@ -1,0 +1,6 @@
+changes:
+  parent_changes:
+    - task: "Test storage integration (#42-6)"
+      parent: "Fix storage bug (#42-7)"
+
+Return ONLY valid JSON. No markdown. No extra text.

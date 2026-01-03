@@ -1,0 +1,38 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Validate frontend workflow (#11-3)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "External contractor",
+      "parent": "T1",
+      "depends_on": [
+        "T24"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Refactor analytics codebase (#11-17)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T23",
+      "depends_on": []
+    }
+  ]
+}

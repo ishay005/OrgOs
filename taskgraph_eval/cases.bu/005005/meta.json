@@ -1,0 +1,16 @@
+{
+  "case_id": "005005",
+  "target_id": 50,
+  "seed": 50004,
+  "bucket": "MIXED",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Setup caching environment (#50-8)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

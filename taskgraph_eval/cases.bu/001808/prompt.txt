@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Optimize scheduler performance (#18-3) | parent=Monitor reporting health (#18-6) |
+| SET_PARENT | Migrate authentication database (#18-4) | parent=Analyze API metrics (#18-5) |
+
+Return ONLY valid JSON. No markdown. No extra text.

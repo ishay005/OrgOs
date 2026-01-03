@@ -1,0 +1,195 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Update alerting configuration (#43-0)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T4"
+    },
+    {
+      "id": "T2",
+      "title": "Analyze API metrics (#43-1)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "resources": "1 developer, 3 days",
+      "parent": "T4"
+    },
+    {
+      "id": "T3",
+      "title": "Review worker documentation (#43-2)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T9"
+      ],
+      "main_goal": "Reduce technical debt",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T8"
+    },
+    {
+      "id": "T4",
+      "title": "Review database documentation (#43-3)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": []
+    },
+    {
+      "id": "T5",
+      "title": "Update caching configuration (#43-4)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T2"
+      ],
+      "parent": "T11"
+    },
+    {
+      "id": "T6",
+      "title": "Migrate monitoring database (#43-5)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "perceived_owner": "Manager",
+      "parent": "T4"
+    },
+    {
+      "id": "T7",
+      "title": "Debug scheduler issue (#43-6)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T4"
+    },
+    {
+      "id": "T8",
+      "title": "Review database documentation (#43-7)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T11"
+      ],
+      "parent": "T10"
+    },
+    {
+      "id": "T9",
+      "title": "Test database integration (#43-8)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "parent": "T4"
+    },
+    {
+      "id": "T10",
+      "title": "Analyze scheduler metrics (#43-9)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T6"
+    },
+    {
+      "id": "T11",
+      "title": "Debug storage issue (#43-10)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "main_goal": "Improve user experience",
+      "resources": "1 developer, 3 days",
+      "parent": "T4"
+    },
+    {
+      "id": "T12",
+      "title": "Refactor dashboard codebase (#43-11)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T3"
+    },
+    {
+      "id": "T13",
+      "title": "Backup authentication data (#43-12)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "main_goal": "Enhance security",
+      "resources": "External contractor",
+      "parent": "T5"
+    },
+    {
+      "id": "T14",
+      "title": "Validate proxy workflow (#43-13)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T2"
+    }
+  ]
+}

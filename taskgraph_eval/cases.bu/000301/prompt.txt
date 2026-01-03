@@ -1,0 +1,6 @@
+Make these changes to the task graph:
+
+• Move "Refactor notification codebase (#3-5)" under "Optimize queue performance (#3-4)"
+• Move "Optimize queue performance (#3-4)" under "Test API integration (#3-9)"
+
+Return ONLY valid JSON. No markdown. No extra text.

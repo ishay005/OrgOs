@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| ADD_DEP | Create storage assets (#28-2) → Configure notification settings (#28-20) | - |
+
+Return ONLY valid JSON. No markdown. No extra text.

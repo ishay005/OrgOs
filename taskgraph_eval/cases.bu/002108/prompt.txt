@@ -1,0 +1,13 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[UPDATE] Task "Migrate payment database (#21-3)" requires changes:
+         - status: "Not started"
+         - state: "ACTIVE"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

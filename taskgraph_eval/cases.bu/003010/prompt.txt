@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Migrate alerting database (#30-1)"
+  → priority: "High"
+• Move "Fix scheduler bug (#30-3)" under "Fix frontend bug (#30-8)"
+
+Return ONLY valid JSON. No markdown. No extra text.

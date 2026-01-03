@@ -1,0 +1,17 @@
+{
+  "case_id": "000705",
+  "target_id": 7,
+  "seed": 7004,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Deploy authentication to production (#7-1)",
+      "Create gateway assets (#7-3)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

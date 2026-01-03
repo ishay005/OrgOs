@@ -1,0 +1,206 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Research caching options (#33-0)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T8"
+      ],
+      "perceived_owner": "Manager",
+      "main_goal": "Enhance security",
+      "parent": "T12"
+    },
+    {
+      "id": "T2",
+      "title": "Update restore configuration (#33-1)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "perceived_owner": "Manager",
+      "parent": "T4"
+    },
+    {
+      "id": "T3",
+      "title": "Validate scheduler workflow (#33-2)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T1"
+      ],
+      "perceived_owner": "Developer",
+      "main_goal": "Increase performance",
+      "parent": "T12"
+    },
+    {
+      "id": "T4",
+      "title": "Design proxy API (#33-3)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "parent": "T12"
+    },
+    {
+      "id": "T5",
+      "title": "Document caching usage (#33-4)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "resources": "1 developer, 3 days",
+      "parent": "T14"
+    },
+    {
+      "id": "T6",
+      "title": "Test queue integration (#33-5)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T8"
+      ],
+      "parent": "T11"
+    },
+    {
+      "id": "T7",
+      "title": "Document dashboard usage (#33-6)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T6"
+    },
+    {
+      "id": "T8",
+      "title": "Create scheduler assets (#33-7)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T9",
+        "T2"
+      ],
+      "perceived_owner": "Developer",
+      "parent": "T12"
+    },
+    {
+      "id": "T9",
+      "title": "Review API documentation (#33-8)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": null
+    },
+    {
+      "id": "T10",
+      "title": "Migrate notification database (#33-9)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T2"
+      ],
+      "main_goal": "Enable new features",
+      "parent": "T5"
+    },
+    {
+      "id": "T11",
+      "title": "Implement dashboard feature (#33-10)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T10"
+      ],
+      "parent": "T2"
+    },
+    {
+      "id": "T12",
+      "title": "Configure import settings (#33-11)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": []
+    },
+    {
+      "id": "T13",
+      "title": "Research monitoring options (#33-12)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T11"
+      ],
+      "resources": "External contractor",
+      "parent": "T12"
+    },
+    {
+      "id": "T14",
+      "title": "Optimize worker performance (#33-13)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "parent": "T12"
+    }
+  ]
+}

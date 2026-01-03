@@ -1,0 +1,188 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Refactor import codebase (#3-0)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "resources": "External contractor"
+    },
+    {
+      "id": "T2",
+      "title": "Validate scheduler workflow (#3-1)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T1",
+        "T4"
+      ],
+      "main_goal": "Increase performance",
+      "parent": "T8"
+    },
+    {
+      "id": "T3",
+      "title": "Analyze gateway metrics (#3-2)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T7",
+        "T1"
+      ],
+      "perceived_owner": "Manager",
+      "parent": "T6"
+    },
+    {
+      "id": "T4",
+      "title": "Deploy backup to production (#3-3)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T7",
+        "T9"
+      ],
+      "main_goal": "Increase performance",
+      "parent": "T8"
+    },
+    {
+      "id": "T5",
+      "title": "Optimize queue performance (#3-4)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T1",
+        "T10"
+      ],
+      "resources": "Team effort, 2 sprints",
+      "parent": null
+    },
+    {
+      "id": "T6",
+      "title": "Refactor notification codebase (#3-5)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "resources": "1 developer, 3 days",
+      "parent": null
+    },
+    {
+      "id": "T7",
+      "title": "Research import options (#3-6)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "perceived_owner": "Manager",
+      "parent": "T4"
+    },
+    {
+      "id": "T8",
+      "title": "Analyze database metrics (#3-7)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T5",
+        "T10"
+      ]
+    },
+    {
+      "id": "T9",
+      "title": "Configure notification settings (#3-8)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T7"
+      ],
+      "parent": "T8"
+    },
+    {
+      "id": "T10",
+      "title": "Test API integration (#3-9)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T1"
+      ],
+      "resources": "External contractor",
+      "parent": "T9"
+    },
+    {
+      "id": "T11",
+      "title": "Refactor backup codebase (#3-10)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T10"
+      ],
+      "parent": "T8"
+    },
+    {
+      "id": "T12",
+      "title": "Design gateway API (#3-11)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T5",
+        "T3"
+      ],
+      "main_goal": "Enhance security",
+      "parent": "T8"
+    }
+  ]
+}

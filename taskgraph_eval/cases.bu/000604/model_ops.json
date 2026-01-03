@@ -1,0 +1,40 @@
+{
+  "ops": [
+    {
+      "op": "TASK_UPDATE",
+      "id": "T4",
+      "field": "status",
+      "value": "Not started"
+    },
+    {
+      "op": "TASK_UPDATE",
+      "id": "T4",
+      "field": "state",
+      "value": "DRAFT"
+    },
+    {
+      "op": "TASK_UPDATE",
+      "id": "T3",
+      "field": "impact_size",
+      "value": 3
+    },
+    {
+      "op": "TASK_UPDATE",
+      "id": "T3",
+      "field": "priority",
+      "value": "Critical"
+    },
+    {
+      "op": "TASK_UPDATE",
+      "id": "T6",
+      "field": "status",
+      "value": "In progress"
+    },
+    {
+      "op": "TASK_UPDATE",
+      "id": "T6",
+      "field": "state",
+      "value": "ACTIVE"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+Please make the following changes:
+
+1. Create a new task titled "Analyze API metrics (#44-10)"
+   - Set priority to: "Critical"
+   - Set status to: "Not started"
+   - Set state to: "DRAFT"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 3
+   - Set depends_on to: ["Refactor search codebase (#44-43)"]
+   - Set parent to: "Validate API workflow (#44-13)"
+2. Create a new task titled "Analyze queue metrics (#44-56)"
+   - Set priority to: "High"
+   - Set status to: "In progress"
+   - Set state to: "DRAFT"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 3
+   - Set depends_on to: ["Monitor import health (#44-8)", "Optimize API performance (#44-70)", "Test database integration (#44-27)"]
+   - Set main_goal to: "Improve user experience"
+   - Set resources to: "Team effort, 2 sprints"
+   - Set parent to: "Debug API issue (#44-64)"
+3. Add dependency: "Refactor alerting codebase (#44-15)" depends on "Analyze queue metrics (#44-56)"
+4. Add dependency: "Optimize backend performance (#44-38)" depends on "Analyze queue metrics (#44-56)"
+5. Add dependency: "Optimize backend performance (#44-38)" depends on "Analyze API metrics (#44-10)"
+6. Add dependency: "Refactor search codebase (#44-43)" depends on "Analyze queue metrics (#44-56)"
+7. Add dependency: "Implement search feature (#44-53)" depends on "Analyze queue metrics (#44-56)"
+8. Add dependency: "Create backend assets (#44-66)" depends on "Analyze queue metrics (#44-56)"
+9. Add dependency: "Implement alerting feature (#44-84)" depends on "Analyze API metrics (#44-10)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Refactor payment codebase (#20-0)"
+      parent: "Fix API bug (#20-106)"
+    - task: "Implement search feature (#20-25)"
+      parent: "Configure monitoring settings (#20-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

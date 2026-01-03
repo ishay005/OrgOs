@@ -1,0 +1,18 @@
+{
+  "case_id": "000104",
+  "target_id": 1,
+  "seed": 1003,
+  "bucket": "ADD",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [
+      "Review backend documentation (#1-2)",
+      "Backup logging data (#1-3)",
+      "Design gateway API (#1-9)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 2
+  }
+}

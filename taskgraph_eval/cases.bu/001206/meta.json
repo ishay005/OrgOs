@@ -1,0 +1,16 @@
+{
+  "case_id": "001206",
+  "target_id": 12,
+  "seed": 12005,
+  "bucket": "MIXED",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Migrate import database (#12-25)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

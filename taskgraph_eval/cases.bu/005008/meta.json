@@ -1,0 +1,17 @@
+{
+  "case_id": "005008",
+  "target_id": 50,
+  "seed": 50007,
+  "bucket": "EDIT",
+  "prompt_format": "table",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Monitor payment health (#50-3)",
+      "Monitor dashboard health (#50-17)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

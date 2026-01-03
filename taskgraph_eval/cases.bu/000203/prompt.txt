@@ -1,0 +1,46 @@
+changes:
+  add_tasks:
+    - title: "Configure caching settings (#2-4)"
+      priority: "Critical"
+      status: "Done"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_ishay"
+      impact_size: 4
+      depends_on: ["Research logging options (#2-2)", "Backup caching data (#2-5)", "Setup monitoring environment (#2-3)"]
+      perceived_owner: "Developer"
+      resources: "Team effort, 2 sprints"
+      parent: "Document authentication usage (#2-1)"
+    - title: "Backup caching data (#2-5)"
+      priority: "Critical"
+      status: "Blocked"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 4
+      depends_on: []
+      resources: "External contractor"
+      parent: "Deploy sync to production (#2-6)"
+    - title: "Optimize API performance (#2-7)"
+      priority: "Critical"
+      status: "Blocked"
+      state: "ACTIVE"
+      owner: "U_ishay"
+      created_by: "U_ishay"
+      impact_size: 3
+      depends_on: ["Backup caching data (#2-5)", "Research logging options (#2-2)", "Setup monitoring environment (#2-3)", "Configure reporting settings (#2-0)"]
+      perceived_owner: "Developer"
+      main_goal: "Improve user experience"
+      parent: "Setup monitoring environment (#2-3)"
+  dependency_changes:
+    - action: add
+      task: "Document authentication usage (#2-1)"
+      depends_on: "Configure caching settings (#2-4)"
+    - action: add
+      task: "Research logging options (#2-2)"
+      depends_on: "Backup caching data (#2-5)"
+    - action: add
+      task: "Deploy sync to production (#2-6)"
+      depends_on: "Optimize API performance (#2-7)"
+
+Return ONLY valid JSON. No markdown. No extra text.

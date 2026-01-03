@@ -1,0 +1,6 @@
+changes:
+  parent_changes:
+    - task: "Review API documentation (#34-19)"
+      parent: "Debug backend issue (#34-18)"
+
+Return ONLY valid JSON. No markdown. No extra text.

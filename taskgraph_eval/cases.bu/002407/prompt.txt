@@ -1,0 +1,5 @@
+Make these changes to the task graph:
+
+• Move "Validate cache workflow (#24-3)" under "Fix database bug (#24-70)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,3 @@
+Create a new task called "Design proxy API (#39-25)" with priority="Critical", status="Not started", state="ACTIVE", owner="U_ishay", created_by="U_elram", impact_size=4, depends_on=["Backup backup data (#39-39)"], resources="External contractor", parent="Debug gateway issue (#39-87)". Create a new task called "Implement search feature (#39-27)" with priority="High", status="Not started", state="ACTIVE", owner="U_ishay", created_by="U_ishay", impact_size=5, depends_on=["Configure sync settings (#39-10)"], parent="Optimize scheduler performance (#39-48)".
+
+Return ONLY valid JSON. No markdown. No extra text.

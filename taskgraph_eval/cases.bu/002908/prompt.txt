@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Optimize database performance (#29-21)"
+      parent: "Research reporting options (#29-11)"
+    - task: "Migrate alerting database (#29-15)"
+      parent: "Optimize database performance (#29-14)"
+
+Return ONLY valid JSON. No markdown. No extra text.

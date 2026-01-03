@@ -1,0 +1,50 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Test API integration (#18-1)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 5,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T7",
+      "depends_on": [
+        "T8"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Research sync options (#18-9)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "DRAFT",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Reduce technical debt",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T4",
+      "depends_on": [
+        "T6"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T7",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T9",
+      "depends_on": "new1"
+    }
+  ]
+}

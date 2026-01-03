@@ -1,0 +1,64 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Create queue assets (#14-9)",
+      "priority": "High",
+      "status": "Done",
+      "state": "DRAFT",
+      "impact_size": 3,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T30",
+      "depends_on": [
+        "T65",
+        "T4"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Setup payment environment (#14-52)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "Team effort, 2 sprints",
+      "parent": "T55",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T5",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T12",
+      "depends_on": "new2"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T52",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T73",
+      "depends_on": "new2"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T95",
+      "depends_on": "new1"
+    }
+  ]
+}

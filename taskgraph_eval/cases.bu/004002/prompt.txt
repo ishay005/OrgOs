@@ -1,0 +1,9 @@
+Please make the following changes:
+
+1. Update task "Fix proxy bug (#40-4)":
+   - Change impact_size to: 2
+2. Update task "Implement payment feature (#40-24)":
+   - Change status to: "In progress"
+   - Change state to: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

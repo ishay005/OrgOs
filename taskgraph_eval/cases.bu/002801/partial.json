@@ -1,0 +1,333 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Test worker integration (#28-0)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T8"
+      ],
+      "parent": "T8"
+    },
+    {
+      "id": "T2",
+      "title": "Update sync configuration (#28-1)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T3",
+        "T21"
+      ],
+      "main_goal": "Increase performance"
+    },
+    {
+      "id": "T3",
+      "title": "Create storage assets (#28-2)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T21"
+      ],
+      "parent": "T5"
+    },
+    {
+      "id": "T4",
+      "title": "Deploy authentication to production (#28-3)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T6"
+      ],
+      "perceived_owner": "Developer",
+      "main_goal": "Enable new features",
+      "parent": "T6"
+    },
+    {
+      "id": "T5",
+      "title": "Design API API (#28-4)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T18",
+        "T4",
+        "T21"
+      ],
+      "main_goal": "Enhance security"
+    },
+    {
+      "id": "T6",
+      "title": "Setup reporting environment (#28-5)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "resources": "Team effort, 2 sprints",
+      "parent": "T21"
+    },
+    {
+      "id": "T7",
+      "title": "Debug frontend issue (#28-6)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T10"
+      ],
+      "parent": "T5"
+    },
+    {
+      "id": "T8",
+      "title": "Backup export data (#28-7)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T3"
+    },
+    {
+      "id": "T9",
+      "title": "Implement export feature (#28-8)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T1"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T23"
+    },
+    {
+      "id": "T10",
+      "title": "Debug frontend issue (#28-9)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T11"
+    },
+    {
+      "id": "T11",
+      "title": "Validate gateway workflow (#28-10)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T4"
+      ],
+      "main_goal": "Reduce technical debt",
+      "parent": "T2"
+    },
+    {
+      "id": "T12",
+      "title": "Design storage API (#28-11)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T5"
+    },
+    {
+      "id": "T13",
+      "title": "Migrate sync database (#28-12)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Manager",
+      "resources": "External contractor",
+      "parent": "T5"
+    },
+    {
+      "id": "T14",
+      "title": "Validate gateway workflow (#28-13)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T2"
+      ],
+      "parent": "T2"
+    },
+    {
+      "id": "T15",
+      "title": "Optimize frontend performance (#28-14)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T3"
+      ],
+      "resources": "Team effort, 2 sprints",
+      "parent": "T14"
+    },
+    {
+      "id": "T16",
+      "title": "Implement caching feature (#28-15)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T5"
+    },
+    {
+      "id": "T17",
+      "title": "Review storage documentation (#28-16)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T5"
+    },
+    {
+      "id": "T18",
+      "title": "Implement logging feature (#28-17)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "parent": "T10"
+    },
+    {
+      "id": "T19",
+      "title": "Update analytics configuration (#28-18)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T8"
+      ],
+      "parent": "T5"
+    },
+    {
+      "id": "T20",
+      "title": "Update payment configuration (#28-19)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T13"
+    },
+    {
+      "id": "T21",
+      "title": "Configure notification settings (#28-20)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T19"
+      ],
+      "parent": "T18"
+    },
+    {
+      "id": "T22",
+      "title": "Setup search environment (#28-21)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Developer",
+      "resources": "2 developers, 1 week",
+      "parent": "T20"
+    },
+    {
+      "id": "T23",
+      "title": "Design gateway API (#28-22)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T3",
+        "T2",
+        "T1"
+      ],
+      "resources": "Team effort, 2 sprints",
+      "parent": "T5"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+Create a new task called "Update notification configuration (#45-6)" with priority="Low", status="Done", state="DRAFT", owner="U_elram", created_by="U_elram", impact_size=3, depends_on=["Test database integration (#45-8)"], perceived_owner="Developer", parent="Migrate logging database (#45-4)". Create a new task called "Document notification usage (#45-7)" with priority="Critical", status="In progress", state="ACTIVE", owner="U_elram", created_by="U_elram", impact_size=5, depends_on=["Analyze worker metrics (#45-5)"], perceived_owner="Team Lead", parent="Test database integration (#45-8)". Add a dependency where "Analyze worker metrics (#45-5)" depends on "Update notification configuration (#45-6)".
+
+Return ONLY valid JSON. No markdown. No extra text.

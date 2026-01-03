@@ -1,0 +1,7 @@
+changes:
+  dependency_changes:
+    - action: add
+      task: "Analyze database metrics (#9-4)"
+      depends_on: "Test gateway integration (#9-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

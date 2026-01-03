@@ -1,0 +1,40 @@
+changes:
+  add_tasks:
+    - title: "Fix scheduler bug (#21-0)"
+      priority: "Low"
+      status: "Blocked"
+      state: "ACTIVE"
+      owner: "U_ishay"
+      created_by: "U_ishay"
+      impact_size: 5
+      depends_on: ["Migrate payment database (#21-3)", "Create scheduler assets (#21-7)"]
+      perceived_owner: "Developer"
+      main_goal: "Reduce technical debt"
+      resources: "1 developer, 3 days"
+      parent: "Document payment usage (#21-4)"
+    - title: "Backup monitoring data (#21-2)"
+      priority: "Critical"
+      status: "Done"
+      state: "DRAFT"
+      owner: "U_elram"
+      created_by: "U_ishay"
+      impact_size: 2
+      depends_on: ["Migrate payment database (#21-3)", "Create scheduler assets (#21-7)"]
+      perceived_owner: "Developer"
+      parent: "Migrate payment database (#21-3)"
+    - title: "Test database integration (#21-8)"
+      priority: "Critical"
+      status: "Not started"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 1
+      depends_on: ["Refactor analytics codebase (#21-5)"]
+      main_goal: "Increase performance"
+      parent: "Refactor analytics codebase (#21-5)"
+  dependency_changes:
+    - action: add
+      task: "Design backend API (#21-6)"
+      depends_on: "Fix scheduler bug (#21-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

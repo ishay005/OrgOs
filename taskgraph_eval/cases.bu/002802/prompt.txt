@@ -1,0 +1,38 @@
+changes:
+  add_tasks:
+    - title: "Test worker integration (#28-0)"
+      priority: "High"
+      status: "In progress"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 3
+      depends_on: ["Backup export data (#28-7)"]
+      parent: "Backup export data (#28-7)"
+    - title: "Debug frontend issue (#28-6)"
+      priority: "Medium"
+      status: "Blocked"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_ishay"
+      impact_size: 4
+      depends_on: ["Debug frontend issue (#28-9)"]
+      parent: "Design API API (#28-4)"
+    - title: "Design storage API (#28-11)"
+      priority: "Medium"
+      status: "Blocked"
+      state: "DRAFT"
+      owner: "U_ishay"
+      created_by: "U_elram"
+      impact_size: 2
+      depends_on: []
+      parent: "Design API API (#28-4)"
+  dependency_changes:
+    - action: add
+      task: "Implement export feature (#28-8)"
+      depends_on: "Test worker integration (#28-0)"
+    - action: add
+      task: "Design gateway API (#28-22)"
+      depends_on: "Test worker integration (#28-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,16 @@
+{
+  "case_id": "004408",
+  "target_id": 44,
+  "seed": 44007,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Analyze gateway metrics (#44-1)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 6
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "001008",
+  "target_id": 10,
+  "seed": 10007,
+  "bucket": "MIXED",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Deploy import to production (#10-6)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

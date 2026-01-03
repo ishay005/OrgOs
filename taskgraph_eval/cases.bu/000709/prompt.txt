@@ -1,0 +1,7 @@
+changes:
+  dependency_changes:
+    - action: add
+      task: "Analyze gateway metrics (#7-30)"
+      depends_on: "Create storage assets (#7-10)"
+
+Return ONLY valid JSON. No markdown. No extra text.

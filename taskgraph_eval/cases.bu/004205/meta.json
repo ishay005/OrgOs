@@ -1,0 +1,17 @@
+{
+  "case_id": "004205",
+  "target_id": 42,
+  "seed": 42004,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Create gateway assets (#42-2)",
+      "Setup monitoring environment (#42-5)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

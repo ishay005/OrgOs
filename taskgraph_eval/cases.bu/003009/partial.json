@@ -1,0 +1,191 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Setup notification environment (#30-0)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T11",
+        "T4"
+      ],
+      "main_goal": "Reduce technical debt"
+    },
+    {
+      "id": "T2",
+      "title": "Migrate alerting database (#30-1)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T4",
+        "T3"
+      ],
+      "parent": "T1"
+    },
+    {
+      "id": "T3",
+      "title": "Update sync configuration (#30-2)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "perceived_owner": "Manager",
+      "parent": "T10"
+    },
+    {
+      "id": "T4",
+      "title": "Fix scheduler bug (#30-3)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T11"
+      ],
+      "resources": "2 developers, 1 week",
+      "parent": "T9"
+    },
+    {
+      "id": "T5",
+      "title": "Create cache assets (#30-4)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T2",
+        "T4"
+      ],
+      "parent": "T8"
+    },
+    {
+      "id": "T6",
+      "title": "Deploy import to production (#30-5)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T7",
+        "T10"
+      ],
+      "main_goal": "Increase performance",
+      "parent": "T2"
+    },
+    {
+      "id": "T7",
+      "title": "Optimize queue performance (#30-6)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "resources": "External contractor",
+      "parent": "T1"
+    },
+    {
+      "id": "T8",
+      "title": "Setup backup environment (#30-7)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T5"
+      ],
+      "perceived_owner": "Architect",
+      "parent": "T4"
+    },
+    {
+      "id": "T9",
+      "title": "Fix frontend bug (#30-8)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T10"
+      ],
+      "parent": "T11"
+    },
+    {
+      "id": "T10",
+      "title": "Debug frontend issue (#30-9)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T3"
+      ],
+      "main_goal": "Reduce technical debt"
+    },
+    {
+      "id": "T11",
+      "title": "Setup authentication environment (#30-10)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T10"
+    },
+    {
+      "id": "T12",
+      "title": "Extra task to delete (30-8-0)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": []
+    },
+    {
+      "id": "T13",
+      "title": "Extra task to delete (30-8-1)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": []
+    }
+  ]
+}

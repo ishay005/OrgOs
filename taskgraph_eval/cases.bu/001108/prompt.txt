@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Update authentication configuration (#11-20) | priority→"Medium" |
+| SET_PARENT | Refactor analytics codebase (#11-17) | parent=Document authentication usage (#11-22) |
+
+Return ONLY valid JSON. No markdown. No extra text.

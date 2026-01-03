@@ -1,0 +1,129 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Configure reporting settings (#2-0)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T4"
+    },
+    {
+      "id": "T2",
+      "title": "Document authentication usage (#2-1)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T8"
+      ],
+      "main_goal": "Enhance security"
+    },
+    {
+      "id": "T3",
+      "title": "Research logging options (#2-2)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T9"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T1"
+    },
+    {
+      "id": "T4",
+      "title": "Setup monitoring environment (#2-3)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "main_goal": "Improve user experience"
+    },
+    {
+      "id": "T7",
+      "title": "Deploy sync to production (#2-6)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T10"
+      ],
+      "parent": "T3"
+    },
+    {
+      "id": "T8",
+      "depends_on": [
+        "T3",
+        "T9",
+        "T4"
+      ],
+      "title": "Configure caching settings (#2-4)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 4,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": "Developer",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T2"
+    },
+    {
+      "id": "T9",
+      "depends_on": [],
+      "title": "Backup caching data (#2-5)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 4,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "resources": "External contractor",
+      "parent": "T7"
+    },
+    {
+      "id": "T10",
+      "depends_on": [
+        "T9",
+        "T3",
+        "T4",
+        "T1"
+      ],
+      "title": "Optimize API performance (#2-7)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": "Developer",
+      "main_goal": "Improve user experience",
+      "parent": "T4"
+    }
+  ]
+}

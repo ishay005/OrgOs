@@ -1,0 +1,18 @@
+{
+  "case_id": "001704",
+  "target_id": 17,
+  "seed": 17003,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Research payment options (#17-1)",
+      "Test worker integration (#17-17)",
+      "Configure backup settings (#17-20)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

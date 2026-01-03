@@ -1,0 +1,6 @@
+Make these changes to the task graph:
+
+• Move "Configure caching settings (#2-4)" under "Document authentication usage (#2-1)"
+• Move "Research logging options (#2-2)" under "Configure reporting settings (#2-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

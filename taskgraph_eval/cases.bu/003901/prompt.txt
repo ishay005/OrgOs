@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Document caching usage (#39-15)"
+  → priority: "High"
+• Move "Design backend API (#39-23)" under "Update monitoring configuration (#39-9)"
+
+Return ONLY valid JSON. No markdown. No extra text.

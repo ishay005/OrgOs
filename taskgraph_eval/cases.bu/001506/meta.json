@@ -1,0 +1,18 @@
+{
+  "case_id": "001506",
+  "target_id": 15,
+  "seed": 15005,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Create storage assets (#15-1)",
+      "Implement backup feature (#15-12)",
+      "Optimize queue performance (#15-15)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 7
+  }
+}

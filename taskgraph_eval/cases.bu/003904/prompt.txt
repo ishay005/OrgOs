@@ -1,0 +1,6 @@
+changes:
+  parent_changes:
+    - task: "Implement notification feature (#39-70)"
+      parent: "Configure analytics settings (#39-11)"
+
+Return ONLY valid JSON. No markdown. No extra text.

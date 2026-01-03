@@ -1,0 +1,17 @@
+{
+  "case_id": "002409",
+  "target_id": 24,
+  "seed": 24008,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Validate cache workflow (#24-3)",
+      "Fix proxy bug (#24-56)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

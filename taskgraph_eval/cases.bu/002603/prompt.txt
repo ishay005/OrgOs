@@ -1,0 +1,12 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[UPDATE] Task "Deploy import to production (#26-37)" requires changes:
+         - impact_size: 1
+
+
+Return ONLY valid JSON. No markdown. No extra text.

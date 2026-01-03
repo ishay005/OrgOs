@@ -1,0 +1,499 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Monitor import health (#41-0)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "parent": "T26"
+    },
+    {
+      "id": "T2",
+      "title": "Fix worker bug (#41-1)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "parent": "T18"
+    },
+    {
+      "id": "T3",
+      "title": "Create frontend assets (#41-2)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "resources": "External contractor",
+      "parent": "T13"
+    },
+    {
+      "id": "T4",
+      "title": "Review storage documentation (#41-3)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T19"
+      ],
+      "parent": "T29"
+    },
+    {
+      "id": "T5",
+      "title": "Deploy authentication to production (#41-4)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T23"
+    },
+    {
+      "id": "T6",
+      "title": "Optimize worker performance (#41-5)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T11"
+      ],
+      "perceived_owner": "Architect",
+      "resources": "1 developer, 3 days",
+      "parent": "T29"
+    },
+    {
+      "id": "T7",
+      "title": "Monitor export health (#41-6)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T18"
+    },
+    {
+      "id": "T8",
+      "title": "Research authentication options (#41-7)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T6"
+      ],
+      "parent": null
+    },
+    {
+      "id": "T9",
+      "title": "Design gateway API (#41-8)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "main_goal": "Enhance security",
+      "parent": "T25"
+    },
+    {
+      "id": "T10",
+      "title": "Implement monitoring feature (#41-9)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T22"
+      ],
+      "parent": "T29"
+    },
+    {
+      "id": "T11",
+      "title": "Fix scheduler bug (#41-10)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T2"
+      ],
+      "resources": "2 developers, 1 week",
+      "parent": "T10"
+    },
+    {
+      "id": "T12",
+      "title": "Backup analytics data (#41-11)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "parent": "T29"
+    },
+    {
+      "id": "T13",
+      "title": "Review API documentation (#41-12)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T4",
+        "T29"
+      ],
+      "parent": "T18"
+    },
+    {
+      "id": "T14",
+      "title": "Implement authentication feature (#41-13)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T10"
+      ],
+      "perceived_owner": "Team Lead",
+      "parent": "T31"
+    },
+    {
+      "id": "T15",
+      "title": "Update monitoring configuration (#41-14)",
+      "priority": "High",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T2"
+      ],
+      "parent": "T19"
+    },
+    {
+      "id": "T16",
+      "title": "Refactor search codebase (#41-15)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T22"
+      ],
+      "perceived_owner": "Manager",
+      "parent": "T34"
+    },
+    {
+      "id": "T17",
+      "title": "Deploy import to production (#41-16)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "resources": "1 developer, 3 days",
+      "parent": "T29"
+    },
+    {
+      "id": "T18",
+      "title": "Configure reporting settings (#41-17)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "perceived_owner": "Developer"
+    },
+    {
+      "id": "T19",
+      "title": "Research monitoring options (#41-18)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "perceived_owner": "Manager",
+      "main_goal": "Increase performance",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T12"
+    },
+    {
+      "id": "T20",
+      "title": "Refactor alerting codebase (#41-19)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T17"
+      ],
+      "parent": "T1"
+    },
+    {
+      "id": "T21",
+      "title": "Setup analytics environment (#41-20)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T11"
+      ],
+      "resources": "1 developer, 3 days",
+      "parent": "T18"
+    },
+    {
+      "id": "T22",
+      "title": "Test scheduler integration (#41-21)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T2"
+      ],
+      "main_goal": "Enable new features",
+      "parent": "T18"
+    },
+    {
+      "id": "T23",
+      "title": "Create API assets (#41-22)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "resources": "External contractor",
+      "parent": "T29"
+    },
+    {
+      "id": "T24",
+      "title": "Document monitoring usage (#41-23)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T29"
+    },
+    {
+      "id": "T25",
+      "title": "Backup analytics data (#41-24)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T12"
+      ],
+      "parent": "T19"
+    },
+    {
+      "id": "T26",
+      "title": "Deploy logging to production (#41-25)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [],
+      "perceived_owner": "Manager",
+      "parent": "T16"
+    },
+    {
+      "id": "T27",
+      "title": "Update caching configuration (#41-26)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T9"
+      ],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Improve user experience",
+      "parent": "T18"
+    },
+    {
+      "id": "T28",
+      "title": "Research monitoring options (#41-27)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T24"
+      ],
+      "perceived_owner": "Manager",
+      "main_goal": "Reduce technical debt",
+      "parent": "T33"
+    },
+    {
+      "id": "T29",
+      "title": "Monitor restore health (#41-28)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "resources": "1 developer, 3 days"
+    },
+    {
+      "id": "T30",
+      "title": "Migrate authentication database (#41-29)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "parent": "T13"
+    },
+    {
+      "id": "T31",
+      "title": "Update import configuration (#41-30)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T4"
+      ],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Increase performance",
+      "parent": "T33"
+    },
+    {
+      "id": "T32",
+      "title": "Implement backup feature (#41-31)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T3"
+      ],
+      "perceived_owner": "Manager",
+      "resources": "1 developer, 3 days",
+      "parent": "T18"
+    },
+    {
+      "id": "T33",
+      "title": "Migrate restore database (#41-32)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T22",
+        "T31"
+      ],
+      "parent": "T29"
+    },
+    {
+      "id": "T34",
+      "title": "Update authentication configuration (#41-33)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [],
+      "resources": "External contractor",
+      "parent": "T31"
+    },
+    {
+      "id": "T35",
+      "title": "Review frontend documentation (#41-34)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T17"
+      ],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Reduce technical debt",
+      "parent": "T29"
+    }
+  ]
+}

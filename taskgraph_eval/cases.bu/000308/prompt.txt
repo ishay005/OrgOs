@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Research import options (#3-6)"
+      set:
+        status: "Not started"
+    - title: "Optimize queue performance (#3-4)"
+      set:
+        state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

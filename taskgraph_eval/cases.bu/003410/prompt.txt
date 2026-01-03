@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Update caching configuration (#34-15) | priority→"Medium" |
+| SET_PARENT | Fix backend bug (#34-20) | parent=Analyze proxy metrics (#34-16) |
+
+Return ONLY valid JSON. No markdown. No extra text.

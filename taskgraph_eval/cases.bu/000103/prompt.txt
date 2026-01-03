@@ -1,0 +1,6 @@
+Make these changes to the task graph:
+
+• Move "Design gateway API (#1-9)" under "Deploy payment to production (#1-19)"
+• Move "Validate storage workflow (#1-6)" under "Deploy payment to production (#1-19)"
+
+Return ONLY valid JSON. No markdown. No extra text.

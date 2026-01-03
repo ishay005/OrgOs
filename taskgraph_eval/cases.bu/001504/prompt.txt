@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Debug worker issue (#15-2) | priority→"High" |
+| SET_PARENT | Document export usage (#15-9) | parent=Validate backend workflow (#15-5) |
+
+Return ONLY valid JSON. No markdown. No extra text.

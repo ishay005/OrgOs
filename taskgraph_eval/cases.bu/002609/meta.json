@@ -1,0 +1,16 @@
+{
+  "case_id": "002609",
+  "target_id": 26,
+  "seed": 26008,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Refactor notification codebase (#26-35)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

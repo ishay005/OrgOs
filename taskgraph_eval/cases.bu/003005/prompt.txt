@@ -1,0 +1,12 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[UPDATE] Task "Fix frontend bug (#30-8)" requires changes:
+         - state: "DRAFT"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

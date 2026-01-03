@@ -1,0 +1,147 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Research payment options (#6-0)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T8"
+    },
+    {
+      "id": "T2",
+      "title": "Create queue assets (#6-1)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T7"
+      ],
+      "resources": "Team effort, 2 sprints",
+      "parent": "T8"
+    },
+    {
+      "id": "T3",
+      "title": "Fix queue bug (#6-2)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T9"
+    },
+    {
+      "id": "T4",
+      "title": "Review worker documentation (#6-3)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [],
+      "resources": "1 developer, 3 days",
+      "parent": "T9"
+    },
+    {
+      "id": "T5",
+      "title": "Implement caching feature (#6-4)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T2"
+      ],
+      "main_goal": "Enhance security",
+      "parent": "T7"
+    },
+    {
+      "id": "T6",
+      "title": "Implement notification feature (#6-5)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T2"
+      ],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Enhance security",
+      "parent": "T9"
+    },
+    {
+      "id": "T7",
+      "title": "Backup backup data (#6-6)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": []
+    },
+    {
+      "id": "T8",
+      "title": "Document dashboard usage (#6-7)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [],
+      "perceived_owner": "Architect",
+      "parent": "T9"
+    },
+    {
+      "id": "T9",
+      "title": "Implement logging feature (#6-8)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T5"
+      ]
+    },
+    {
+      "id": "T10",
+      "title": "Research restore options (#6-9)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T2"
+      ],
+      "perceived_owner": "Developer",
+      "parent": "T3"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[ACTION] @team needs to create new task "Design gateway API (#1-9)"
+         - priority should be: "Critical"
+         - status should be: "Blocked"
+         - state should be: "ACTIVE"
+         - owner should be: "U_ishay"
+         - created_by should be: "U_elram"
+         - impact_size should be: 2
+         - depends_on should be: []
+         - parent should be: "Deploy payment to production (#1-19)"
+
+[DEPENDENCY] Add: "Research logging options (#1-4)" depends on "Design gateway API (#1-9)"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

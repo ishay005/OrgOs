@@ -1,0 +1,22 @@
+{
+  "ops": [
+    {
+      "op": "TASK_UPDATE",
+      "id": "T88",
+      "field": "impact_size",
+      "value": 1
+    },
+    {
+      "op": "TASK_UPDATE",
+      "id": "T43",
+      "field": "priority",
+      "value": "High"
+    },
+    {
+      "op": "TASK_UPDATE",
+      "id": "T43",
+      "field": "state",
+      "value": "ACTIVE"
+    }
+  ]
+}

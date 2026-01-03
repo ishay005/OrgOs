@@ -1,0 +1,18 @@
+{
+  "case_id": "002307",
+  "target_id": 23,
+  "seed": 23006,
+  "bucket": "ADD",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [
+      "Research dashboard options (#23-0)",
+      "Implement monitoring feature (#23-10)",
+      "Design gateway API (#23-15)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

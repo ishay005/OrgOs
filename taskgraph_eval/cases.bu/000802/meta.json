@@ -1,0 +1,18 @@
+{
+  "case_id": "000802",
+  "target_id": 8,
+  "seed": 8001,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Backup monitoring data (#8-14)",
+      "Monitor search health (#8-11)",
+      "Monitor dashboard health (#8-22)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

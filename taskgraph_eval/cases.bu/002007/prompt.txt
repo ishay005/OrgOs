@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Fix storage bug (#20-104) | parent=Fix scheduler bug (#20-115) |
+| SET_PARENT | Configure sync settings (#20-96) | parent=Test API integration (#20-42) |
+
+Return ONLY valid JSON. No markdown. No extra text.

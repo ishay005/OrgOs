@@ -1,0 +1,7 @@
+changes:
+  dependency_changes:
+    - action: add
+      task: "Research restore options (#6-9)"
+      depends_on: "Create queue assets (#6-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

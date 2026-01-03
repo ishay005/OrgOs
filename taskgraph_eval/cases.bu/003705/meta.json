@@ -1,0 +1,17 @@
+{
+  "case_id": "003705",
+  "target_id": 37,
+  "seed": 37004,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Deploy export to production (#37-2)",
+      "Optimize scheduler performance (#37-0)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

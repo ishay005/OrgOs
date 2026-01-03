@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Create gateway assets (#23-14) | parent=Test frontend integration (#23-7) |
+| SET_PARENT | Design worker API (#23-18) | parent=Design queue API (#23-16) |
+
+Return ONLY valid JSON. No markdown. No extra text.

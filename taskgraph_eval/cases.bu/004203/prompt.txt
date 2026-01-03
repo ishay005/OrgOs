@@ -1,0 +1,6 @@
+Make these changes to the task graph:
+
+• Add dependency: "Setup monitoring environment (#42-5)" → "Implement analytics feature (#42-4)"
+• Add dependency: "Fix storage bug (#42-7)" → "Deploy analytics to production (#42-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

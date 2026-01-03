@@ -1,0 +1,14 @@
+{
+  "case_id": "004102",
+  "target_id": 41,
+  "seed": 41001,
+  "bucket": "PARENT",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

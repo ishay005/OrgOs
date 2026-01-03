@@ -1,0 +1,5 @@
+Make these changes to the task graph:
+
+• Delete task: "Extra task to delete (15-7-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

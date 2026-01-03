@@ -1,0 +1,17 @@
+{
+  "case_id": "000804",
+  "target_id": 8,
+  "seed": 8003,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Backup payment data (#8-1)",
+      "Configure restore settings (#8-3)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "004306",
+  "target_id": 43,
+  "seed": 43005,
+  "bucket": "MIXED",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Backup authentication data (#43-12)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "case_id": "001804",
+  "target_id": 18,
+  "seed": 18003,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Document sync usage (#18-0)",
+      "Research sync options (#18-9)",
+      "Create scheduler assets (#18-10)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

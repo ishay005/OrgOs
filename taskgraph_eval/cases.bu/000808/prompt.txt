@@ -1,0 +1,7 @@
+changes:
+  dependency_changes:
+    - action: add
+      task: "Document search usage (#8-25)"
+      depends_on: "Migrate restore database (#8-19)"
+
+Return ONLY valid JSON. No markdown. No extra text.

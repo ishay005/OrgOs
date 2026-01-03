@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Analyze gateway metrics (#25-8) | parent=Update payment configuration (#25-5) |
+| SET_PARENT | Fix worker bug (#25-9) | parent=Update payment configuration (#25-5) |
+
+Return ONLY valid JSON. No markdown. No extra text.

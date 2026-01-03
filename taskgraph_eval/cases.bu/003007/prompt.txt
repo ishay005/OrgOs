@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Fix frontend bug (#30-8)"
+      parent: "Setup authentication environment (#30-10)"
+    - task: "Setup backup environment (#30-7)"
+      parent: "Fix scheduler bug (#30-3)"
+
+Return ONLY valid JSON. No markdown. No extra text.

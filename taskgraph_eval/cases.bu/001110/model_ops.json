@@ -1,0 +1,66 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Create API assets (#11-1)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": "Team Lead",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T1",
+      "depends_on": [
+        "T8"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Validate frontend workflow (#11-3)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "External contractor",
+      "parent": "T1",
+      "depends_on": [
+        "new3"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Design scheduler API (#11-23)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T1",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T7",
+      "depends_on": "new3"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T21",
+      "depends_on": "new3"
+    }
+  ]
+}

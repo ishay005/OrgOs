@@ -1,0 +1,18 @@
+{
+  "case_id": "000203",
+  "target_id": 2,
+  "seed": 2002,
+  "bucket": "ADD",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [
+      "Configure caching settings (#2-4)",
+      "Backup caching data (#2-5)",
+      "Optimize API performance (#2-7)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 3
+  }
+}

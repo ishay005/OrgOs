@@ -1,0 +1,212 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Analyze worker metrics (#13-0)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T13",
+        "T12"
+      ],
+      "parent": "T3"
+    },
+    {
+      "id": "T2",
+      "title": "Analyze proxy metrics (#13-1)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T7"
+    },
+    {
+      "id": "T3",
+      "title": "Backup authentication data (#13-2)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T6"
+      ],
+      "main_goal": "Reduce technical debt",
+      "resources": "2 developers, 1 week",
+      "parent": "T8"
+    },
+    {
+      "id": "T4",
+      "title": "Refactor alerting codebase (#13-3)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T3",
+        "T12"
+      ],
+      "perceived_owner": "Architect",
+      "main_goal": "Improve user experience",
+      "resources": "1 developer, 3 days",
+      "parent": "T10"
+    },
+    {
+      "id": "T5",
+      "title": "Test proxy integration (#13-4)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T4",
+        "T13"
+      ],
+      "parent": "T6"
+    },
+    {
+      "id": "T6",
+      "title": "Implement sync feature (#13-5)",
+      "priority": "High",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": []
+    },
+    {
+      "id": "T7",
+      "title": "Deploy import to production (#13-6)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T6",
+        "T12"
+      ],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Enable new features"
+    },
+    {
+      "id": "T8",
+      "title": "Test API integration (#13-7)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "resources": "External contractor",
+      "parent": "T2"
+    },
+    {
+      "id": "T9",
+      "title": "Setup alerting environment (#13-8)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T4"
+      ]
+    },
+    {
+      "id": "T10",
+      "title": "Monitor search health (#13-9)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T11",
+        "T3"
+      ],
+      "parent": "T6"
+    },
+    {
+      "id": "T11",
+      "title": "Implement authentication feature (#13-10)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T1",
+        "T9"
+      ],
+      "main_goal": "Enable new features",
+      "parent": "T9"
+    },
+    {
+      "id": "T12",
+      "title": "Debug proxy issue (#13-11)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T3"
+      ],
+      "parent": "T7"
+    },
+    {
+      "id": "T13",
+      "title": "Debug cache issue (#13-12)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T8"
+      ],
+      "resources": "1 developer, 3 days",
+      "parent": "T1"
+    },
+    {
+      "id": "T14",
+      "title": "Extra task to delete (13-3-0)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": []
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "case_id": "000604",
+  "target_id": 6,
+  "seed": 6003,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Review worker documentation (#6-3)",
+      "Fix queue bug (#6-2)",
+      "Implement notification feature (#6-5)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "003410",
+  "target_id": 34,
+  "seed": 34009,
+  "bucket": "MIXED",
+  "prompt_format": "table",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Update caching configuration (#34-15)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

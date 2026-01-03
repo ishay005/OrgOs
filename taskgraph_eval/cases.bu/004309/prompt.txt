@@ -1,0 +1,13 @@
+Please make the following changes:
+
+1. Create a new task titled "Update alerting configuration (#43-0)"
+   - Set priority to: "Medium"
+   - Set status to: "Done"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 3
+   - Set depends_on to: []
+   - Set parent to: "Review database documentation (#43-3)"
+
+Return ONLY valid JSON. No markdown. No extra text.

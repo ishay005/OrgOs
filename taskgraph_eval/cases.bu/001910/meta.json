@@ -1,0 +1,16 @@
+{
+  "case_id": "001910",
+  "target_id": 19,
+  "seed": 19009,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Research dashboard options (#19-9)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

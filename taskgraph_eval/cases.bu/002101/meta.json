@@ -1,0 +1,18 @@
+{
+  "case_id": "002101",
+  "target_id": 21,
+  "seed": 21000,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Fix scheduler bug (#21-0)",
+      "Test database integration (#21-8)",
+      "Document payment usage (#21-4)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

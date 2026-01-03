@@ -1,0 +1,17 @@
+{
+  "case_id": "004503",
+  "target_id": 45,
+  "seed": 45002,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Analyze worker metrics (#45-5)",
+      "Test database integration (#45-8)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

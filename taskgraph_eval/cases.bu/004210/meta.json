@@ -1,0 +1,16 @@
+{
+  "case_id": "004210",
+  "target_id": 42,
+  "seed": 42009,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Validate gateway workflow (#42-0)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

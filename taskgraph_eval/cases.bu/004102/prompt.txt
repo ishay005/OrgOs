@@ -1,0 +1,6 @@
+changes:
+  parent_changes:
+    - task: "Update authentication configuration (#41-33)"
+      parent: "Update import configuration (#41-30)"
+
+Return ONLY valid JSON. No markdown. No extra text.

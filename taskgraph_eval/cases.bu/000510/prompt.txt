@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| DELETE | Extra task to delete (5-9-0) | - |
+
+Return ONLY valid JSON. No markdown. No extra text.

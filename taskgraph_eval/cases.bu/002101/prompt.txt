@@ -1,0 +1,11 @@
+Please make the following changes:
+
+1. Update task "Fix scheduler bug (#21-0)":
+   - Change status to: "Blocked"
+2. Update task "Test database integration (#21-8)":
+   - Change status to: "Not started"
+   - Change priority to: "Critical"
+3. Update task "Document payment usage (#21-4)":
+   - Change priority to: "Low"
+
+Return ONLY valid JSON. No markdown. No extra text.

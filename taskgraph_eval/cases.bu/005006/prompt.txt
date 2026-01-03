@@ -1,0 +1,26 @@
+Please make the following changes:
+
+1. Create a new task titled "Optimize proxy performance (#50-19)"
+   - Set priority to: "High"
+   - Set status to: "Blocked"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 3
+   - Set depends_on to: ["Optimize scheduler performance (#50-20)", "Update backup configuration (#50-9)"]
+   - Set perceived_owner to: "Architect"
+   - Set parent to: "Design gateway API (#50-25)"
+2. Create a new task titled "Validate storage workflow (#50-28)"
+   - Set priority to: "Medium"
+   - Set status to: "Not started"
+   - Set state to: "DRAFT"
+   - Set owner to: "U_ishay"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 4
+   - Set depends_on to: ["Deploy search to production (#50-2)", "Validate worker workflow (#50-24)", "Debug proxy issue (#50-23)", "Validate worker workflow (#50-5)", "Deploy dashboard to production (#50-18)"]
+   - Set main_goal to: "Enable new features"
+   - Set parent to: "Design gateway API (#50-25)"
+3. Add dependency: "Setup export environment (#50-4)" depends on "Optimize proxy performance (#50-19)"
+4. Add dependency: "Optimize database performance (#50-15)" depends on "Validate storage workflow (#50-28)"
+
+Return ONLY valid JSON. No markdown. No extra text.

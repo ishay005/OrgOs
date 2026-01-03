@@ -1,0 +1,18 @@
+{
+  "case_id": "001902",
+  "target_id": 19,
+  "seed": 19001,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Implement dashboard feature (#19-0)",
+      "Research search options (#19-2)",
+      "Update authentication configuration (#19-3)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

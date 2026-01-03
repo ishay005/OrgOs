@@ -1,0 +1,10 @@
+Please make the following changes:
+
+1. Update task "Deploy export to production (#37-2)":
+   - Change priority to: "Medium"
+   - Change state to: "ACTIVE"
+2. Update task "Optimize scheduler performance (#37-0)":
+   - Change status to: "Done"
+   - Change state to: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

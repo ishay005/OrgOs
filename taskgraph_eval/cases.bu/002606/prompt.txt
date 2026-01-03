@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Update analytics configuration (#26-5) | state→"DRAFT" |
+
+Return ONLY valid JSON. No markdown. No extra text.

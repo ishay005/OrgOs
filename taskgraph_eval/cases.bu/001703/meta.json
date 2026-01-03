@@ -1,0 +1,17 @@
+{
+  "case_id": "001703",
+  "target_id": 17,
+  "seed": 17002,
+  "bucket": "ADD",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [
+      "Optimize storage performance (#17-16)",
+      "Design storage API (#17-58)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 6
+  }
+}

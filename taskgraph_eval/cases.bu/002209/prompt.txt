@@ -1,0 +1,5 @@
+Make these changes to the task graph:
+
+• Move "Backup export data (#22-2)" under "Review database documentation (#22-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

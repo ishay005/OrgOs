@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Analyze queue metrics (#19-5) | parent=Optimize API performance (#19-1) |
+| SET_PARENT | Refactor logging codebase (#19-6) | parent=Design worker API (#19-4) |
+
+Return ONLY valid JSON. No markdown. No extra text.

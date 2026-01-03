@@ -1,0 +1,16 @@
+{
+  "case_id": "003107",
+  "target_id": 31,
+  "seed": 31006,
+  "bucket": "MIXED",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Validate frontend workflow (#31-2)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

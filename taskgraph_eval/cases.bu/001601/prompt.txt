@@ -1,0 +1,3 @@
+Delete the following tasks: "Extra task to delete (16-0-0)".
+
+Return ONLY valid JSON. No markdown. No extra text.

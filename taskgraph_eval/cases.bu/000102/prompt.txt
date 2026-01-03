@@ -1,0 +1,5 @@
+Make these changes to the task graph:
+
+• Add dependency: "Create database assets (#1-18)" → "Validate storage workflow (#1-6)"
+
+Return ONLY valid JSON. No markdown. No extra text.

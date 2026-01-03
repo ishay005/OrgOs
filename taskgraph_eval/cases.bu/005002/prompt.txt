@@ -1,0 +1,14 @@
+Please make the following changes:
+
+1. Create a new task titled "Configure backup settings (#50-0)"
+   - Set priority to: "Low"
+   - Set status to: "Not started"
+   - Set state to: "DRAFT"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 2
+   - Set depends_on to: []
+   - Set resources to: "1 developer, 3 days"
+   - Set parent to: "Design gateway API (#50-25)"
+
+Return ONLY valid JSON. No markdown. No extra text.

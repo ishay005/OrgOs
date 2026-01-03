@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Create scheduler assets (#21-7) | parent=Refactor analytics codebase (#21-5) |
+| SET_PARENT | Migrate payment database (#21-3) | parent=Refactor analytics codebase (#21-5) |
+
+Return ONLY valid JSON. No markdown. No extra text.

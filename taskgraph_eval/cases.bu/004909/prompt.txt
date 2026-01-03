@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Monitor notification health (#49-1) | impact_size→4 |
+| UPDATE | Monitor monitoring health (#49-8) | state→"ACTIVE" |
+
+Return ONLY valid JSON. No markdown. No extra text.

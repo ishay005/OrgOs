@@ -1,0 +1,9 @@
+Make these changes to the task graph:
+
+• Edit task "Setup export environment (#47-10)"
+  → impact_size: 2
+• Edit task "Review scheduler documentation (#47-5)"
+  → priority: "High"
+  → state: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

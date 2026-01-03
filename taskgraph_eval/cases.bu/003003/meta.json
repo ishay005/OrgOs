@@ -1,0 +1,17 @@
+{
+  "case_id": "003003",
+  "target_id": 30,
+  "seed": 30002,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Setup notification environment (#30-0)",
+      "Setup backup environment (#30-7)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "case_id": "004007",
+  "target_id": 40,
+  "seed": 40006,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Validate frontend workflow (#40-12)",
+      "Fix worker bug (#40-13)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 3
+  }
+}

@@ -1,0 +1,11 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[DEPENDENCY] Add: "Validate scheduler workflow (#27-6)" depends on "Monitor monitoring health (#27-8)"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

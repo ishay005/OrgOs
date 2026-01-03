@@ -1,0 +1,17 @@
+{
+  "case_id": "004601",
+  "target_id": 46,
+  "seed": 46000,
+  "bucket": "ADD",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [
+      "Setup sync environment (#46-12)",
+      "Optimize worker performance (#46-25)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

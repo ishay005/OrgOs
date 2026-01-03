@@ -1,0 +1,17 @@
+{
+  "case_id": "003309",
+  "target_id": 33,
+  "seed": 33008,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Validate scheduler workflow (#33-2)",
+      "Research monitoring options (#33-12)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

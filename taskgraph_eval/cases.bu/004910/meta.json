@@ -1,0 +1,16 @@
+{
+  "case_id": "004910",
+  "target_id": 49,
+  "seed": 49009,
+  "bucket": "MIXED",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Research export options (#49-4)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

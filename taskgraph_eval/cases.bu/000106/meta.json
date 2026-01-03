@@ -1,0 +1,16 @@
+{
+  "case_id": "000106",
+  "target_id": 1,
+  "seed": 1005,
+  "bucket": "ADD",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [
+      "Design gateway API (#1-9)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

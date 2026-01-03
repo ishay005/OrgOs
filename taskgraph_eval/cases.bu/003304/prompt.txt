@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Implement dashboard feature (#33-10)"
+      parent: "Update restore configuration (#33-1)"
+    - task: "Create scheduler assets (#33-7)"
+      parent: "Configure import settings (#33-11)"
+
+Return ONLY valid JSON. No markdown. No extra text.

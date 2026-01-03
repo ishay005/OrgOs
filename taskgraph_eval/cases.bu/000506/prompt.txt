@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Design gateway API (#5-12)"
+      set:
+        status: "Blocked"
+    - title: "Debug proxy issue (#5-9)"
+      set:
+        state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

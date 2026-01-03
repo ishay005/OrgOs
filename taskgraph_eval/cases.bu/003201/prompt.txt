@@ -1,0 +1,10 @@
+Make these changes to the task graph:
+
+• Edit task "Validate backend workflow (#32-0)"
+  → status: "Blocked"
+  → priority: "Low"
+• Edit task "Setup authentication environment (#32-7)"
+  → status: "In progress"
+  → state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

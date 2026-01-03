@@ -1,0 +1,162 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Review cache documentation (#27-0)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "main_goal": "Enable new features",
+      "resources": "1 developer, 3 days",
+      "parent": "T3"
+    },
+    {
+      "id": "T2",
+      "title": "Document import usage (#27-1)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T11"
+      ],
+      "main_goal": "Reduce technical debt",
+      "parent": "T4"
+    },
+    {
+      "id": "T3",
+      "title": "Create backend assets (#27-2)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T2",
+        "T10"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Validate gateway workflow (#27-3)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T8",
+        "T11"
+      ],
+      "parent": "T5"
+    },
+    {
+      "id": "T5",
+      "title": "Create frontend assets (#27-4)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "parent": "T3"
+    },
+    {
+      "id": "T6",
+      "title": "Debug scheduler issue (#27-5)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T5"
+      ],
+      "perceived_owner": "Architect",
+      "parent": "T11"
+    },
+    {
+      "id": "T7",
+      "title": "Validate scheduler workflow (#27-6)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T9"
+      ],
+      "parent": "T3"
+    },
+    {
+      "id": "T8",
+      "title": "Create scheduler assets (#27-7)",
+      "priority": "High",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "parent": "T9"
+    },
+    {
+      "id": "T9",
+      "title": "Monitor monitoring health (#27-8)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "parent": "T2"
+    },
+    {
+      "id": "T10",
+      "title": "Test frontend integration (#27-9)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [],
+      "parent": "T3"
+    },
+    {
+      "id": "T11",
+      "title": "Monitor notification health (#27-10)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "parent": "T3"
+    }
+  ]
+}

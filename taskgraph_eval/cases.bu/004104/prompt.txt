@@ -1,0 +1,6 @@
+Make these changes to the task graph:
+
+• Add dependency: "Update import configuration (#41-30)" → "Review storage documentation (#41-3)"
+• Add dependency: "Research monitoring options (#41-27)" → "Document monitoring usage (#41-23)"
+
+Return ONLY valid JSON. No markdown. No extra text.

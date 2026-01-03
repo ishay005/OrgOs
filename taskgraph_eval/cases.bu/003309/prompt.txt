@@ -1,0 +1,9 @@
+Please make the following changes:
+
+1. Update task "Validate scheduler workflow (#33-2)":
+   - Change impact_size to: 3
+2. Update task "Research monitoring options (#33-12)":
+   - Change status to: "Not started"
+   - Change state to: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

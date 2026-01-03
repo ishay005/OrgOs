@@ -1,0 +1,16 @@
+{
+  "case_id": "003703",
+  "target_id": 37,
+  "seed": 37002,
+  "bucket": "MIXED",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Document analytics usage (#37-1)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

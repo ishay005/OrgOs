@@ -1,0 +1,3 @@
+Create a new task called "Create gateway assets (#42-2)" with priority="High", status="In progress", state="ACTIVE", owner="U_elram", created_by="U_ishay", impact_size=3, depends_on=["Test storage integration (#42-6)"], main_goal="Enable new features", parent="Research logging options (#42-8)". Create a new task called "Setup monitoring environment (#42-5)" with priority="Medium", status="Not started", state="DRAFT", owner="U_ishay", created_by="U_ishay", impact_size=4, depends_on=["Implement analytics feature (#42-4)", "Create gateway assets (#42-2)", "Fix storage bug (#42-7)"], resources="2 developers, 1 week".
+
+Return ONLY valid JSON. No markdown. No extra text.

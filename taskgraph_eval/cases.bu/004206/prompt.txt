@@ -1,0 +1,10 @@
+Make these changes to the task graph:
+
+• Edit task "Setup monitoring environment (#42-5)"
+  → state: "DRAFT"
+  → status: "Not started"
+• Edit task "Validate gateway workflow (#42-0)"
+  → impact_size: 2
+  → priority: "Medium"
+
+Return ONLY valid JSON. No markdown. No extra text.

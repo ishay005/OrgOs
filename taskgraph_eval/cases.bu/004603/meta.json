@@ -1,0 +1,16 @@
+{
+  "case_id": "004603",
+  "target_id": 46,
+  "seed": 46002,
+  "bucket": "MIXED",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Fix storage bug (#46-24)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

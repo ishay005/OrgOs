@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Setup analytics environment (#11-12)"
+      set:
+        priority: "Low"
+  parent_changes:
+    - task: "Refactor analytics codebase (#11-17)"
+      parent: "Document authentication usage (#11-22)"
+
+Return ONLY valid JSON. No markdown. No extra text.

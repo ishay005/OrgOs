@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Review API documentation (#41-12) | parent=Configure reporting settings (#41-17) |
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,18 @@
+{
+  "case_id": "001705",
+  "target_id": 17,
+  "seed": 17004,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Backup import data (#17-0)",
+      "Create worker assets (#17-2)",
+      "Research caching options (#17-69)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

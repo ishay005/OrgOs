@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Deploy payment to production (#38-3)"
+  → priority: "Low"
+• Move "Configure sync settings (#38-5)" under "Implement payment feature (#38-12)"
+
+Return ONLY valid JSON. No markdown. No extra text.

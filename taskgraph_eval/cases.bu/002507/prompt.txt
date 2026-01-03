@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Monitor import health (#25-19) | status→"Done" |
+
+Return ONLY valid JSON. No markdown. No extra text.

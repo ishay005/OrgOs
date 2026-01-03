@@ -1,0 +1,16 @@
+{
+  "case_id": "002408",
+  "target_id": 24,
+  "seed": 24007,
+  "bucket": "EDIT",
+  "prompt_format": "table",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Fix API bug (#24-79)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

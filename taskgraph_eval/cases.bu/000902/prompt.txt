@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Migrate alerting database (#9-6)"
+      set:
+        status: "Not started"
+    - title: "Analyze database metrics (#9-4)"
+      set:
+        state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,41 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Migrate export database (#49-7)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 4,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": "Manager",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T9",
+      "depends_on": []
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Refactor monitoring codebase (#49-9)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Increase performance",
+      "resources": null,
+      "parent": "T3",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T2",
+      "depends_on": "new1"
+    }
+  ]
+}

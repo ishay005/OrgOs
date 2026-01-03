@@ -1,0 +1,11 @@
+Please make the following changes:
+
+1. Update task "Analyze worker metrics (#13-0)":
+   - Change status to: "Not started"
+2. Update task "Monitor search health (#13-9)":
+   - Change impact_size to: 3
+   - Change state to: "DRAFT"
+3. Update task "Debug proxy issue (#13-11)":
+   - Change status to: "Blocked"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,17 @@
+{
+  "case_id": "001002",
+  "target_id": 10,
+  "seed": 10001,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Refactor sync codebase (#10-0)",
+      "Setup logging environment (#10-9)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

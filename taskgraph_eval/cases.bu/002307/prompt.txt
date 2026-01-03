@@ -1,0 +1,36 @@
+changes:
+  add_tasks:
+    - title: "Research dashboard options (#23-0)"
+      priority: "Low"
+      status: "In progress"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 3
+      depends_on: ["Validate database workflow (#23-28)", "Create scheduler assets (#23-13)"]
+      perceived_owner: "Manager"
+      main_goal: "Reduce technical debt"
+      parent: "Fix backend bug (#23-2)"
+    - title: "Implement monitoring feature (#23-10)"
+      priority: "High"
+      status: "In progress"
+      state: "DRAFT"
+      owner: "U_ishay"
+      created_by: "U_ishay"
+      impact_size: 2
+      depends_on: ["Review storage documentation (#23-19)"]
+      main_goal: "Enhance security"
+      parent: "Design queue API (#23-16)"
+    - title: "Design gateway API (#23-15)"
+      priority: "Low"
+      status: "Done"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 1
+      depends_on: ["Analyze database metrics (#23-8)"]
+      perceived_owner: "Architect"
+      resources: "Team effort, 2 sprints"
+      parent: "Design queue API (#23-16)"
+
+Return ONLY valid JSON. No markdown. No extra text.

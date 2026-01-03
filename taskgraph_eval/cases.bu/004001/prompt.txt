@@ -1,0 +1,3 @@
+Move the task "Deploy monitoring to production (#40-9)" to be a subtask of "Research export options (#40-11)".
+
+Return ONLY valid JSON. No markdown. No extra text.

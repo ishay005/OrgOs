@@ -1,0 +1,6 @@
+changes:
+  parent_changes:
+    - task: "Optimize queue performance (#40-18)"
+      parent: "Deploy notification to production (#40-8)"
+
+Return ONLY valid JSON. No markdown. No extra text.

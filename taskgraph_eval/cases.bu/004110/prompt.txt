@@ -1,0 +1,5 @@
+Please make the following changes:
+
+1. Set the parent of "Implement authentication feature (#41-13)" to "Update import configuration (#41-30)"
+
+Return ONLY valid JSON. No markdown. No extra text.

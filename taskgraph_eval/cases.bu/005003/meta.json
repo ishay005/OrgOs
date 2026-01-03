@@ -1,0 +1,17 @@
+{
+  "case_id": "005003",
+  "target_id": 50,
+  "seed": 50002,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Validate storage workflow (#50-28)",
+      "Document alerting usage (#50-30)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 2
+  }
+}

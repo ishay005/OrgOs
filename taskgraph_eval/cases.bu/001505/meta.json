@@ -1,0 +1,17 @@
+{
+  "case_id": "001505",
+  "target_id": 15,
+  "seed": 15004,
+  "bucket": "ADD",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [
+      "Implement backup feature (#15-12)",
+      "Migrate import database (#15-35)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

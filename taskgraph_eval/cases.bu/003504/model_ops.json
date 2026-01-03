@@ -1,0 +1,12 @@
+{
+  "ops": [
+    {
+      "op": "TASK_DELETE",
+      "id": "T107"
+    },
+    {
+      "op": "TASK_DELETE",
+      "id": "T108"
+    }
+  ]
+}

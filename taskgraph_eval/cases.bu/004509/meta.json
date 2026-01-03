@@ -1,0 +1,16 @@
+{
+  "case_id": "004509",
+  "target_id": 45,
+  "seed": 45008,
+  "bucket": "MIXED",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Configure payment settings (#45-0)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

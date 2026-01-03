@@ -1,0 +1,22 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Design backend API (#45-3)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 5,
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "2 developers, 1 week",
+      "parent": "T2",
+      "depends_on": [
+        "T3"
+      ]
+    }
+  ]
+}

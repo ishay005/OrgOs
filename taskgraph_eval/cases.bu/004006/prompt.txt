@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Configure export settings (#40-6) | parent=Update backup configuration (#40-30) |
+
+Return ONLY valid JSON. No markdown. No extra text.

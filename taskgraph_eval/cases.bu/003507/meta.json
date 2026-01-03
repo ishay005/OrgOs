@@ -1,0 +1,17 @@
+{
+  "case_id": "003507",
+  "target_id": 35,
+  "seed": 35006,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Optimize queue performance (#35-19)",
+      "Update alerting configuration (#35-99)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

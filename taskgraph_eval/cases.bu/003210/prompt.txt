@@ -1,0 +1,10 @@
+Please make the following changes:
+
+1. Update task "Document sync usage (#32-2)":
+   - Change priority to: "Critical"
+   - Change state to: "ACTIVE"
+2. Update task "Validate backend workflow (#32-0)":
+   - Change status to: "Blocked"
+   - Change state to: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,17 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[UPDATE] Task "Fix database bug (#5-0)" requires changes:
+         - priority: "High"
+         - impact_size: 2
+
+[UPDATE] Task "Test API integration (#5-1)" requires changes:
+         - impact_size: 2
+         - status: "Not started"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

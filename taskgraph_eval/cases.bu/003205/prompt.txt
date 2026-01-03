@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Refactor analytics codebase (#32-10)"
+      parent: "Test gateway integration (#32-6)"
+    - task: "Analyze proxy metrics (#32-8)"
+      parent: "Update export configuration (#32-12)"
+
+Return ONLY valid JSON. No markdown. No extra text.

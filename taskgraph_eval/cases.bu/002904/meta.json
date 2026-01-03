@@ -1,0 +1,17 @@
+{
+  "case_id": "002904",
+  "target_id": 29,
+  "seed": 29003,
+  "bucket": "EDIT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Configure caching settings (#29-0)",
+      "Optimize database performance (#29-14)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

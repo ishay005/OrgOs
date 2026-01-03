@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Fix backend bug (#45-1) | parent=Configure payment settings (#45-0) |
+
+Return ONLY valid JSON. No markdown. No extra text.

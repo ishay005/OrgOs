@@ -1,0 +1,16 @@
+{
+  "case_id": "001701",
+  "target_id": 17,
+  "seed": 17000,
+  "bucket": "MIXED",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Deploy authentication to production (#17-50)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

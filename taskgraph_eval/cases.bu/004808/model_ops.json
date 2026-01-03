@@ -1,0 +1,44 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Analyze storage metrics (#48-0)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": "Architect",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T7",
+      "depends_on": [
+        "T31",
+        "T32"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Review cache documentation (#48-12)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T35",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T7",
+      "depends_on": "new2"
+    }
+  ]
+}

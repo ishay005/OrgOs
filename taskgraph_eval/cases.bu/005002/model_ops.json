@@ -1,0 +1,20 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Configure backup settings (#50-0)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "DRAFT",
+      "impact_size": 2,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "1 developer, 3 days",
+      "parent": "T26",
+      "depends_on": []
+    }
+  ]
+}

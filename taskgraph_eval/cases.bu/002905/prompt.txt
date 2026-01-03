@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| ADD_DEP | Validate frontend workflow (#29-22) → Configure caching settings (#29-0) | - |
+
+Return ONLY valid JSON. No markdown. No extra text.

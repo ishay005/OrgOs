@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Optimize API performance (#34-23)"
+      parent: "Debug storage issue (#34-9)"
+    - task: "Update caching configuration (#34-15)"
+      parent: "Optimize storage performance (#34-2)"
+
+Return ONLY valid JSON. No markdown. No extra text.

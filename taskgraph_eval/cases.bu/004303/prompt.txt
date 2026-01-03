@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| SET_PARENT | Update caching configuration (#43-4) | parent=Debug storage issue (#43-10) |
+
+Return ONLY valid JSON. No markdown. No extra text.

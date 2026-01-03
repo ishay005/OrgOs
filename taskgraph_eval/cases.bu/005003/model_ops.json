@@ -1,0 +1,55 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Validate storage workflow (#50-28)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "impact_size": 4,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": "Enable new features",
+      "resources": null,
+      "parent": "T26",
+      "depends_on": [
+        "T3",
+        "T25",
+        "T24",
+        "T6",
+        "T19"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Document alerting usage (#50-30)",
+      "priority": "High",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T22",
+      "depends_on": [
+        "T10",
+        "T8"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T16",
+      "depends_on": "new1"
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T30",
+      "depends_on": "new2"
+    }
+  ]
+}

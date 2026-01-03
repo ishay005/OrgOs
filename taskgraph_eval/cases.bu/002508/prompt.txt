@@ -1,0 +1,10 @@
+Make these changes to the task graph:
+
+• Edit task "Setup restore environment (#25-0)"
+  → status: "Not started"
+  → priority: "Medium"
+• Edit task "Monitor sync health (#25-14)"
+  → status: "Not started"
+  → state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,11 @@
+Please make the following changes:
+
+1. Update task "Validate queue workflow (#12-0)":
+   - Change status to: "Not started"
+2. Update task "Document monitoring usage (#12-1)":
+   - Change status to: "Done"
+   - Change priority to: "Low"
+3. Update task "Fix backend bug (#12-34)":
+   - Change priority to: "Critical"
+
+Return ONLY valid JSON. No markdown. No extra text.

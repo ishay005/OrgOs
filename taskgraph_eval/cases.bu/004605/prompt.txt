@@ -1,0 +1,5 @@
+Please make the following changes:
+
+1. Set the parent of "Implement sync feature (#46-8)" to "Configure dashboard settings (#46-1)"
+
+Return ONLY valid JSON. No markdown. No extra text.

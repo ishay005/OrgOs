@@ -1,0 +1,14 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[UPDATE] Task "Research logging options (#1-4)" requires changes:
+         - priority: "Medium"
+
+[REORG] Move "Monitor restore health (#1-14)" under "Fix frontend bug (#1-15)"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

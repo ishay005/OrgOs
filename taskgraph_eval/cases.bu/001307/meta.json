@@ -1,0 +1,17 @@
+{
+  "case_id": "001307",
+  "target_id": 13,
+  "seed": 13006,
+  "bucket": "ADD",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [
+      "Test proxy integration (#13-4)",
+      "Debug cache issue (#13-12)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

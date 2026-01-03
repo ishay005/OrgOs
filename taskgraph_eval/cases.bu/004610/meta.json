@@ -1,0 +1,17 @@
+{
+  "case_id": "004610",
+  "target_id": 46,
+  "seed": 46009,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Test database integration (#46-11)",
+      "Refactor logging codebase (#46-23)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 3
+  }
+}

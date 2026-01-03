@@ -1,0 +1,18 @@
+{
+  "case_id": "002109",
+  "target_id": 21,
+  "seed": 21008,
+  "bucket": "ADD",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [
+      "Fix scheduler bug (#21-0)",
+      "Backup monitoring data (#21-2)",
+      "Test database integration (#21-8)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

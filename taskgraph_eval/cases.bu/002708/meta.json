@@ -1,0 +1,16 @@
+{
+  "case_id": "002708",
+  "target_id": 27,
+  "seed": 27007,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Monitor monitoring health (#27-8)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

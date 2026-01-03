@@ -1,0 +1,16 @@
+{
+  "case_id": "004309",
+  "target_id": 43,
+  "seed": 43008,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Update alerting configuration (#43-0)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

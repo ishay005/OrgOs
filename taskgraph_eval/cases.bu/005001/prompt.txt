@@ -1,0 +1,5 @@
+Please make the following changes:
+
+1. Set the parent of "Update dashboard configuration (#50-6)" to "Design gateway API (#50-25)"
+
+Return ONLY valid JSON. No markdown. No extra text.

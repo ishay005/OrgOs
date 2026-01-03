@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| ADD_DEP | Debug proxy issue (#32-3) → Debug frontend issue (#32-5) | - |
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,43 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Optimize database performance (#50-15)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T19",
+      "depends_on": [
+        "T29"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Validate worker workflow (#50-24)",
+      "priority": "Low",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 1,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": "Team effort, 2 sprints",
+      "parent": "T26",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T29",
+      "depends_on": "new2"
+    }
+  ]
+}

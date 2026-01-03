@@ -1,0 +1,33 @@
+changes:
+  add_tasks:
+    - title: "Configure export settings (#22-1)"
+      priority: "Medium"
+      status: "Not started"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 3
+      depends_on: ["Setup caching environment (#22-14)"]
+      perceived_owner: "Team Lead"
+      parent: "Review database documentation (#22-0)"
+    - title: "Design database API (#22-10)"
+      priority: "Medium"
+      status: "In progress"
+      state: "ACTIVE"
+      owner: "U_ishay"
+      created_by: "U_ishay"
+      impact_size: 1
+      depends_on: []
+      main_goal: "Enable new features"
+      parent: "Refactor notification codebase (#22-13)"
+    - title: "Backup monitoring data (#22-16)"
+      priority: "High"
+      status: "Blocked"
+      state: "DRAFT"
+      owner: "U_ishay"
+      created_by: "U_elram"
+      impact_size: 2
+      depends_on: ["Create database assets (#22-35)"]
+      parent: "Analyze proxy metrics (#22-39)"
+
+Return ONLY valid JSON. No markdown. No extra text.

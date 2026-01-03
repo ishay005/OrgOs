@@ -1,0 +1,11 @@
+Please make the following changes:
+
+1. Update task "Migrate alerting database (#15-0)":
+   - Change status to: "In progress"
+2. Update task "Create storage assets (#15-1)":
+   - Change status to: "Blocked"
+   - Change priority to: "Medium"
+3. Update task "Fix cache bug (#15-34)":
+   - Change priority to: "Critical"
+
+Return ONLY valid JSON. No markdown. No extra text.

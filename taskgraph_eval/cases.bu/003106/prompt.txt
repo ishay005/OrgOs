@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Review backend documentation (#31-15)"
+      parent: "Backup notification data (#31-1)"
+    - task: "Optimize proxy performance (#31-13)"
+      parent: "Implement restore feature (#31-9)"
+
+Return ONLY valid JSON. No markdown. No extra text.

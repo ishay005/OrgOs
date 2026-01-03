@@ -1,0 +1,17 @@
+{
+  "case_id": "004904",
+  "target_id": 49,
+  "seed": 49003,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Setup alerting environment (#49-3)",
+      "Refactor monitoring codebase (#49-9)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

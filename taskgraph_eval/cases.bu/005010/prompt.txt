@@ -1,0 +1,3 @@
+Add a dependency where "Update dashboard configuration (#50-6)" depends on "Document backup usage (#50-10)".
+
+Return ONLY valid JSON. No markdown. No extra text.

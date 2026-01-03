@@ -1,0 +1,3 @@
+For the task "Optimize storage performance (#34-2)", change priority to "Medium". Move the task "Update analytics configuration (#34-6)" to be a subtask of "Deploy payment to production (#34-14)".
+
+Return ONLY valid JSON. No markdown. No extra text.

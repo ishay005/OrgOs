@@ -1,0 +1,22 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Backup backup data (#46-6)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T20",
+      "depends_on": [
+        "T15"
+      ]
+    }
+  ]
+}

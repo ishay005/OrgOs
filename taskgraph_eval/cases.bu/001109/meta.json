@@ -1,0 +1,17 @@
+{
+  "case_id": "001109",
+  "target_id": 11,
+  "seed": 11008,
+  "bucket": "ADD",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [
+      "Validate frontend workflow (#11-3)",
+      "Refactor analytics codebase (#11-17)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

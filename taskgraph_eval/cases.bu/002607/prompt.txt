@@ -1,0 +1,10 @@
+Make these changes to the task graph:
+
+• Edit task "Debug scheduler issue (#26-1)"
+  → status: "Done"
+  → priority: "Medium"
+• Edit task "Implement export feature (#26-28)"
+  → status: "Done"
+  → state: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

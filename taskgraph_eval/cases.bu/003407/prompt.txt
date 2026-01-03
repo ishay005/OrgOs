@@ -1,0 +1,3 @@
+Move the task "Debug storage issue (#34-9)" to be a subtask of "Configure monitoring settings (#34-11)".
+
+Return ONLY valid JSON. No markdown. No extra text.

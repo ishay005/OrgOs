@@ -1,0 +1,9 @@
+Please make the following changes:
+
+1. Update task "Review API documentation (#34-4)":
+   - Change impact_size to: 2
+2. Update task "Create frontend assets (#34-24)":
+   - Change status to: "Blocked"
+   - Change state to: "DRAFT"
+
+Return ONLY valid JSON. No markdown. No extra text.

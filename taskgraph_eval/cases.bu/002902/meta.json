@@ -1,0 +1,14 @@
+{
+  "case_id": "002902",
+  "target_id": 29,
+  "seed": 29001,
+  "bucket": "PARENT",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

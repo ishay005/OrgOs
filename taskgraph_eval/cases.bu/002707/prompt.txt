@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| ADD_DEP | Create backend assets (#27-2) → Test frontend integration (#27-9) | - |
+
+Return ONLY valid JSON. No markdown. No extra text.

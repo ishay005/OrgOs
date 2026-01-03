@@ -1,0 +1,45 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Implement caching feature (#16-6)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "DRAFT",
+      "impact_size": 4,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T8",
+      "depends_on": []
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Test backend integration (#16-16)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "DRAFT",
+      "impact_size": 5,
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "perceived_owner": "Manager",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T14",
+      "depends_on": [
+        "T19",
+        "T16",
+        "T15"
+      ]
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T4",
+      "depends_on": "new2"
+    }
+  ]
+}

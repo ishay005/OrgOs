@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Research dashboard options (#23-0)"
+      parent: "Fix backend bug (#23-2)"
+    - task: "Document analytics usage (#23-11)"
+      parent: "Design queue API (#23-16)"
+
+Return ONLY valid JSON. No markdown. No extra text.

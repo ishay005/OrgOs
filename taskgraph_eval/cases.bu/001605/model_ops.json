@@ -1,0 +1,60 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Validate frontend workflow (#16-1)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "DRAFT",
+      "impact_size": 4,
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "perceived_owner": null,
+      "main_goal": "Reduce technical debt",
+      "resources": null,
+      "parent": "T19",
+      "depends_on": [
+        "T3",
+        "T12"
+      ]
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new2",
+      "title": "Implement caching feature (#16-6)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "DRAFT",
+      "impact_size": 4,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T8",
+      "depends_on": []
+    },
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new3",
+      "title": "Refactor backup codebase (#16-20)",
+      "priority": "Critical",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 2,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": "Developer",
+      "main_goal": null,
+      "resources": null,
+      "parent": "T8",
+      "depends_on": []
+    },
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T20",
+      "depends_on": "new1"
+    }
+  ]
+}

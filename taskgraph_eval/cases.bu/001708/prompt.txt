@@ -1,0 +1,8 @@
+changes:
+  parent_changes:
+    - task: "Backup import data (#17-0)"
+      parent: "Create API assets (#17-26)"
+    - task: "Validate frontend workflow (#17-24)"
+      parent: "Update backup configuration (#17-55)"
+
+Return ONLY valid JSON. No markdown. No extra text.

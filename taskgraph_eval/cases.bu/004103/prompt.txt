@@ -1,0 +1,8 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Implement backup feature (#41-31) | priority→"Low" |
+| SET_PARENT | Update import configuration (#41-30) | parent=Migrate restore database (#41-32) |
+
+Return ONLY valid JSON. No markdown. No extra text.

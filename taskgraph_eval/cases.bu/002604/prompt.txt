@@ -1,0 +1,33 @@
+changes:
+  add_tasks:
+    - title: "Review storage documentation (#26-2)"
+      priority: "Critical"
+      status: "Done"
+      state: "DRAFT"
+      owner: "U_elram"
+      created_by: "U_ishay"
+      impact_size: 5
+      depends_on: []
+      main_goal: "Increase performance"
+      parent: "Implement export feature (#26-28)"
+    - title: "Analyze queue metrics (#26-11)"
+      priority: "Critical"
+      status: "Not started"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_ishay"
+      impact_size: 3
+      depends_on: []
+      main_goal: "Reduce technical debt"
+      parent: "Update analytics configuration (#26-5)"
+    - title: "Test queue integration (#26-16)"
+      priority: "Medium"
+      status: "Done"
+      state: "ACTIVE"
+      owner: "U_elram"
+      created_by: "U_elram"
+      impact_size: 3
+      depends_on: []
+      parent: "Update restore configuration (#26-23)"
+
+Return ONLY valid JSON. No markdown. No extra text.

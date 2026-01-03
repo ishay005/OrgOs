@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| UPDATE | Debug frontend issue (#30-9) | status→"In progress" |
+
+Return ONLY valid JSON. No markdown. No extra text.

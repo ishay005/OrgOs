@@ -1,0 +1,17 @@
+{
+  "case_id": "000704",
+  "target_id": 7,
+  "seed": 7003,
+  "bucket": "EDIT",
+  "prompt_format": "yaml",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Test proxy integration (#7-25)",
+      "Validate API workflow (#7-18)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

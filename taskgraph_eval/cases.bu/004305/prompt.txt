@@ -1,0 +1,9 @@
+Make these changes to the task graph:
+
+• Edit task "Debug storage issue (#43-10)"
+  → impact_size: 1
+• Edit task "Migrate monitoring database (#43-5)"
+  → priority: "High"
+  → state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

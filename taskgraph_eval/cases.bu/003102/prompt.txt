@@ -1,0 +1,10 @@
+Make these changes to the task graph:
+
+• Edit task "Setup search environment (#31-0)"
+  → status: "Done"
+  → priority: "High"
+• Edit task "Design frontend API (#31-14)"
+  → status: "Done"
+  → state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

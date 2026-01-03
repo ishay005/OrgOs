@@ -1,0 +1,5 @@
+Please make the following changes:
+
+1. Set the parent of "Fix queue bug (#6-2)" to "Research payment options (#6-0)"
+
+Return ONLY valid JSON. No markdown. No extra text.

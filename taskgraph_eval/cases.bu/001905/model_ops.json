@@ -1,0 +1,9 @@
+{
+  "ops": [
+    {
+      "op": "ADD_DEPENDENCY",
+      "task": "T12",
+      "depends_on": "T8"
+    }
+  ]
+}

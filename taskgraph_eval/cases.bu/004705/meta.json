@@ -1,0 +1,16 @@
+{
+  "case_id": "004705",
+  "target_id": 47,
+  "seed": 47004,
+  "bucket": "ADD",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [
+      "Test storage integration (#47-0)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 1
+  }
+}

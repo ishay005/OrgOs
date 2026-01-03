@@ -1,0 +1,17 @@
+{
+  "case_id": "003903",
+  "target_id": 39,
+  "seed": 39002,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Validate backend workflow (#39-19)",
+      "Migrate reporting database (#39-99)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

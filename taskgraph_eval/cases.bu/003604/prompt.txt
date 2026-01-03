@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Refactor notification codebase (#36-1)"
+  → priority: "Medium"
+• Move "Migrate export database (#36-2)" under "Research analytics options (#36-5)"
+
+Return ONLY valid JSON. No markdown. No extra text.

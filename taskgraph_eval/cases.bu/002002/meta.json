@@ -1,0 +1,18 @@
+{
+  "case_id": "002002",
+  "target_id": 20,
+  "seed": 20001,
+  "bucket": "EDIT",
+  "prompt_format": "numbered",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Debug queue issue (#20-114)",
+      "Refactor payment codebase (#20-0)",
+      "Fix storage bug (#20-104)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

@@ -1,0 +1,11 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[DEPENDENCY] Add: "Implement export feature (#17-70)" depends on "Test gateway integration (#17-10)"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

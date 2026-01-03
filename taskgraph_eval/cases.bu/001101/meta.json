@@ -1,0 +1,17 @@
+{
+  "case_id": "001101",
+  "target_id": 11,
+  "seed": 11000,
+  "bucket": "EDIT",
+  "prompt_format": "meeting_notes",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Update logging configuration (#11-0)",
+      "Create API assets (#11-1)"
+    ],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}

@@ -1,0 +1,10 @@
+changes:
+  edit_tasks:
+    - title: "Test proxy integration (#7-25)"
+      set:
+        status: "In progress"
+    - title: "Validate API workflow (#7-18)"
+      set:
+        state: "ACTIVE"
+
+Return ONLY valid JSON. No markdown. No extra text.

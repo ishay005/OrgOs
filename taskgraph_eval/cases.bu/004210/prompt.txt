@@ -1,0 +1,16 @@
+Please make the following changes:
+
+1. Create a new task titled "Validate gateway workflow (#42-0)"
+   - Set priority to: "Medium"
+   - Set status to: "Not started"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_ishay"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 2
+   - Set depends_on to: []
+   - Set perceived_owner to: "Team Lead"
+   - Set main_goal to: "Enhance security"
+   - Set resources to: "External contractor"
+   - Set parent to: "Implement analytics feature (#42-4)"
+
+Return ONLY valid JSON. No markdown. No extra text.

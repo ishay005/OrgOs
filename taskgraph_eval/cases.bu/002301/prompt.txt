@@ -1,0 +1,11 @@
+MEETING NOTES - Task Updates
+
+Date: Today
+Attendees: Team
+
+Action Items:
+
+[DEPENDENCY] Add: "Create gateway assets (#23-14)" depends on "Design queue API (#23-16)"
+
+
+Return ONLY valid JSON. No markdown. No extra text.

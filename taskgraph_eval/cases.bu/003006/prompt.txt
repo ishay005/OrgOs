@@ -1,0 +1,5 @@
+Please make the following changes:
+
+1. Set the parent of "Fix scheduler bug (#30-3)" to "Fix frontend bug (#30-8)"
+
+Return ONLY valid JSON. No markdown. No extra text.

@@ -1,0 +1,24 @@
+Please make the following changes:
+
+1. Create a new task titled "Optimize database performance (#50-15)"
+   - Set priority to: "Low"
+   - Set status to: "Not started"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_ishay"
+   - Set impact_size to: 3
+   - Set depends_on to: ["Validate storage workflow (#50-28)"]
+   - Set parent to: "Deploy dashboard to production (#50-18)"
+2. Create a new task titled "Validate worker workflow (#50-24)"
+   - Set priority to: "Low"
+   - Set status to: "Blocked"
+   - Set state to: "ACTIVE"
+   - Set owner to: "U_elram"
+   - Set created_by to: "U_elram"
+   - Set impact_size to: 1
+   - Set depends_on to: []
+   - Set resources to: "Team effort, 2 sprints"
+   - Set parent to: "Design gateway API (#50-25)"
+3. Add dependency: "Validate storage workflow (#50-28)" depends on "Validate worker workflow (#50-24)"
+
+Return ONLY valid JSON. No markdown. No extra text.

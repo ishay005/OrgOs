@@ -1,0 +1,7 @@
+changes:
+  dependency_changes:
+    - action: add
+      task: "Debug gateway issue (#14-63)"
+      depends_on: "Fix queue bug (#14-30)"
+
+Return ONLY valid JSON. No markdown. No extra text.

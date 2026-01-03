@@ -1,0 +1,7 @@
+Make these changes to the task graph:
+
+• Edit task "Configure payment settings (#45-0)"
+  → priority: "Critical"
+• Move "Configure payment settings (#45-0)" under "Backup payment data (#45-2)"
+
+Return ONLY valid JSON. No markdown. No extra text.

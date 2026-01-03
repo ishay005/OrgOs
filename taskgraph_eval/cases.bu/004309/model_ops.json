@@ -1,0 +1,20 @@
+{
+  "ops": [
+    {
+      "op": "TASK_CREATE",
+      "temp_id": "new1",
+      "title": "Update alerting configuration (#43-0)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "impact_size": 3,
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "perceived_owner": null,
+      "main_goal": null,
+      "resources": null,
+      "parent": "T4",
+      "depends_on": []
+    }
+  ]
+}

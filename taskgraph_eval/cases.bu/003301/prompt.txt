@@ -1,0 +1,7 @@
+Requested changes:
+
+| Action | Target | Details |
+|--------|--------|---------|
+| ADD_DEP | Validate scheduler workflow (#33-2) → Research caching options (#33-0) | - |
+
+Return ONLY valid JSON. No markdown. No extra text.

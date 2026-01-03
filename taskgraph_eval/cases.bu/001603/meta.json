@@ -1,0 +1,16 @@
+{
+  "case_id": "001603",
+  "target_id": 16,
+  "seed": 16002,
+  "bucket": "MIXED",
+  "prompt_format": "table",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Refactor backup codebase (#16-20)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

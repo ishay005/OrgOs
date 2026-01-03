@@ -1,0 +1,16 @@
+{
+  "case_id": "004207",
+  "target_id": 42,
+  "seed": 42006,
+  "bucket": "MIXED",
+  "prompt_format": "paragraph",
+  "summary": {
+    "titles_added": [],
+    "titles_removed": [],
+    "titles_edited": [
+      "Implement analytics feature (#42-4)"
+    ],
+    "parent_edges_changed": 1,
+    "dependencies_changed": 0
+  }
+}

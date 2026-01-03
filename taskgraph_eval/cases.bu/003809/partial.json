@@ -1,0 +1,330 @@
+{
+  "users": {
+    "U_ishay": {
+      "name": "Ishay"
+    },
+    "U_elram": {
+      "name": "Elram"
+    }
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Deploy logging to production (#38-0)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T5",
+        "T13"
+      ],
+      "main_goal": "Enable new features",
+      "resources": "Team effort, 2 sprints",
+      "parent": "T9"
+    },
+    {
+      "id": "T2",
+      "title": "Monitor dashboard health (#38-1)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [
+        "T7"
+      ],
+      "perceived_owner": "Manager",
+      "parent": "T9"
+    },
+    {
+      "id": "T3",
+      "title": "Monitor monitoring health (#38-2)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 2,
+      "depends_on": [],
+      "parent": "T19"
+    },
+    {
+      "id": "T4",
+      "title": "Deploy payment to production (#38-3)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [
+        "T16"
+      ],
+      "main_goal": "Improve user experience",
+      "parent": "T12"
+    },
+    {
+      "id": "T5",
+      "title": "Debug frontend issue (#38-4)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt",
+      "parent": "T2"
+    },
+    {
+      "id": "T7",
+      "title": "Update search configuration (#38-6)",
+      "priority": "Medium",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 3,
+      "depends_on": [
+        "T11",
+        "T13"
+      ],
+      "parent": "T22"
+    },
+    {
+      "id": "T8",
+      "title": "Fix API bug (#38-7)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [],
+      "parent": "T2"
+    },
+    {
+      "id": "T9",
+      "title": "Analyze scheduler metrics (#38-8)",
+      "priority": "Medium",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [],
+      "main_goal": "Reduce technical debt"
+    },
+    {
+      "id": "T10",
+      "title": "Document analytics usage (#38-9)",
+      "priority": "Critical",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [
+        "T3"
+      ],
+      "perceived_owner": "Developer",
+      "parent": "T13"
+    },
+    {
+      "id": "T11",
+      "title": "Update sync configuration (#38-10)",
+      "priority": "Critical",
+      "status": "Not started",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T8"
+    },
+    {
+      "id": "T12",
+      "title": "Monitor search health (#38-11)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 2,
+      "depends_on": [
+        "T1"
+      ],
+      "resources": "1 developer, 3 days",
+      "parent": "T13"
+    },
+    {
+      "id": "T13",
+      "title": "Implement payment feature (#38-12)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "resources": "2 developers, 1 week"
+    },
+    {
+      "id": "T14",
+      "title": "Validate cache workflow (#38-13)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T7"
+      ],
+      "parent": "T13"
+    },
+    {
+      "id": "T15",
+      "title": "Monitor payment health (#38-14)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_elram",
+      "impact_size": 4,
+      "depends_on": [
+        "T24"
+      ],
+      "resources": "1 developer, 3 days",
+      "parent": "T13"
+    },
+    {
+      "id": "T16",
+      "title": "Setup monitoring environment (#38-15)",
+      "priority": "High",
+      "status": "In progress",
+      "state": "DRAFT",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 5,
+      "depends_on": [],
+      "main_goal": "Enable new features",
+      "parent": "T23"
+    },
+    {
+      "id": "T17",
+      "title": "Analyze scheduler metrics (#38-16)",
+      "priority": "Low",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 1,
+      "depends_on": [],
+      "perceived_owner": "Team Lead",
+      "main_goal": "Enable new features",
+      "parent": "T12"
+    },
+    {
+      "id": "T18",
+      "title": "Optimize proxy performance (#38-17)",
+      "priority": "High",
+      "status": "Not started",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [
+        "T12",
+        "T9"
+      ],
+      "resources": "External contractor",
+      "parent": "T9"
+    },
+    {
+      "id": "T19",
+      "title": "Validate scheduler workflow (#38-18)",
+      "priority": "Low",
+      "status": "Done",
+      "state": "DRAFT",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T7"
+    },
+    {
+      "id": "T20",
+      "title": "Deploy authentication to production (#38-19)",
+      "priority": "Critical",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "resources": "2 developers, 1 week",
+      "parent": "T9"
+    },
+    {
+      "id": "T21",
+      "title": "Configure alerting settings (#38-20)",
+      "priority": "High",
+      "status": "Blocked",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 1,
+      "depends_on": [
+        "T7"
+      ],
+      "resources": "External contractor",
+      "parent": "T20"
+    },
+    {
+      "id": "T22",
+      "title": "Analyze scheduler metrics (#38-21)",
+      "priority": "Low",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_ishay",
+      "created_by": "U_ishay",
+      "impact_size": 3,
+      "depends_on": [
+        "T13"
+      ],
+      "parent": "T21"
+    },
+    {
+      "id": "T23",
+      "title": "Monitor dashboard health (#38-22)",
+      "priority": "Medium",
+      "status": "In progress",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_ishay",
+      "impact_size": 4,
+      "depends_on": [],
+      "parent": "T13"
+    },
+    {
+      "id": "T24",
+      "title": "Backup authentication data (#38-23)",
+      "priority": "Medium",
+      "status": "Done",
+      "state": "ACTIVE",
+      "owner": "U_elram",
+      "created_by": "U_elram",
+      "impact_size": 5,
+      "depends_on": [
+        "T3",
+        "T11"
+      ],
+      "parent": "T8"
+    }
+  ]
+}

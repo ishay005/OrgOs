@@ -1,0 +1,3 @@
+Move the task "Document caching usage (#33-4)" to be a subtask of "Optimize worker performance (#33-13)".
+
+Return ONLY valid JSON. No markdown. No extra text.

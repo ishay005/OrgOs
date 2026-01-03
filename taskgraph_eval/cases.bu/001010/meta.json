@@ -1,0 +1,17 @@
+{
+  "case_id": "001010",
+  "target_id": 10,
+  "seed": 10009,
+  "bucket": "ADD",
+  "prompt_format": "bullets",
+  "summary": {
+    "titles_added": [
+      "Refactor sync codebase (#10-0)",
+      "Backup payment data (#10-2)"
+    ],
+    "titles_removed": [],
+    "titles_edited": [],
+    "parent_edges_changed": 0,
+    "dependencies_changed": 0
+  }
+}
