@@ -45,7 +45,8 @@
     <div id="dashboard-page" class="page">
         <div class="header top-nav-header">
             <nav class="top-nav">
-                <button onclick="showSection('pending')" class="top-nav-btn active" id="pending-nav">📋 Questions</button>
+                <button onclick="showSection('board')" class="top-nav-btn active" id="board-nav">📊 My Board</button>
+                <button onclick="showSection('pending')" class="top-nav-btn" id="pending-nav">📋 Questions</button>
                 <button onclick="showSection('decisions')" class="top-nav-btn" id="decisions-nav">✅ Decisions <span id="decisions-badge" class="badge">0</span></button>
                 <button onclick="showSection('graph')" class="top-nav-btn" id="graph-nav">🔗 Tasks</button>
                 <button onclick="showSection('orgchart')" class="top-nav-btn" id="orgchart-nav">👥 Org</button>
@@ -65,8 +66,60 @@
             <!-- Main Content Area -->
             <div class="dashboard-container">
             
+            <!-- My Board Section -->
+            <div id="board-section" class="section active">
+                <div class="board-grid">
+                    <!-- Daily Tasks Card -->
+                    <div class="board-card" id="daily-tasks-card">
+                        <div class="board-card-header">
+                            <h4>📅 Daily Tasks</h4>
+                            <span class="card-badge" id="daily-tasks-count">0</span>
+                        </div>
+                        <div class="board-card-content" id="daily-tasks-content">
+                            <div class="loading-placeholder">Loading...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Updates Card -->
+                    <div class="board-card" id="updates-card">
+                        <div class="board-card-header">
+                            <h4>🔔 Updates</h4>
+                            <span class="card-badge" id="updates-count">0</span>
+                        </div>
+                        <div class="board-card-content" id="updates-content">
+                            <div class="loading-placeholder">Loading...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Weekly Tasks Card -->
+                    <div class="board-card" id="weekly-tasks-card">
+                        <div class="board-card-header">
+                            <h4>📆 Weekly Tasks</h4>
+                            <div class="week-nav">
+                                <button onclick="navigateWeek(-1)" class="week-nav-btn">◀</button>
+                                <span id="week-label">This Week</span>
+                                <button onclick="navigateWeek(1)" class="week-nav-btn">▶</button>
+                            </div>
+                        </div>
+                        <div class="board-card-content" id="weekly-tasks-content">
+                            <div class="loading-placeholder">Loading...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Alignment Card -->
+                    <div class="board-card" id="alignment-card">
+                        <div class="board-card-header">
+                            <h4>🎯 Alignment</h4>
+                        </div>
+                        <div class="board-card-content" id="alignment-content">
+                            <div class="loading-placeholder">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Pending Questions Section -->
-            <div id="pending-section" class="section active">
+            <div id="pending-section" class="section">
                 <!-- Quick Add Task Form (Expandable) -->
                 <div id="quick-add-task-container" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 24px; border: 2px dashed #6366f1;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">

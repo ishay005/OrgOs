@@ -263,8 +263,8 @@ function showDashboard() {
     initSidebarResize();
     loadRobinChat();
     
-    // Restore saved tab or default to Pending Questions
-    const savedTab = localStorage.getItem('currentTab') || 'pending';
+    // Restore saved tab or default to My Board
+    const savedTab = localStorage.getItem('currentTab') || 'board';
     showSection(savedTab);
     
     // Load other dashboard data in background
@@ -684,7 +684,9 @@ function showSection(sectionName) {
     localStorage.setItem('currentTab', sectionName);
     
     // Load data for specific sections
-    if (sectionName === 'pending') {
+    if (sectionName === 'board') {
+        loadBoard();
+    } else if (sectionName === 'pending') {
         loadPendingQuestions();
     } else if (sectionName === 'prompts') {
         loadPrompts().catch(err => console.error('Error loading prompts:', err));
@@ -6308,6 +6310,365 @@ function submitAltDependency(dependencyId) {
 
 function showRejectAlternativeDialog(proposalId) {
     showRejectDialog('alternative', proposalId);
+}
+
+// ============================================================================
+// MY BOARD DASHBOARD FUNCTIONS
+// ============================================================================
+
+let currentWeekOffset = 0; // 0 = this week, -1 = last week, 1 = next week
+
+async function loadBoard() {
+    await Promise.all([
+        loadDailyTasks(),
+        loadBoardUpdates(),
+        loadWeeklyCalendar(),
+        loadAlignmentSummary()
+    ]);
+}
+
+async function loadDailyTasks() {
+    const content = document.getElementById('daily-tasks-content');
+    const countBadge = document.getElementById('daily-tasks-count');
+    
+    if (!content) return;
+    
+    try {
+        // Fetch tasks
+        const graphData = await apiCall('/tasks/graph/with-attributes');
+        const tasks = graphData.tasks || [];
+        
+        // Get today's date (in local timezone)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+        
+        // Filter tasks:
+        // 1. Tasks owned by current user
+        // 2. Not archived
+        // 3. Due today OR assigned today
+        const dailyTasks = tasks.filter(task => {
+            if (task.owner?.id !== currentUser?.id) return false;
+            if (task.state === 'ARCHIVED') return false;
+            
+            // Check due date
+            const dueDate = task.attributes?.due_date;
+            if (dueDate && dueDate.split('T')[0] === todayStr) return true;
+            
+            // Check if created today (as a proxy for assigned today)
+            const createdAt = task.created_at;
+            if (createdAt && createdAt.split('T')[0] === todayStr) return true;
+            
+            return false;
+        });
+        
+        countBadge.textContent = dailyTasks.length;
+        
+        if (dailyTasks.length === 0) {
+            content.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">☀️</div>
+                    <div class="empty-state-text">No tasks for today</div>
+                </div>
+            `;
+            return;
+        }
+        
+        content.innerHTML = dailyTasks.map(task => {
+            const dueDate = task.attributes?.due_date;
+            const isDueToday = dueDate && dueDate.split('T')[0] === todayStr;
+            
+            return `
+                <div class="daily-task-item" onclick="showTaskDetails('${task.id}')">
+                    <span class="task-icon">${getStateIcon(task.state)}</span>
+                    <span class="task-title">${escapeHtml(task.title)}</span>
+                    ${isDueToday ? '<span class="task-source">Due Today</span>' : '<span class="task-source">New</span>'}
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('Error loading daily tasks:', error);
+        content.innerHTML = `<div class="empty-state"><div class="empty-state-text">Failed to load tasks</div></div>`;
+    }
+}
+
+function getStateIcon(state) {
+    switch (state) {
+        case 'ACTIVE': return '🟢';
+        case 'DRAFT': return '📝';
+        case 'REJECTED': return '❌';
+        case 'ARCHIVED': return '📦';
+        default: return '📋';
+    }
+}
+
+async function loadBoardUpdates() {
+    const content = document.getElementById('updates-content');
+    const countBadge = document.getElementById('updates-count');
+    
+    if (!content) return;
+    
+    try {
+        // Fetch pending decisions and questions
+        const [decisionsData, questions] = await Promise.all([
+            apiCall('/decisions/pending'),
+            apiCall('/pending-questions')
+        ]);
+        
+        // Handle API response structure
+        const decisions = decisionsData.decisions || decisionsData || [];
+        const questionsList = Array.isArray(questions) ? questions : [];
+        
+        const updates = [];
+        
+        // Add pending decisions
+        (Array.isArray(decisions) ? decisions : []).forEach(d => {
+            updates.push({
+                type: 'decision',
+                icon: '✅',
+                title: d.description || `${d.decision_type} decision`,
+                meta: formatRelativeTime(d.created_at),
+                onClick: `showSection('decisions')`
+            });
+        });
+        
+        // Add pending questions
+        questionsList.forEach(q => {
+            updates.push({
+                type: 'question',
+                icon: '❓',
+                title: q.question_text || 'Data collection question',
+                meta: formatRelativeTime(q.created_at),
+                onClick: `showSection('pending')`
+            });
+        });
+        
+        // Sort by most recent
+        updates.sort((a, b) => {
+            const dateA = new Date(a.meta);
+            const dateB = new Date(b.meta);
+            return dateB - dateA;
+        });
+        
+        countBadge.textContent = updates.length;
+        
+        if (updates.length === 0) {
+            content.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">✨</div>
+                    <div class="empty-state-text">No updates</div>
+                </div>
+            `;
+            return;
+        }
+        
+        content.innerHTML = updates.slice(0, 10).map(update => `
+            <div class="update-item ${update.type}" onclick="${update.onClick}">
+                <span class="update-icon">${update.icon}</span>
+                <div class="update-content">
+                    <div class="update-title">${escapeHtml(update.title)}</div>
+                    <div class="update-meta">${update.meta}</div>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading updates:', error);
+        content.innerHTML = `<div class="empty-state"><div class="empty-state-text">Failed to load updates</div></div>`;
+    }
+}
+
+function formatRelativeTime(dateStr) {
+    if (!dateStr) return '';
+    
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return date.toLocaleDateString();
+}
+
+async function loadWeeklyCalendar() {
+    const content = document.getElementById('weekly-tasks-content');
+    const weekLabel = document.getElementById('week-label');
+    
+    if (!content) return;
+    
+    try {
+        // Fetch all tasks
+        const graphData = await apiCall('/tasks/graph/with-attributes');
+        const tasks = graphData.tasks || [];
+        
+        // Filter to current user's non-archived tasks
+        const myTasks = tasks.filter(t => 
+            t.owner?.id === currentUser?.id && t.state !== 'ARCHIVED'
+        );
+        
+        // Calculate week start (Monday) based on offset
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() + mondayOffset + (currentWeekOffset * 7));
+        weekStart.setHours(0, 0, 0, 0);
+        
+        // Update week label
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        
+        if (currentWeekOffset === 0) {
+            weekLabel.textContent = 'This Week';
+        } else if (currentWeekOffset === -1) {
+            weekLabel.textContent = 'Last Week';
+        } else if (currentWeekOffset === 1) {
+            weekLabel.textContent = 'Next Week';
+        } else {
+            weekLabel.textContent = `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        }
+        
+        // Build week days
+        const days = [];
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        
+        for (let i = 0; i < 7; i++) {
+            const dayDate = new Date(weekStart);
+            dayDate.setDate(weekStart.getDate() + i);
+            
+            const dateStr = dayDate.toISOString().split('T')[0];
+            const isToday = dateStr === today.toISOString().split('T')[0];
+            
+            // Find tasks due on this day
+            const dayTasks = myTasks.filter(task => {
+                const dueDate = task.attributes?.due_date;
+                return dueDate && dueDate.split('T')[0] === dateStr;
+            });
+            
+            days.push({
+                name: dayNames[i],
+                num: dayDate.getDate(),
+                isToday,
+                tasks: dayTasks
+            });
+        }
+        
+        content.innerHTML = `
+            <div class="weekly-calendar">
+                ${days.map(day => `
+                    <div class="calendar-day ${day.isToday ? 'today' : ''}">
+                        <div class="calendar-day-header">
+                            <span class="day-name">${day.name}</span>
+                            <span class="day-num">${day.num}</span>
+                        </div>
+                        <div class="calendar-tasks">
+                            ${day.tasks.map(task => `
+                                <div class="calendar-task" onclick="showTaskDetails('${task.id}')" title="${escapeHtml(task.title)}">
+                                    ${escapeHtml(task.title)}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+    } catch (error) {
+        console.error('Error loading weekly calendar:', error);
+        content.innerHTML = `<div class="empty-state"><div class="empty-state-text">Failed to load calendar</div></div>`;
+    }
+}
+
+function navigateWeek(direction) {
+    currentWeekOffset += direction;
+    loadWeeklyCalendar();
+}
+
+async function loadAlignmentSummary() {
+    const content = document.getElementById('alignment-content');
+    
+    if (!content) return;
+    
+    try {
+        // Fetch alignment stats and users
+        const [alignmentStats, users] = await Promise.all([
+            apiCall('/alignment-stats/users'),
+            apiCall('/users')
+        ]);
+        
+        // Create user name lookup
+        const userNames = {};
+        (Array.isArray(users) ? users : []).forEach(u => {
+            userNames[u.id] = u.name;
+        });
+        
+        // Convert dict to array for processing
+        const statsArray = Object.entries(alignmentStats).map(([userId, percentage]) => ({
+            user_id: userId,
+            user_name: userNames[userId] || 'Unknown',
+            alignment_percentage: percentage
+        }));
+        
+        // Find current user's alignment
+        const myStats = statsArray.find(s => s.user_id === currentUser?.id);
+        const myAlignment = myStats?.alignment_percentage ?? 100;
+        
+        // Calculate team average
+        const teamTotal = statsArray.reduce((sum, s) => sum + (s.alignment_percentage ?? 100), 0);
+        const teamAvg = statsArray.length > 0 ? Math.round(teamTotal / statsArray.length) : 100;
+        
+        // Find misalignments (users with lower alignment)
+        const misalignedUsers = statsArray
+            .filter(s => (s.alignment_percentage ?? 100) < 80)
+            .sort((a, b) => (a.alignment_percentage ?? 100) - (b.alignment_percentage ?? 100))
+            .slice(0, 5);
+        
+        const alignmentColor = myAlignment >= 80 ? '#16a34a' : myAlignment >= 60 ? '#f59e0b' : '#dc2626';
+        
+        content.innerHTML = `
+            <div class="alignment-score-display" style="background: linear-gradient(135deg, ${myAlignment >= 80 ? '#f0fdf4' : myAlignment >= 60 ? '#fef3c7' : '#fef2f2'} 0%, ${myAlignment >= 80 ? '#dcfce7' : myAlignment >= 60 ? '#fde68a' : '#fecaca'} 100%);">
+                <div class="alignment-score-value" style="color: ${alignmentColor};">${myAlignment}%</div>
+                <div class="alignment-score-label">Your Alignment</div>
+            </div>
+            
+            <div class="alignment-team-avg">
+                Team Average: <strong>${teamAvg}%</strong>
+            </div>
+            
+            ${misalignedUsers.length > 0 ? `
+                <div class="misalignment-list">
+                    <div class="misalignment-list-header">⚠️ Low Alignment</div>
+                    ${misalignedUsers.map(user => `
+                        <div class="misalignment-item" onclick="showUserMisalignments('${user.user_id}')">
+                            <span>${escapeHtml(user.user_name || 'Unknown')}</span>
+                            <span style="margin-left: auto; font-weight: 600; color: ${(user.alignment_percentage ?? 100) >= 60 ? '#f59e0b' : '#dc2626'};">
+                                ${user.alignment_percentage ?? 100}%
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : `
+                <div class="misalignment-list">
+                    <div class="misalignment-list-header">✅ All Aligned</div>
+                    <div style="color: #6b7280; font-size: 0.85rem; padding: 8px;">
+                        No significant misalignments detected.
+                    </div>
+                </div>
+            `}
+        `;
+        
+    } catch (error) {
+        console.error('Error loading alignment summary:', error);
+        content.innerHTML = `<div class="empty-state"><div class="empty-state-text">Failed to load alignment</div></div>`;
+    }
 }
 
 
